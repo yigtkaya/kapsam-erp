@@ -1,0 +1,21 @@
+{
+  "loginPage": {
+    "signIn": "Giriş yap",
+    "accessPanel": "Kontrol Paneline Erişim",
+    "supportText": "Teknik destek için",
+    "contactSupport": "iletişime geçin",
+    "copyright": "© {year} {company}. Tüm hakları saklıdır."
+  },
+  "login": {
+    "signInTitle": "Hesabınıza Giriş Yapın",
+    "emailLabel": "Email adresi",
+    "emailPlaceholder": "Email adresi",
+    "passwordLabel": "Şifre",
+    "passwordPlaceholder": "Şifre",
+    "signInButton": "Giriş Yap",
+    "loginFailed": "Giriş yapılamadı",
+    "forgotPassword": "Şifrenizi mi unuttunuz?",
+    "passwordResetInfo": "Şifre sıfırlama özelliği yakında eklenecektir",
+    "signingIn": "Giriş yapılıyor..."
+  }
+}

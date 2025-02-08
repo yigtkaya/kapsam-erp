@@ -1,0 +1,21 @@
+{
+  "loginPage": {
+    "signIn": "Sign in",
+    "accessPanel": "Access Control Panel",
+    "supportText": "For technical support",
+    "contactSupport": "contact us",
+    "copyright": "© {year} {company}. All rights reserved."
+  },
+  "login": {
+    "signInTitle": "Sign in to Your Account",
+    "emailLabel": "Email address",
+    "emailPlaceholder": "Email address",
+    "passwordLabel": "Password",
+    "passwordPlaceholder": "Password",
+    "signInButton": "Sign In",
+    "loginFailed": "Login failed",
+    "forgotPassword": "Forgot your password?",
+    "passwordResetInfo": "Password reset feature coming soon",
+    "signingIn": "Signing in..."
+  }
+}
