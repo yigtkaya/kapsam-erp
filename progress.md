@@ -7,6 +7,13 @@
   - [ ] Configure Tailwind CSS
   - [ ] Set up API client (React Query)
   - [ ] Implement basic auth flow
+  - [x] favicon eklenecek
+  - [ ] dashboard modülleri gelecek - ui iyileştireilcebilir
+  - [ ] header, sidebar, eklenecek
+  - [ ] auth fonksiyonları çalıştırılacak
+  - [ ] auth sonrası yönlendirme olacak - ilk yapılacak sayfa kullanıcılar listeleme ve arama düzenleme sayfası olacak burda kullanıcı - admin - müdür verileri açılacak. ve farklı rotalara verilecek deneme için
+  - [ ] Sonrasında depo kısmı tamamlanması lazım bütün ui ve ekleme düzenleme fonksiyonları ile
+  - [ ] bir domain ve bu domainde sitenin prod - hali host edilmeli => direkt vercelden yap burayı
 
 ## Phase 2: Core Modules (Week 3-4)
 
