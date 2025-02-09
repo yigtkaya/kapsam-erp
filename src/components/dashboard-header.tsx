@@ -6,9 +6,10 @@ import { Button } from "@/components/ui/button";
 import { useState } from "react";
 import { cn } from "@/lib/utils";
 import { logout } from "@/app/login/action";
+import { User } from "@/types/auth";
 
 interface DashboardHeaderProps {
-  user: SafeUser;
+  user: User;
 }
 
 export function DashboardHeader({ user }: DashboardHeaderProps) {

@@ -1,66 +1,85 @@
 "use server";
 
-import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
+import { login as authLogin } from "@/lib/auth";
+import { cookies } from "next/headers";
 
 export async function login(username: string, password: string) {
   try {
-    const response = await fetch(`http://localhost:8000/api/auth/login/`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ username, password }),
-    });
+    const data = await authLogin(username, password);
 
-    console.log(response);
-
-    if (!response.ok) {
-      const errorData = await response.json();
-      throw new Error(errorData.message || "Şifre veya kullanıcı adı hatalı");
+    if (!data.success) {
+      return { error: data.message };
     }
 
-    const data = await response.json();
-    const { access, refresh, user } = data;
+    const { access, refresh, user, csrfToken } = data;
 
-    // Set both JWT tokens in HttpOnly cookies
-    const accessExpiry = process.env.NEXT_PUBLIC_JWT_EXPIRY || "3600"; // 1 hour
-    const refreshExpiry =
-      process.env.NEXT_PUBLIC_REFRESH_TOKEN_EXPIRY || "86400"; // 24 hours
+    // Set cookies server-side
+    const cookieStore = await cookies();
 
-    const cookiesList = await cookies();
-
-    cookiesList.set({
+    // Set access token
+    cookieStore.set({
       name: "access_token",
       value: access,
       httpOnly: true,
-      path: "/",
       secure: process.env.NODE_ENV === "production",
       sameSite: "lax",
-      maxAge: parseInt(accessExpiry),
+      path: "/",
+      maxAge: 60 * 60 * 24, // 1 day
     });
 
-    cookiesList.set({
+    // Set refresh token
+    cookieStore.set({
       name: "refresh_token",
       value: refresh,
       httpOnly: true,
-      path: "/",
       secure: process.env.NODE_ENV === "production",
       sameSite: "lax",
-      maxAge: parseInt(refreshExpiry),
+      path: "/",
+      maxAge: 60 * 60 * 24 * 30, // 30 days
     });
 
-    console.log(user);
+    // Set CSRF token if available
+    if (csrfToken) {
+      cookieStore.set({
+        name: "csrftoken",
+        value: csrfToken,
+        httpOnly: false, // Need to be accessible from JavaScript
+        secure: process.env.NODE_ENV === "production",
+        sameSite: "lax",
+        path: "/",
+        maxAge: 60 * 60 * 24, // 1 day
+      });
+    }
 
-    return { user: { user } };
+    return { user };
   } catch (error: any) {
+    console.error(error);
     return { error: error.message || "Bir hata oluştu" };
   }
 }
 
 export async function logout() {
-  const cookiesList = await cookies();
-  cookiesList.delete("access_token");
-  cookiesList.delete("refresh_token");
+  const cookieStore = await cookies();
+
+  // Clear all auth cookies
+  cookieStore.set({
+    name: "access_token",
+    value: "",
+    maxAge: 0,
+  });
+
+  cookieStore.set({
+    name: "refresh_token",
+    value: "",
+    maxAge: 0,
+  });
+
+  cookieStore.set({
+    name: "csrftoken",
+    value: "",
+    maxAge: 0,
+  });
+
   redirect("/login");
 }

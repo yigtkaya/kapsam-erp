@@ -2,76 +2,74 @@ import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 
 // Add paths that don't require authentication
-const publicPaths = ["/login", "/forgot-password"];
+const publicPaths = ["/login", "/forgot-password", "/register", "/api/auth"];
 
-export function middleware(request: NextRequest) {
+export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
-  // Redirect authenticated users from public paths to home
-  if (publicPaths.some((path) => pathname.startsWith(path))) {
-    const accessToken = request.cookies.get("access_token")?.value;
-    const refreshToken = request.cookies.get("refresh_token")?.value;
+  // Check if the current path is public
+  const isPublicPath = publicPaths.some(
+    (path) => pathname.startsWith(path) || pathname === "/"
+  );
 
-    if (accessToken || refreshToken) {
-      return NextResponse.redirect(new URL("/", request.url));
-    }
-    return NextResponse.next();
-  }
+  // Get authentication tokens from cookies
+  const accessToken = request.cookies.get("access_token")?.value;
+  const refreshToken = request.cookies.get("refresh_token")?.value;
+  const csrfToken = request.cookies.get("csrftoken")?.value;
 
-  // For API routes
-  if (pathname.startsWith("/api")) {
-    // Remove the "/api" prefix and build the backend URL
-    const rewrittenPath = pathname.replace(/^\/api/, "");
-    const backendUrl = new URL(
-      rewrittenPath,
-      process.env.NEXT_PUBLIC_API_BASE_URL
-    );
-    backendUrl.search = request.nextUrl.search;
-
-    // Create a new Headers instance from the original headers
-    const requestHeaders = new Headers(request.headers);
-
-    // If no "authorization" header exists, try to get the access token from cookies
-    if (!requestHeaders.has("authorization")) {
-      const accessToken = request.cookies.get("access_token")?.value;
-      if (accessToken) {
-        requestHeaders.set("authorization", `Bearer ${accessToken}`);
+  try {
+    // For public routes
+    if (isPublicPath) {
+      // If user has tokens, redirect to dashboard
+      if (accessToken && refreshToken) {
+        return NextResponse.redirect(new URL("/dashboard", request.url));
       }
+      return NextResponse.next();
     }
 
-    // Rewrite the request to forward it to the backend with the proper headers
-    return NextResponse.rewrite(backendUrl, {
+    // For protected routes
+    if (!accessToken && !refreshToken) {
+      // Store the original path to redirect back after login
+      const loginUrl = new URL("/login", request.url);
+      loginUrl.searchParams.set("callbackUrl", pathname);
+      return NextResponse.redirect(loginUrl);
+    }
+
+    // Clone the request headers and add authorization
+    const requestHeaders = new Headers(request.headers);
+    requestHeaders.set("Authorization", `Bearer ${accessToken}`);
+
+    // Add CSRF token if available and if the request method requires it
+    if (
+      csrfToken &&
+      !["GET", "HEAD", "OPTIONS", "TRACE"].includes(request.method)
+    ) {
+      requestHeaders.set("X-CSRFToken", csrfToken);
+    }
+
+    // Create a new response with modified headers
+    const response = NextResponse.next({
       request: {
         headers: requestHeaders,
       },
     });
+
+    return response;
+  } catch (error) {
+    console.error("Middleware error:", error);
+    // Redirect to login on error
+    return NextResponse.redirect(new URL("/login", request.url));
   }
-
-  // For non-API routes, check if user is authenticated
-  const accessToken = request.cookies.get("access_token")?.value;
-  const refreshToken = request.cookies.get("refresh_token")?.value;
-
-  // If no tokens exist and not on a public path, redirect to login
-  if (!accessToken && !refreshToken && !publicPaths.includes(pathname)) {
-    const loginUrl = new URL("/login", request.url);
-    loginUrl.searchParams.set("from", pathname);
-    return NextResponse.redirect(loginUrl);
-  }
-
-  // Continue with the request
-  return NextResponse.next();
 }
 
 export const config = {
-  // This matcher ensures the middleware runs on appropriate routes
   matcher: [
     /*
-     * Match all request paths except for the ones starting with:
-     * - _next/static (static files)
-     * - _next/image (image optimization files)
-     * - favicon.ico (favicon file)
-     * - public folder
+     * Match all paths except:
+     * - API routes that don't need auth
+     * - Static files
+     * - Public assets
      */
-    "/((?!_next/static|_next/image|favicon.ico|public/).*)",
+    "/((?!_next/static|_next/image|favicon.ico|public|assets/|api/public/).*)",
   ],
 };
