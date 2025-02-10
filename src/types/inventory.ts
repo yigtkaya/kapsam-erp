@@ -34,6 +34,9 @@ export interface Product {
   product_type: ProductType;
   description?: string;
   current_stock: number;
+  created_at: string;
+  modified_at: string;
+  unit: number;
   customer?: Customer;
   inventory_category?: InventoryCategory;
 }
@@ -77,4 +80,11 @@ export interface InventoryTransaction {
   from_category?: InventoryCategory;
   to_category?: InventoryCategory;
   reference_id?: string;
+}
+
+export interface ApiPaginatedResponse<T> {
+  count: number;
+  next: string | null;
+  previous: string | null;
+  results: T[];
 }

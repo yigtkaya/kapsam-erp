@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, Suspense } from "react";
+import React, { Suspense } from "react";
 import RawMaterialsDataTable from "./components/raw-materials-data-table";
 import StandardPartsDataTable from "./components/standart-parts-data-table";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -9,7 +9,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
 
-export default function InventoryTabsPage() {
+export default function RawMaterialsPage() {
   return (
     <div className="p-6 space-y-4">
       <div className="flex justify-between items-start">

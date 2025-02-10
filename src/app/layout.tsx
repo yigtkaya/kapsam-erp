@@ -32,17 +32,21 @@ export default function RootLayout({
   return (
     <html lang="tr">
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased bg-[#f8f9fc]`}
+        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        <QueryProvider>
-          <ProtectedRoute>
-            <div className="min-h-screen w-full">
-              <UnifiedHeader />
-              <main className="w-full">{children}</main>
-            </div>
-          </ProtectedRoute>
-        </QueryProvider>
-        <Toaster />
+        <div className="min-h-screen w-full px-8 bg-[#f8f9fc]">
+          <div className="w-full pt-24 pb-8">
+            <QueryProvider>
+              <ProtectedRoute>
+                <div className="flex flex-col items-center justify-center">
+                  <UnifiedHeader />
+                  <main className="w-full">{children}</main>
+                </div>
+              </ProtectedRoute>
+            </QueryProvider>
+            <Toaster />
+          </div>
+        </div>
       </body>
     </html>
   );

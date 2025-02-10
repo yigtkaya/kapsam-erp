@@ -1,54 +1,38 @@
 import { useQuery } from "@tanstack/react-query";
+import { RawMaterial, ApiPaginatedResponse } from "@/types/inventory";
+import { fetchRawMaterials } from "@/app/warehouse/raw-materials/api/fetch";
 
-interface PaginatedResponse<T> {
-  items: T[];
-  total: number;
-  page: number;
-  page_size: number;
-  total_pages: number;
-}
-
-interface RawMaterial {
-  id: string;
-  material_code: string;
-  material_name: string;
-  current_stock: number;
-  category: string;
-  // Add other raw material fields as needed
-}
-
-interface FetchRawMaterialsParams {
-  category: string;
+interface UseRawMaterialsParams {
+  category?: string;
+  material_name?: string;
+  material_code?: string;
   page?: number;
-  pageSize?: number;
+  page_size?: number;
 }
 
-// Function to fetch raw materials by category with pagination
-async function fetchRawMaterials({
+export function useRawMaterials({
   category,
+  material_name,
+  material_code,
   page = 1,
-  pageSize = 50,
-}: FetchRawMaterialsParams): Promise<PaginatedResponse<RawMaterial>> {
-  const response = await fetch(
-    `/api/raw-materials/?category=${encodeURIComponent(
-      category
-    )}&page=${page}&page_size=${pageSize}`
-  );
-
-  if (!response.ok) {
-    throw new Error("Error fetching raw materials");
-  }
-
-  return response.json();
-}
-
-export function useRawMaterials(
-  category: string,
-  page: number = 1,
-  pageSize: number = 50
-) {
-  return useQuery({
-    queryKey: ["rawMaterials", category, page, pageSize],
-    queryFn: () => fetchRawMaterials({ category, page, pageSize }),
+  page_size = 50,
+}: UseRawMaterialsParams) {
+  return useQuery<ApiPaginatedResponse<RawMaterial>>({
+    queryKey: [
+      "rawMaterials",
+      category,
+      material_name,
+      material_code,
+      page,
+      page_size,
+    ],
+    queryFn: () =>
+      fetchRawMaterials({
+        category,
+        material_name,
+        material_code,
+        page,
+        page_size,
+      }),
   });
 }

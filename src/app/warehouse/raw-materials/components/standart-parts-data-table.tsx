@@ -1,35 +1,60 @@
+"use client";
+
 import React from "react";
-import DataTable, { Column } from "./data-table";
 import { useProducts } from "@/hooks/useProducts";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { Product } from "@/types/inventory";
 
+// This component demonstrates how to fetch products (here, considered as "standard parts")
 export default function StandardPartsDataTable() {
-  const { data, isLoading, error } = useProducts("HAMMADDE", "STANDARD_PART");
+  // Replace these parameters with the actual category and product type for standard parts.
+  const { data, isLoading, error } = useProducts({
+    category: "HAMMADDE",
+    product_type: "STANDARD_PART",
+    page: 1,
+    page_size: 50,
+  });
 
-  const columns: Column[] = [
-    { header: "Product Code", accessor: "product_code" },
-    { header: "Product Name", accessor: "product_name" },
-    { header: "Product Type", accessor: "product_type" },
-    { header: "Current Stock", accessor: "current_stock" },
-  ];
+  if (isLoading) {
+    return <div>Loading standard parts...</div>;
+  }
 
   if (error) {
-    return (
-      <div className="text-center py-4 text-red-600">
-        Error loading standard parts data
-      </div>
-    );
+    return <div>Error loading standard parts: {error.message}</div>;
+  }
+
+  // Check if there are no standard parts returned
+  if (data?.results && data.results.length === 0) {
+    return <div>No standard parts found.</div>;
   }
 
   return (
-    <DataTable
-      columns={columns}
-      data={data?.items || []}
-      page={0}
-      pageSize={0}
-      totalPages={0}
-      onPageChange={function (page: number): void {
-        throw new Error("Function not implemented.");
-      }}
-    />
+    <Table>
+      <TableHeader>
+        <TableRow>
+          <TableCell>ID</TableCell>
+          <TableCell>Product Code</TableCell>
+          <TableCell>Product Name</TableCell>
+          <TableCell>Current Stock</TableCell>
+        </TableRow>
+      </TableHeader>
+      <TableBody>
+        {data?.results.map((product: Product) => (
+          <TableRow key={product.id}>
+            <TableCell>{product.id}</TableCell>
+            <TableCell>{product.product_code}</TableCell>
+            <TableCell>{product.product_name}</TableCell>
+            <TableCell>{product.current_stock}</TableCell>
+          </TableRow>
+        ))}
+      </TableBody>
+    </Table>
   );
 }
