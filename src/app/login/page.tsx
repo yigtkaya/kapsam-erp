@@ -13,8 +13,8 @@ function Footer() {
 
 export default function LoginPage() {
   return (
-    <main className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-white p-4">
-      <div className="w-full max-w-[450px] space-y-8">
+    <div className="flex flex-col items-center justify-center min-h-[calc(100vh-9rem)] w-full">
+      <main className="flex flex-col gap-8 items-center max-w-4xl w-full px-4">
         {/* Logo and Text Container */}
         <div className="text-center space-y-4">
           <div className="flex justify-center">
@@ -55,7 +55,7 @@ export default function LoginPage() {
 
         {/* Footer */}
         <Footer />
-      </div>
-    </main>
+      </main>
+    </div>
   );
 }

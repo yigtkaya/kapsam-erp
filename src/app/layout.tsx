@@ -23,6 +23,7 @@ export const metadata: Metadata = {
 
 // For a dynamic locale, you could accept params in your layout.
 // For now, it just sets a default language.
+// app/layout.tsx
 export default function RootLayout({
   children,
 }: {
@@ -31,19 +32,17 @@ export default function RootLayout({
   return (
     <html lang="tr">
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+        className={`${geistSans.variable} ${geistMono.variable} antialiased bg-[#f8f9fc]`}
       >
-        <div className="min-h-screen bg-[#f8f9fc]">
-          <div className="flex-1 space-y-4 container mx-auto pt-24 pb-8">
-            <QueryProvider>
-              <ProtectedRoute>
-                <UnifiedHeader />
-                {children}
-              </ProtectedRoute>
-            </QueryProvider>
-            <Toaster />
-          </div>
-        </div>
+        <QueryProvider>
+          <ProtectedRoute>
+            <div className="min-h-screen w-full">
+              <UnifiedHeader />
+              <main className="w-full">{children}</main>
+            </div>
+          </ProtectedRoute>
+        </QueryProvider>
+        <Toaster />
       </body>
     </html>
   );
