@@ -6,9 +6,10 @@ import { Button } from "@/components/ui/button";
 import { useState } from "react";
 import { cn } from "@/lib/utils";
 import { User } from "@/types/auth";
-import { logout } from "@/lib/auth";
+import { useAuth } from "@/hooks/use-auth";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
+
 interface DashboardHeaderProps {
   user: User;
 }
@@ -16,16 +17,7 @@ interface DashboardHeaderProps {
 export function DashboardHeader({ user }: DashboardHeaderProps) {
   const [isVisible, setIsVisible] = useState(false);
   const router = useRouter();
-
-  const handleLogout = async () => {
-    const response = await logout();
-
-    if (response.success) {
-      router.push("/login");
-    } else {
-      toast.error(response.message);
-    }
-  };
+  const { logout } = useAuth();
 
   return (
     <header
@@ -53,17 +45,15 @@ export function DashboardHeader({ user }: DashboardHeaderProps) {
               {user?.username ?? user?.email}{" "}
               <span className="text-gray-400">({user?.role})</span>
             </span>
-            <form action={handleLogout}>
-              <Button
-                type="submit"
-                variant="ghost"
-                size="sm"
-                className="text-gray-600 hover:text-red-600 transition-colors group"
-              >
-                <LogOut className="h-4 w-4 mr-2 group-hover:text-red-600" />
-                Çıkış Yap
-              </Button>
-            </form>
+            <Button
+              onClick={logout}
+              variant="ghost"
+              size="sm"
+              className="text-gray-600 hover:text-red-600 transition-colors group"
+            >
+              <LogOut className="h-4 w-4 mr-2 group-hover:text-red-600" />
+              Çıkış Yap
+            </Button>
           </div>
         </div>
       </div>

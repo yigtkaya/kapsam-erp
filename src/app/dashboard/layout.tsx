@@ -1,7 +1,8 @@
 "use client";
 
 import { DashboardHeader } from "@/components/dashboard-header";
-import { useAuth } from "@/providers/auth-provider";
+import { useAuth } from "@/hooks/use-auth";
+import { User } from "@/types/auth";
 
 export default function DashboardLayout({
   children,
@@ -12,7 +13,7 @@ export default function DashboardLayout({
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <DashboardHeader user={user as unknown as SafeUser} />
+      <DashboardHeader user={user as unknown as User} />
       <div className="flex-1 space-y-4 container mx-auto pt-24 pb-8">
         {children}
       </div>

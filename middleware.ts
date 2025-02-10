@@ -12,8 +12,12 @@ export async function middleware(request: NextRequest) {
     (path) => pathname.startsWith(path) || pathname === "/"
   );
 
-  // For public routes, proceed without checks
+  // For public routes, if user is already authenticated, redirect to dashboard
   if (isPublicPath) {
+    const sessionId = request.cookies.get("sessionid");
+    if (sessionId) {
+      return NextResponse.redirect(new URL("/dashboard", request.url));
+    }
     return NextResponse.next();
   }
 
@@ -21,8 +25,8 @@ export async function middleware(request: NextRequest) {
   const sessionId = request.cookies.get("sessionid");
   const csrfToken = request.cookies.get("csrftoken");
 
-  // If no session, redirect to login
-  if (!sessionId) {
+  // If no session or CSRF token, redirect to login
+  if (!sessionId || !csrfToken) {
     const loginUrl = new URL("/login", request.url);
     loginUrl.searchParams.set("callbackUrl", pathname);
     const response = NextResponse.redirect(loginUrl);

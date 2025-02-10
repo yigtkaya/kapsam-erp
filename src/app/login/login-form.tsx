@@ -6,36 +6,48 @@ import { Label } from "@/components/ui/label";
 import { useState } from "react";
 import { Loader2, Eye, EyeOff } from "lucide-react";
 import { toast } from "sonner";
-import { login } from "@/app/login/action";
+import { login } from "./action";
 import { useRouter } from "next/navigation";
+import type { User } from "@/types/auth"; // assume this defines your User type
 
 export default function LoginForm() {
-  const router = useRouter();
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
-  const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const router = useRouter();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError(null);
     setIsLoading(true);
 
     try {
-      const result = await login(username, password);
-      if (result?.error) {
-        throw new Error(result.error);
+      const data = await login(username, password);
+
+      if (data.error) {
+        toast.error(data.error);
+        setIsLoading(false);
+        return;
       }
+
       toast.success("Başarıyla giriş yapıldı");
-      router.push("/dashboard");
-    } catch (error: any) {
-      const errorMessage = error.message || "Giriş yapılırken bir hata oluştu";
-      setError(errorMessage);
-      toast.error(errorMessage, {
-        duration: 5000,
-      });
-    } finally {
+
+      // Add a small delay to ensure cookies are properly set
+      await new Promise((resolve) => setTimeout(resolve, 200));
+
+      // Force a router refresh to update server state
+      router.refresh();
+
+      // Redirect to callback URL if exists, otherwise go to dashboard
+      const params = new URLSearchParams(window.location.search);
+      const callbackUrl = params.get("callbackUrl") ?? "/dashboard";
+      window.location.href = callbackUrl;
+    } catch (error) {
+      if (error instanceof Error) {
+        toast.error(error.message);
+      } else {
+        toast.error("Beklenmeyen bir hata oluştu");
+      }
       setIsLoading(false);
     }
   };

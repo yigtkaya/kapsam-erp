@@ -12,41 +12,41 @@ export async function login(username: string, password: string) {
     }
 
     const { user, csrfToken, sessionid } = data;
-
-    // Set cookies server-side
     const cookieStore = await cookies();
 
-    console.log(csrfToken, sessionid);
-
-    // Set CSRF token if available
     if (csrfToken) {
-      cookieStore.set({
-        name: "csrftoken",
-        value: csrfToken,
-        httpOnly: false, // Need to be accessible from JavaScript
-        secure: process.env.NODE_ENV === "production",
-        sameSite: "lax",
+      cookieStore.set("csrftoken", csrfToken, {
         path: "/",
-        maxAge: 60 * 60 * 24, // 1 day
+        httpOnly: true,
+        sameSite: "lax",
+        secure: process.env.NODE_ENV === "production",
       });
     }
 
     if (sessionid) {
-      const sessionidCookie = sessionid.split("=")[1];
-      cookieStore.set({
-        name: "sessionid",
-        value: sessionidCookie,
-        httpOnly: false, // Need to be accessible from JavaScript
-        secure: process.env.NODE_ENV === "production",
-        sameSite: "lax",
+      const sessionidCookie = sessionid.split("=")[1].split(";")[0];
+      cookieStore.set("sessionid", sessionidCookie, {
         path: "/",
-        maxAge: 60 * 60 * 24, // 1 day
+        httpOnly: true,
+        sameSite: "lax",
+        secure: process.env.NODE_ENV === "production",
       });
     }
 
-    return { user };
-  } catch (error: any) {
-    console.error(error);
-    return { error: error.message || "Bir hata oluştu" };
+    // Add a small delay to ensure cookies are set
+    await new Promise((resolve) => setTimeout(resolve, 100));
+
+    // Return a plain object with success flag
+    return { success: true, user };
+  } catch (error) {
+    console.error("Login error:", error);
+    if (error instanceof Error) {
+      return {
+        error: error.message,
+      };
+    }
+    return {
+      error: "Giriş yapılırken bir hata oluştu",
+    };
   }
 }

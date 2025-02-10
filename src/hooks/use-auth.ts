@@ -32,13 +32,21 @@ export function useAuth() {
       const response = await loginApi(username, password);
       return response;
     },
-    onSuccess: (data: AuthResponse) => {
-      // Invalidate and refetch session data
-      queryClient.setQueryData(["session"], {
-        isAuthenticated: true,
-        user: data.user,
-      });
-      router.push("/dashboard");
+    onSuccess: async (data: AuthResponse) => {
+      if (data.success && data.user) {
+        queryClient.setQueryData(["session"], {
+          isAuthenticated: true,
+          user: data.user,
+        });
+
+        // Add a small delay to ensure state is updated
+        await new Promise((resolve) => setTimeout(resolve, 100));
+
+        // Force a router refresh to update server state
+        router.refresh();
+      } else {
+        throw new Error(data.message || "Login failed");
+      }
     },
   });
 
@@ -46,19 +54,19 @@ export function useAuth() {
   const { mutateAsync: logout } = useMutation({
     mutationFn: logoutApi,
     onSuccess: () => {
-      // Clear session data
       queryClient.setQueryData(["session"], {
         isAuthenticated: false,
         user: null,
       });
+      queryClient.clear(); // Clear all query cache
       router.push("/login");
     },
     onError: () => {
-      // Even if logout fails on the server, we clear the local state
       queryClient.setQueryData(["session"], {
         isAuthenticated: false,
         user: null,
       });
+      queryClient.clear(); // Clear all query cache
       router.push("/login");
     },
   });

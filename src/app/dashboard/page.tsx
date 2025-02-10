@@ -2,7 +2,7 @@
 
 // create a dashboard page using dashboard modules, use name, as a title. Hoşgeldiniz, {name}
 
-import { useAuth } from "@/providers/auth-provider";
+import { useAuth } from "@/hooks/use-auth";
 import { DashboardModules } from "./dashboard-modules";
 
 export default function Dashboard() {

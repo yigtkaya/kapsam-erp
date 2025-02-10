@@ -4,58 +4,36 @@ import { useAuth } from "@/hooks/use-auth";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect } from "react";
 
-interface ProtectedRouteProps {
-  children: React.ReactNode;
-}
-
 const PUBLIC_ROUTES = ["/login", "/forgot-password", "/register", "/"];
 
-export function ProtectedRoute({ children }: ProtectedRouteProps) {
+export function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { user, isAuthenticated, isLoading } = useAuth();
   const pathname = usePathname();
   const router = useRouter();
 
-  const isPublicRoute = PUBLIC_ROUTES.some((route) =>
-    pathname.startsWith(route)
-  );
+  const isPublicRoute = PUBLIC_ROUTES.includes(pathname);
 
   useEffect(() => {
-    if (!isLoading) {
-      if (!isPublicRoute && !isAuthenticated) {
-        const currentPath = pathname;
-        router.replace(`/login?callbackUrl=${encodeURIComponent(currentPath)}`);
-        return;
-      }
+    if (isLoading) return;
 
-      // Redirect authenticated users away from public routes
-      if (isAuthenticated && isPublicRoute) {
-        router.replace("/dashboard");
-      }
+    // Redirect unauthenticated users from private routes
+    if (!isPublicRoute && !isAuthenticated) {
+      router.push(`/login`);
     }
-  }, [isLoading, isAuthenticated, isPublicRoute, router, pathname]);
 
-  // For public routes, show content regardless of auth state
-  if (isPublicRoute) {
-    return <>{children}</>;
-  }
+    // Redirect authenticated users from public routes
+    if (isAuthenticated && isPublicRoute) {
+      router.push("/dashboard");
+    }
+  }, [isAuthenticated, isLoading, isPublicRoute, pathname, router]);
 
-  // Show loading state while checking auth
-  if (isLoading) {
+  if ((isLoading || !isAuthenticated) && !isPublicRoute) {
     return (
-      <div className="flex h-screen w-screen items-center justify-center">
-        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-gray-900" />
+      <div className="grid place-items-center h-screen">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900" />
       </div>
     );
   }
 
-  // Only render children if user is authenticated
-  if (!isAuthenticated || !user) {
-    return (
-      <div className="flex h-screen w-screen items-center justify-center">
-        <div>Redirecting to login...</div>
-      </div>
-    );
-  }
-
-  return <>{children}</>;
+  return children;
 }
