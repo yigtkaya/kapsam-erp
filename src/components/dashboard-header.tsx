@@ -1,23 +1,24 @@
 "use client";
 
+import { usePathname } from "next/navigation";
 import { LogOut } from "lucide-react";
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { useState } from "react";
 import { cn } from "@/lib/utils";
-import { User } from "@/types/auth";
 import { useAuth } from "@/hooks/use-auth";
-import { useRouter } from "next/navigation";
-import { toast } from "sonner";
 
-interface DashboardHeaderProps {
-  user: User;
-}
-
-export function DashboardHeader({ user }: DashboardHeaderProps) {
+export function UnifiedHeader() {
   const [isVisible, setIsVisible] = useState(false);
-  const router = useRouter();
-  const { logout } = useAuth();
+  const pathname = usePathname();
+  const { user, logout } = useAuth();
+
+  // List the routes where the header should NOT display.
+  const excludedRoutes = ["/login", "/register", "/forgot-password"];
+
+  if (excludedRoutes.includes(pathname)) {
+    return null;
+  }
 
   return (
     <header
@@ -46,7 +47,7 @@ export function DashboardHeader({ user }: DashboardHeaderProps) {
               <span className="text-gray-400">({user?.role})</span>
             </span>
             <Button
-              onClick={logout}
+              onClick={() => logout()}
               variant="ghost"
               size="sm"
               className="text-gray-600 hover:text-red-600 transition-colors group"

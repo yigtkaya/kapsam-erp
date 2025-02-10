@@ -2,6 +2,8 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Your custom styles can come after */
+
 body {
   font-family: Arial, Helvetica, sans-serif;
 }

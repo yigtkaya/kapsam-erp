@@ -1,5 +1,15 @@
+"use client";
+
 import Image from "next/image";
 import LoginForm from "./login-form";
+
+function Footer() {
+  return (
+    <div className="text-center text-sm text-gray-500">
+      <p>© {new Date().getFullYear()} Kapsam Makina</p>
+    </div>
+  );
+}
 
 export default function LoginPage() {
   return (
@@ -44,9 +54,7 @@ export default function LoginPage() {
         </div>
 
         {/* Footer */}
-        <div className="text-center text-sm text-gray-500">
-          <p>© {new Date().getFullYear()} Kapsam Makina</p>
-        </div>
+        <Footer />
       </div>
     </main>
   );

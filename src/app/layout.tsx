@@ -4,6 +4,7 @@ import "./globals.css";
 import { QueryProvider } from "@/providers/query-provider";
 import { ProtectedRoute } from "@/providers/protected-route";
 import { Toaster } from "sonner";
+import { UnifiedHeader } from "@/components/dashboard-header";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -33,7 +34,10 @@ export default function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
         <QueryProvider>
-          <ProtectedRoute>{children}</ProtectedRoute>
+          <ProtectedRoute>
+            <UnifiedHeader />
+            {children}
+          </ProtectedRoute>
         </QueryProvider>
         <Toaster />
       </body>
