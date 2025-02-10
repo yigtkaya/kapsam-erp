@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 
 // Add paths that don't require authentication
-const publicPaths = ["/login", "/forgot-password", "/register", "/api/auth"];
+const publicPaths = ["/login", "/forgot-password", "/register", "/auth"];
 
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
@@ -12,54 +12,53 @@ export async function middleware(request: NextRequest) {
     (path) => pathname.startsWith(path) || pathname === "/"
   );
 
-  // Get authentication tokens from cookies
-  const accessToken = request.cookies.get("access_token")?.value;
-  const refreshToken = request.cookies.get("refresh_token")?.value;
-  const csrfToken = request.cookies.get("csrftoken")?.value;
+  // For public routes, proceed without checks
+  if (isPublicPath) {
+    return NextResponse.next();
+  }
 
-  try {
-    // For public routes
-    if (isPublicPath) {
-      // If user has tokens, redirect to dashboard
-      if (accessToken && refreshToken) {
-        return NextResponse.redirect(new URL("/dashboard", request.url));
-      }
-      return NextResponse.next();
-    }
+  // Get session cookie
+  const sessionId = request.cookies.get("sessionid");
+  const csrfToken = request.cookies.get("csrftoken");
 
-    // For protected routes
-    if (!accessToken && !refreshToken) {
-      // Store the original path to redirect back after login
-      const loginUrl = new URL("/login", request.url);
-      loginUrl.searchParams.set("callbackUrl", pathname);
-      return NextResponse.redirect(loginUrl);
-    }
+  // If no session, redirect to login
+  if (!sessionId) {
+    const loginUrl = new URL("/login", request.url);
+    loginUrl.searchParams.set("callbackUrl", pathname);
+    const response = NextResponse.redirect(loginUrl);
 
-    // Clone the request headers and add authorization
-    const requestHeaders = new Headers(request.headers);
-    requestHeaders.set("Authorization", `Bearer ${accessToken}`);
-
-    // Add CSRF token if available and if the request method requires it
-    if (
-      csrfToken &&
-      !["GET", "HEAD", "OPTIONS", "TRACE"].includes(request.method)
-    ) {
-      requestHeaders.set("X-CSRFToken", csrfToken);
-    }
-
-    // Create a new response with modified headers
-    const response = NextResponse.next({
-      request: {
-        headers: requestHeaders,
-      },
-    });
+    // Clear any existing cookies when redirecting to login
+    response.cookies.delete("sessionid");
+    response.cookies.delete("csrftoken");
 
     return response;
-  } catch (error) {
-    console.error("Middleware error:", error);
-    // Redirect to login on error
-    return NextResponse.redirect(new URL("/login", request.url));
   }
+
+  // Clone the request headers
+  const requestHeaders = new Headers(request.headers);
+
+  // Add CSRF token to all non-GET requests if available
+  if (
+    csrfToken &&
+    !["GET", "HEAD", "OPTIONS", "TRACE"].includes(request.method)
+  ) {
+    requestHeaders.set("Content-Type", "application/json");
+    requestHeaders.set("X-CSRFToken", csrfToken.value);
+    requestHeaders.set("sessionid", sessionId.value);
+    requestHeaders.set(
+      "Cookie",
+      `${sessionId.name}=${sessionId.value}; ${csrfToken.name}=${csrfToken.value}`
+    );
+  }
+
+  // Create a new response with modified headers
+  const response = NextResponse.next({
+    request: {
+      headers: requestHeaders,
+    },
+  });
+
+  return response;
 }
 
 export const config = {

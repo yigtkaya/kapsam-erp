@@ -6,13 +6,14 @@ import { Label } from "@/components/ui/label";
 import { useState } from "react";
 import { Loader2, Eye, EyeOff } from "lucide-react";
 import { toast } from "sonner";
-import { useAuth } from "@/hooks/use-auth";
+import { login } from "@/app/login/action";
+import { useRouter } from "next/navigation";
 
 export default function LoginForm() {
+  const router = useRouter();
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
-  const { login } = useAuth();
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
 
@@ -22,8 +23,12 @@ export default function LoginForm() {
     setIsLoading(true);
 
     try {
-      await login(username, password);
+      const result = await login(username, password);
+      if (result?.error) {
+        throw new Error(result.error);
+      }
       toast.success("Başarıyla giriş yapıldı");
+      router.push("/dashboard");
     } catch (error: any) {
       const errorMessage = error.message || "Giriş yapılırken bir hata oluştu";
       setError(errorMessage);
@@ -42,6 +47,7 @@ export default function LoginForm() {
         <Input
           id="username"
           type="text"
+          className="text-black"
           placeholder="Kullanıcı adınızı giriniz"
           value={username}
           onChange={(e) => setUsername(e.target.value)}
@@ -57,6 +63,7 @@ export default function LoginForm() {
             type={showPassword ? "text" : "password"}
             placeholder="Şifrenizi giriniz"
             value={password}
+            className="text-black"
             onChange={(e) => setPassword(e.target.value)}
             required
           />

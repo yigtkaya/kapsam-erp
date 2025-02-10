@@ -5,15 +5,27 @@ import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { useState } from "react";
 import { cn } from "@/lib/utils";
-import { logout } from "@/app/login/action";
 import { User } from "@/types/auth";
-
+import { logout } from "@/lib/auth";
+import { useRouter } from "next/navigation";
+import { toast } from "sonner";
 interface DashboardHeaderProps {
   user: User;
 }
 
 export function DashboardHeader({ user }: DashboardHeaderProps) {
   const [isVisible, setIsVisible] = useState(false);
+  const router = useRouter();
+
+  const handleLogout = async () => {
+    const response = await logout();
+
+    if (response.success) {
+      router.push("/login");
+    } else {
+      toast.error(response.message);
+    }
+  };
 
   return (
     <header
@@ -41,7 +53,7 @@ export function DashboardHeader({ user }: DashboardHeaderProps) {
               {user?.username ?? user?.email}{" "}
               <span className="text-gray-400">({user?.role})</span>
             </span>
-            <form action={logout}>
+            <form action={handleLogout}>
               <Button
                 type="submit"
                 variant="ghost"

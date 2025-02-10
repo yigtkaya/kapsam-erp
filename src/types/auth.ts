@@ -8,9 +8,8 @@ export interface User {
 
 export interface AuthResponse {
   success: boolean;
-  user: User;
-  access: string;
-  refresh: string;
+  user?: User;
   csrfToken?: string;
   message?: string;
+  sessionid?: string;
 }
