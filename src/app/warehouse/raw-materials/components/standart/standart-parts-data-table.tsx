@@ -1,7 +1,9 @@
 "use client";
 
-import React from "react";
+import React, { useState } from "react";
 import { useProducts } from "@/hooks/useProducts";
+import { Product } from "@/types/inventory";
+import { standardPartsColumns } from "./columns";
 import {
   Table,
   TableBody,
@@ -10,51 +12,120 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Product } from "@/types/inventory";
+import {
+  flexRender,
+  getCoreRowModel,
+  getPaginationRowModel,
+  getSortedRowModel,
+  SortingState,
+  VisibilityState,
+  getFilteredRowModel,
+  ColumnFiltersState,
+  useReactTable,
+} from "@tanstack/react-table";
+import { DataTablePagination } from "@/components/ui/data-table-pagination";
+import { DataTableViewOptions } from "@/components/ui/data-table-view-options";
+import { DataTableSkeleton } from "@/components/ui/data-table-skeleton";
 
 // This component demonstrates how to fetch products (here, considered as "standard parts")
 export default function StandardPartsDataTable() {
-  // Replace these parameters with the actual category and product type for standard parts.
+  const [sorting, setSorting] = useState<SortingState>([]);
+  const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
+  const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({});
+  const [pageIndex, setPageIndex] = useState(0);
+  const [pageSize, setPageSize] = useState(10);
+
   const { data, isLoading, error } = useProducts({
     category: "HAMMADDE",
     product_type: "STANDARD_PART",
-    page: 1,
-    page_size: 50,
+    page: pageIndex + 1,
+    page_size: pageSize,
+  });
+
+  const table = useReactTable({
+    data: data?.results ?? [],
+    columns: standardPartsColumns,
+    getCoreRowModel: getCoreRowModel(),
+    getPaginationRowModel: getPaginationRowModel(),
+    getSortedRowModel: getSortedRowModel(),
+    getFilteredRowModel: getFilteredRowModel(),
+    onSortingChange: setSorting,
+    onColumnFiltersChange: setColumnFilters,
+    onColumnVisibilityChange: setColumnVisibility,
+    state: {
+      sorting,
+      columnFilters,
+      columnVisibility,
+      pagination: {
+        pageIndex,
+        pageSize,
+      },
+    },
+    pageCount: data ? Math.ceil(data.count / pageSize) : -1,
+    onPaginationChange: (updater) => {
+      if (typeof updater === "function") {
+        const newState = updater({
+          pageIndex,
+          pageSize,
+        });
+        setPageIndex(newState.pageIndex);
+        setPageSize(newState.pageSize);
+      }
+    },
+    manualPagination: true,
   });
 
   if (isLoading) {
-    return <div>Loading standard parts...</div>;
+    return <DataTableSkeleton />;
   }
 
   if (error) {
-    return <div>Error loading standard parts: {error.message}</div>;
+    return (
+      <div className="rounded-md bg-red-50 p-4 text-sm text-red-500">
+        Error loading standard parts: {error.message}
+      </div>
+    );
   }
 
-  // Check if there are no standard parts returned
-  if (data?.results && data.results.length === 0) {
-    return <div>No standard parts found.</div>;
+  if (!data?.results || data.results.length === 0) {
+    return (
+      <div className="text-center py-10 text-muted-foreground">
+        No standard parts found.
+      </div>
+    );
   }
 
   return (
-    <Table>
-      <TableHeader>
-        <TableRow>
-          <TableCell>ID</TableCell>
-          <TableCell>Product Code</TableCell>
-          <TableCell>Product Name</TableCell>
-          <TableCell>Current Stock</TableCell>
-        </TableRow>
-      </TableHeader>
-      <TableBody>
-        {data?.results.map((product: Product) => (
-          <TableRow key={product.id}>
-            <TableCell>{product.id}</TableCell>
-            <TableCell>{product.product_code}</TableCell>
-            <TableCell>{product.product_name}</TableCell>
-            <TableCell>{product.current_stock}</TableCell>
-          </TableRow>
-        ))}
-      </TableBody>
-    </Table>
+    <div className="space-y-4">
+      <div className="rounded-md border border-muted/200 shadow-sm bg-background">
+        <Table>
+          <TableHeader className="bg-muted/90">
+            <TableRow>
+              {table.getFlatHeaders().map((header) => (
+                <TableHead key={header.id}>
+                  {flexRender(
+                    header.column.columnDef.header,
+                    header.getContext()
+                  )}
+                </TableHead>
+              ))}
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {table.getRowModel().rows.map((row) => (
+              <TableRow key={row.id} className="hover:bg-muted/90">
+                {row.getVisibleCells().map((cell) => (
+                  <TableCell key={cell.id}>
+                    {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                  </TableCell>
+                ))}
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </div>
+
+      <DataTablePagination table={table} />
+    </div>
   );
 }

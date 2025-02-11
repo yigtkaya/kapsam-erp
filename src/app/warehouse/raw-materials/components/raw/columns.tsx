@@ -20,7 +20,7 @@ export const rawMaterialsColumns: ColumnDef<RawMaterial>[] = [
   {
     id: "select",
     header: ({ table }) => (
-      <div className="pl-2">
+      <div className="pl-4">
         <Checkbox
           checked={table.getIsAllPageRowsSelected()}
           onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}

@@ -46,19 +46,17 @@ export default function RawMaterialsPage() {
           </Suspense>
         </TabsContent>
         <TabsContent value="standard-parts">
-          <Card className="p-4">
-            <Suspense
-              fallback={
-                <div className="space-y-3">
-                  <Skeleton className="h-8 w-full" />
-                  <Skeleton className="h-8 w-full" />
-                  <Skeleton className="h-8 w-full" />
-                </div>
-              }
-            >
-              <StandardPartsDataTable />
-            </Suspense>
-          </Card>
+          <Suspense
+            fallback={
+              <div className="space-y-3">
+                <Skeleton className="h-8 w-full" />
+                <Skeleton className="h-8 w-full" />
+                <Skeleton className="h-8 w-full" />
+              </div>
+            }
+          >
+            <StandardPartsDataTable />
+          </Suspense>
         </TabsContent>
       </Tabs>
     </div>
