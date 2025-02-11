@@ -1,8 +1,8 @@
 "use client";
 
 import React, { Suspense } from "react";
-import RawMaterialsDataTable from "./components/raw-materials-data-table";
-import StandardPartsDataTable from "./components/standart-parts-data-table";
+import RawMaterialsDataTable from "./components/raw/raw-materials-data-table";
+import StandardPartsDataTable from "./components/standart/standart-parts-data-table";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -33,19 +33,17 @@ export default function RawMaterialsPage() {
           <TabsTrigger value="standard-parts">Standart Parçalar</TabsTrigger>
         </TabsList>
         <TabsContent value="raw-materials">
-          <Card className="p-4">
-            <Suspense
-              fallback={
-                <div className="space-y-3">
-                  <Skeleton className="h-8 w-full" />
-                  <Skeleton className="h-8 w-full" />
-                  <Skeleton className="h-8 w-full" />
-                </div>
-              }
-            >
-              <RawMaterialsDataTable />
-            </Suspense>
-          </Card>
+          <Suspense
+            fallback={
+              <div className="space-y-3">
+                <Skeleton className="h-8 w-full" />
+                <Skeleton className="h-8 w-full" />
+                <Skeleton className="h-8 w-full" />
+              </div>
+            }
+          >
+            <RawMaterialsDataTable />
+          </Suspense>
         </TabsContent>
         <TabsContent value="standard-parts">
           <Card className="p-4">
