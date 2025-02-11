@@ -101,7 +101,6 @@ export async function fetchProducts({
       },
     }
   );
-  console.log(response);
 
   if (!response.ok) {
     return {

@@ -2,7 +2,6 @@
 
 import React, { useState } from "react";
 import { useProducts } from "@/hooks/useProducts";
-import { Product } from "@/types/inventory";
 import { standardPartsColumns } from "./columns";
 import {
   Table,
@@ -24,7 +23,6 @@ import {
   useReactTable,
 } from "@tanstack/react-table";
 import { DataTablePagination } from "@/components/ui/data-table-pagination";
-import { DataTableViewOptions } from "@/components/ui/data-table-view-options";
 import { DataTableSkeleton } from "@/components/ui/data-table-skeleton";
 
 // This component demonstrates how to fetch products (here, considered as "standard parts")

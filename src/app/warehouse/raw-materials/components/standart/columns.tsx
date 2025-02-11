@@ -19,7 +19,7 @@ export const standardPartsColumns: ColumnDef<Product>[] = [
   {
     id: "select",
     header: ({ table }) => (
-      <div className="pl-4">
+      <div className="flex justify-center items-center">
         <Checkbox
           checked={table.getIsAllPageRowsSelected()}
           onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
@@ -28,7 +28,7 @@ export const standardPartsColumns: ColumnDef<Product>[] = [
       </div>
     ),
     cell: ({ row }) => (
-      <div className="px-4">
+      <div className="flex justify-center items-center">
         <Checkbox
           checked={row.getIsSelected()}
           onCheckedChange={(value) => row.toggleSelected(!!value)}
@@ -43,11 +43,15 @@ export const standardPartsColumns: ColumnDef<Product>[] = [
     id: "product_code",
     accessorFn: (row: Product) => row.product_code,
     header: ({ column }) => (
-      <div className="pl-2">
+      <div className="flex justify-center items-center">
         <DataTableColumnHeader column={column} title="Ürün Kodu" />
       </div>
     ),
-    cell: ({ row }) => row.original.product_code,
+    cell: ({ row }) => (
+      <div className="flex justify-center items-center">
+        {row.original.product_code}
+      </div>
+    ),
     enableSorting: true,
     enableHiding: false,
   },
@@ -55,11 +59,49 @@ export const standardPartsColumns: ColumnDef<Product>[] = [
     id: "product_name",
     accessorFn: (row: Product) => row.product_name,
     header: ({ column }) => (
-      <div className="pl-2">
+      <div className="flex justify-center items-center">
         <DataTableColumnHeader column={column} title="Ürün Adı" />
       </div>
     ),
-    cell: ({ row }) => row.original.product_name,
+    cell: ({ row }) => (
+      <div className="flex justify-center items-center">
+        {row.original.product_name}
+      </div>
+    ),
+    enableSorting: true,
+    enableHiding: false,
+  },
+  {
+    id: "technical_drawing",
+    accessorFn: (row: Product) =>
+      row.technical_drawings?.find((drawing) => drawing.is_current)
+        ?.drawing_code,
+    header: ({ column }) => (
+      <div className="flex justify-center items-center">
+        <DataTableColumnHeader column={column} title="Teknik Çizim Kodu" />
+      </div>
+    ),
+    cell: ({ row }) => {
+      const currentDrawing = row.original.technical_drawings?.find(
+        (drawing) => drawing.is_current
+      );
+      return (
+        <div className="flex justify-center items-center">
+          {currentDrawing && currentDrawing.drawing_url ? (
+            <Link
+              href={currentDrawing.drawing_url}
+              className="hover:text-blue-700"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              {currentDrawing.drawing_code}
+            </Link>
+          ) : (
+            <span>{currentDrawing?.drawing_code ?? "-"}</span>
+          )}
+        </div>
+      );
+    },
     enableSorting: true,
     enableHiding: false,
   },
@@ -67,18 +109,27 @@ export const standardPartsColumns: ColumnDef<Product>[] = [
     id: "current_stock",
     accessorFn: (row: Product) => row.current_stock,
     header: ({ column }) => (
-      <div className="pl-2">
+      <div className="flex justify-center items-center">
         <DataTableColumnHeader column={column} title="Stok Miktarı" />
       </div>
     ),
-    cell: ({ row }) => row.original.current_stock,
+    cell: ({ row }) => (
+      <div className="flex justify-center items-center">
+        {row.original.current_stock}
+      </div>
+    ),
     enableSorting: true,
   },
   {
     id: "actions",
+    header: ({ column }) => (
+      <div className="flex justify-center items-center">
+        <DataTableColumnHeader column={column} title="İşlemler" />
+      </div>
+    ),
     cell: ({ row }) => {
       return (
-        <div className="text-right">
+        <div className="flex justify-center items-center">
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" className="h-8 w-8 p-0">
@@ -89,13 +140,13 @@ export const standardPartsColumns: ColumnDef<Product>[] = [
               <DropdownMenuItem asChild>
                 <Link
                   href={`/warehouse/raw-materials/standard/${row.original.id}`}
-                  className="flex items-center"
+                  className="flex items-center justify-center"
                 >
                   <Pen className="mr-2 h-4 w-4" />
                   <span>Düzenle</span>
                 </Link>
               </DropdownMenuItem>
-              <DropdownMenuItem className="text-red-600">
+              <DropdownMenuItem className="text-red-600 flex items-center justify-center">
                 <Trash className="mr-2 h-4 w-4" />
                 <span>Sil</span>
               </DropdownMenuItem>

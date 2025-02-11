@@ -58,6 +58,7 @@ export interface Product {
   unit: number;
   customer?: Customer;
   inventory_category?: InventoryCategory;
+  technical_drawings?: TechnicalDrawing[];
 }
 
 // Technical Drawing

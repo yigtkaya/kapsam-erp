@@ -20,7 +20,7 @@ export const rawMaterialsColumns: ColumnDef<RawMaterial>[] = [
   {
     id: "select",
     header: ({ table }) => (
-      <div className="pl-4">
+      <div className="flex justify-center items-center">
         <Checkbox
           checked={table.getIsAllPageRowsSelected()}
           onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
@@ -29,7 +29,7 @@ export const rawMaterialsColumns: ColumnDef<RawMaterial>[] = [
       </div>
     ),
     cell: ({ row }) => (
-      <div className="px-4">
+      <div className="flex justify-center items-center">
         <Checkbox
           checked={row.getIsSelected()}
           onCheckedChange={(value) => row.toggleSelected(!!value)}
@@ -44,12 +44,14 @@ export const rawMaterialsColumns: ColumnDef<RawMaterial>[] = [
     id: "material_code",
     accessorFn: (row: RawMaterial) => row.material_code,
     header: ({ column }) => (
-      <div className="pl-2">
+      <div className="flex justify-center items-center">
         <DataTableColumnHeader column={column} title="Malzeme Kodu" />
       </div>
     ),
     cell: ({ row }) => (
-      <div className="text-center py-2">{row.original.material_code}</div>
+      <div className="flex justify-center items-center">
+        {row.original.material_code}
+      </div>
     ),
     enableSorting: true,
     enableHiding: false,
@@ -63,7 +65,9 @@ export const rawMaterialsColumns: ColumnDef<RawMaterial>[] = [
       </div>
     ),
     cell: ({ row }) => (
-      <div className="text-center py-2">{row.original.material_name}</div>
+      <div className="flex justify-center items-center">
+        {row.original.material_name}
+      </div>
     ),
     enableSorting: true,
     enableHiding: false,
@@ -77,7 +81,9 @@ export const rawMaterialsColumns: ColumnDef<RawMaterial>[] = [
       </div>
     ),
     cell: ({ row }) => (
-      <div className="text-center py-2">{row.original.current_stock}</div>
+      <div className="flex justify-center items-center">
+        {row.original.current_stock}
+      </div>
     ),
     enableSorting: true,
   },
@@ -162,9 +168,14 @@ export const rawMaterialsColumns: ColumnDef<RawMaterial>[] = [
   },
   {
     id: "actions",
+    header: ({ column }) => (
+      <div className="flex justify-center items-center">
+        <DataTableColumnHeader column={column} title="İşlemler" />
+      </div>
+    ),
     cell: ({ row }) => {
       return (
-        <div className="text-right">
+        <div className="flex justify-center items-center">
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" className="h-8 w-8 p-0">

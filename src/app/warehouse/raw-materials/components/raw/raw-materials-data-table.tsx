@@ -101,7 +101,7 @@ export default function RawMaterialsDataTable() {
           <TableHeader className="bg-muted/90">
             <TableRow>
               {table.getFlatHeaders().map((header) => (
-                <TableHead key={header.id}>
+                <TableHead key={header.id} className="text-center">
                   {flexRender(
                     header.column.columnDef.header,
                     header.getContext()
@@ -114,7 +114,7 @@ export default function RawMaterialsDataTable() {
             {table.getRowModel().rows.map((row) => (
               <TableRow key={row.id} className="hover:bg-muted/90">
                 {row.getVisibleCells().map((cell) => (
-                  <TableCell key={cell.id}>
+                  <TableCell key={cell.id} className="text-center">
                     {flexRender(cell.column.columnDef.cell, cell.getContext())}
                   </TableCell>
                 ))}
