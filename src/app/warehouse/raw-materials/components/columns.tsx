@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import { ColumnDef } from "@tanstack/react-table";
-import { ArrowUpDown, MoreHorizontal, Pen, Trash } from "lucide-react";
+import { MoreHorizontal, Pen, Trash } from "lucide-react";
 import { DataTableColumnHeader } from "@/components/ui/column-header";
 import {
   DropdownMenu,

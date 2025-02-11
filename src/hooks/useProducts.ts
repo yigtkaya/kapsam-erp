@@ -1,6 +1,7 @@
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { fetchProducts } from "@/app/warehouse/raw-materials/api/fetch";
 import { Product, ApiPaginatedResponse } from "@/types/inventory";
+import { createProduct } from "@/app/warehouse/raw-materials/api/post";
 
 interface UseProductsParams {
   category?: string;
@@ -38,5 +39,16 @@ export function useProducts({
         page,
         page_size,
       }),
+  });
+}
+
+export function useCreateProduct() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: createProduct,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["products"] });
+    },
   });
 }

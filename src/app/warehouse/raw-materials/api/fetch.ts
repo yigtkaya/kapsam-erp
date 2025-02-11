@@ -6,7 +6,7 @@ import { cookies } from "next/headers";
 
 const API_URL = "http://localhost:8000";
 
-interface FetchRawMaterialsParams {
+interface RawMaterialsParams {
   category?: string;
   material_name?: string;
   material_code?: string;
@@ -20,7 +20,7 @@ export async function fetchRawMaterials({
   material_code,
   page = 1,
   page_size = 50,
-}: FetchRawMaterialsParams): Promise<ApiPaginatedResponse<RawMaterial>> {
+}: RawMaterialsParams): Promise<ApiPaginatedResponse<RawMaterial>> {
   const params = new URLSearchParams();
   if (category) params.append("category", category);
   if (material_name) params.append("material_name", material_name);
@@ -59,7 +59,7 @@ export async function fetchRawMaterials({
   return response.json();
 }
 
-interface FetchProductsParams {
+interface ProductsParams {
   category?: string;
   product_type?: string;
   product_name?: string;
@@ -75,7 +75,7 @@ export async function fetchProducts({
   product_code,
   page = 1,
   page_size = 50,
-}: FetchProductsParams): Promise<ApiPaginatedResponse<Product>> {
+}: ProductsParams): Promise<ApiPaginatedResponse<Product>> {
   const params = new URLSearchParams();
 
   if (category) params.append("category", category);

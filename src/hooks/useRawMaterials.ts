@@ -1,6 +1,7 @@
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { RawMaterial, ApiPaginatedResponse } from "@/types/inventory";
 import { fetchRawMaterials } from "@/app/warehouse/raw-materials/api/fetch";
+import { createRawMaterial } from "@/app/warehouse/raw-materials/api/post";
 
 interface UseRawMaterialsParams {
   category?: string;
@@ -34,5 +35,16 @@ export function useRawMaterials({
         page,
         page_size,
       }),
+  });
+}
+
+export function useCreateRawMaterial() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: createRawMaterial,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["rawMaterials"] });
+    },
   });
 }

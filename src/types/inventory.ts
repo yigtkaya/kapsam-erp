@@ -55,8 +55,6 @@ export interface Product {
   current_stock: number;
   created_at: string;
   modified_at: string;
-  unit: number;
-  customer?: Customer;
   inventory_category?: InventoryCategory;
   technical_drawings?: TechnicalDrawing[];
 }
