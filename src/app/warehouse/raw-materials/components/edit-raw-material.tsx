@@ -1,6 +1,6 @@
 "use client";
 
-import { useRouter } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -23,6 +23,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { toast } from "sonner";
+import { useUpdateRawMaterial } from "@/hooks/useRawMaterials";
 
 const formSchema = z.object({
   material_code: z.string().min(1, "Malzeme kodu gerekli"),
@@ -41,41 +42,29 @@ interface EditRawMaterialFormProps {
 }
 
 export function EditRawMaterialForm({ material }: EditRawMaterialFormProps) {
+  const params = useParams();
+  const updateRawMaterial = useUpdateRawMaterial();
   const router = useRouter();
+
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
-    defaultValues: {
-      material_code: material.material_code,
-      material_name: material.material_name,
-      material_type: material.material_type,
-      width: material.width,
-      height: material.height,
-      thickness: material.thickness,
-      diameter_mm: material.diameter_mm,
-    },
+    defaultValues: material,
   });
 
-  const onSubmit = async (values: FormValues) => {
+  async function onSubmit(values: z.infer<typeof formSchema>) {
     try {
-      const response = await fetch(`/api/raw-materials/${material.id}`, {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(values),
-      });
-
-      if (!response.ok) {
-        throw new Error("Failed to update material");
-      }
+      await updateRawMaterial.mutateAsync({
+        ...values,
+        id: material.id,
+      } as unknown as RawMaterial);
 
       toast.success("Hammadde başarıyla güncellendi");
-      router.push("/warehouse/raw-materials");
-      router.refresh();
+      router.back();
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Bir hata oluştu");
+      console.error("Failed to update user:", error);
+      toast.error("Hammadde güncellenirken bir hata oluştu");
     }
-  };
+  }
 
   return (
     <Form {...form}>

@@ -1,41 +1,20 @@
 "use client";
 
 import { useParams, useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
-import { RawMaterial } from "@/types/inventory";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { EditRawMaterialForm } from "../components/edit-raw-material";
+import { useRawMaterial } from "@/hooks/useRawMaterials";
 
 export default function EditRawMaterialPage() {
   const params = useParams();
-  const router = useRouter();
-  const [material, setMaterial] = useState<RawMaterial | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const {
+    data: material,
+    isLoading,
+    error,
+  } = useRawMaterial({ id: params.id as string });
 
-  useEffect(() => {
-    const fetchMaterial = async () => {
-      try {
-        const response = await fetch(`/api/raw-materials/${params.id}`);
-        if (!response.ok) {
-          throw new Error("Failed to fetch material");
-        }
-        const data = await response.json();
-        setMaterial(data);
-      } catch (err) {
-        setError(err instanceof Error ? err.message : "An error occurred");
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    if (params.id) {
-      fetchMaterial();
-    }
-  }, [params.id]);
-
-  if (loading) {
+  if (isLoading) {
     return (
       <Card>
         <CardHeader>
@@ -61,7 +40,7 @@ export default function EditRawMaterialPage() {
           <CardTitle className="text-red-500">Error</CardTitle>
         </CardHeader>
         <CardContent>
-          <p>{error}</p>
+          <p>{error.message}</p>
         </CardContent>
       </Card>
     );

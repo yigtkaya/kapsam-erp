@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -23,6 +24,11 @@ import {
 import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
 import { toast } from "sonner";
+import {
+  useCreateRawMaterial,
+  useUnitOfMeasures,
+} from "@/hooks/useRawMaterials";
+import { RawMaterial } from "@/types/inventory";
 
 // Define the Zod schema for the form
 const materialSchema = z.object({
@@ -44,7 +50,7 @@ const materialSchema = z.object({
       description: z.string().optional(),
     })
     .optional(),
-  material_type: z.enum(["TYPE_A", "TYPE_B", "TYPE_C", "STANDARD"]),
+  material_type: z.enum(["STEEL", "ALUMINUM"]),
   width: z.preprocess((a) => {
     const parsed = Number(a);
     return isNaN(parsed) ? null : parsed;
@@ -67,6 +73,8 @@ type MaterialFormData = z.infer<typeof materialSchema>;
 
 export default function NewMaterialPage() {
   const router = useRouter();
+  const createRawMaterial = useCreateRawMaterial();
+  const { data: unitOfMeasures } = useUnitOfMeasures();
   const searchParams = useSearchParams();
   const type = searchParams.get("type") || "raw"; // 'raw' or 'standard'
   const isStandard = type === "standard";
@@ -77,7 +85,7 @@ export default function NewMaterialPage() {
       material_code: "",
       material_name: "",
       current_stock: 0,
-      material_type: isStandard ? "STANDARD" : "TYPE_A",
+      material_type: "STEEL",
       width: null,
       height: null,
       thickness: null,
@@ -90,39 +98,31 @@ export default function NewMaterialPage() {
     },
   });
 
-  const onSubmit = async (data: MaterialFormData) => {
-    try {
-      const endpoint = isStandard
-        ? "/api/warehouse/standard-parts"
-        : "/api/warehouse/raw-materials";
-
-      const response = await fetch(endpoint, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(data),
-      });
-
-      if (response.ok) {
-        toast.success(
-          `${isStandard ? "Standart parça" : "Hammadde"} başarıyla oluşturuldu`
-        );
-        router.push("/warehouse/raw-materials");
-      } else {
-        const error = await response.text();
-        toast.error(
-          `${isStandard ? "Standart parça" : "Hammadde"} oluşturulamadı`,
-          {
-            description: error,
-          }
-        );
-      }
-    } catch (error) {
-      toast.error("Form gönderilirken hata oluştu", {
-        description:
-          error instanceof Error ? error.message : "Bilinmeyen bir hata oluştu",
-      });
+  // If the list of units is loaded and no valid unit is yet selected,
+  // preselect the first available unit.
+  useEffect(() => {
+    if (unitOfMeasures?.length && form.getValues("unit").id === 0) {
+      form.setValue("unit", unitOfMeasures[0]);
     }
-  };
+  }, [unitOfMeasures, form]);
+
+  async function onSubmit(values: z.infer<typeof materialSchema>) {
+    try {
+      const payload = {
+        ...values,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+        inventory_category: "HAMMADDE",
+      };
+
+      await createRawMaterial.mutateAsync(payload as unknown as RawMaterial);
+      toast.success("Hammadde başarıyla oluşturuldu");
+      router.back();
+    } catch (error) {
+      toast.error("Hammadde oluşturulurken bir hata oluştu");
+      console.error(error);
+    }
+  }
 
   return (
     <div className="container py-8">
@@ -211,9 +211,8 @@ export default function NewMaterialPage() {
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
-                          <SelectItem value="TYPE_A">Tip A</SelectItem>
-                          <SelectItem value="TYPE_B">Tip B</SelectItem>
-                          <SelectItem value="TYPE_C">Tip C</SelectItem>
+                          <SelectItem value="STEEL">Çelik</SelectItem>
+                          <SelectItem value="ALUMINUM">Alüminyum</SelectItem>
                         </SelectContent>
                       </Select>
                       <FormMessage />
@@ -224,38 +223,48 @@ export default function NewMaterialPage() {
             </div>
           </div>
 
-          {/* Unit Information */}
+          {/* Unit Selection */}
           <div>
-            <h3 className="text-lg font-medium mb-2">Birim Bilgileri</h3>
+            <h3 className="text-lg font-medium mb-2">Birim Seçimi</h3>
             <Separator className="mb-4" />
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <FormField
-                control={form.control}
-                name="unit.unit_code"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Birim Kodu</FormLabel>
+            <FormField
+              control={form.control}
+              name="unit"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Birim</FormLabel>
+                  <Select
+                    onValueChange={(value: string) => {
+                      const selectedUnit = unitOfMeasures?.find(
+                        (unit) => String(unit.id) === value
+                      );
+                      if (selectedUnit) {
+                        field.onChange(selectedUnit);
+                      }
+                    }}
+                    value={
+                      field.value && field.value.id !== 0
+                        ? String(field.value.id)
+                        : ""
+                    }
+                  >
                     <FormControl>
-                      <Input placeholder="Birim kodunu girin" {...field} />
+                      <SelectTrigger>
+                        <SelectValue placeholder="Birim seçin" />
+                      </SelectTrigger>
                     </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="unit.unit_name"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Birim Adı</FormLabel>
-                    <FormControl>
-                      <Input placeholder="Birim adını girin" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </div>
+                    <SelectContent>
+                      {unitOfMeasures?.map((unit) => (
+                        <SelectItem key={unit.id} value={String(unit.id)}>
+                          {unit.unit_name} ({unit.unit_code})
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
           </div>
 
           {/* Dimensions */}

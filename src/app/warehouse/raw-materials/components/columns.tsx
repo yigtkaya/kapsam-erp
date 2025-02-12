@@ -11,7 +11,7 @@ import {
   DropdownMenuItem,
 } from "@/components/ui/dropdown-menu";
 import { RawMaterial } from "@/types/inventory";
-
+import { useDeleteRawMaterial } from "@/hooks/useRawMaterials";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -174,6 +174,8 @@ export const rawMaterialsColumns: ColumnDef<RawMaterial>[] = [
       </div>
     ),
     cell: ({ row }) => {
+      const deleteRawMaterial = useDeleteRawMaterial();
+
       return (
         <div className="flex justify-center items-center">
           <DropdownMenu>
@@ -192,7 +194,18 @@ export const rawMaterialsColumns: ColumnDef<RawMaterial>[] = [
                   <span>Düzenle</span>
                 </Link>
               </DropdownMenuItem>
-              <DropdownMenuItem className="text-red-600">
+              <DropdownMenuItem
+                className="text-red-600"
+                onClick={() => {
+                  if (
+                    window.confirm(
+                      "Hammaddeyi silmek istediğinize emin misiniz?"
+                    )
+                  ) {
+                    deleteRawMaterial.mutate(row.original.id);
+                  }
+                }}
+              >
                 <Trash className="mr-2 h-4 w-4" />
                 <span>Sil</span>
               </DropdownMenuItem>

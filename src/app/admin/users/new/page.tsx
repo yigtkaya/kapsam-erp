@@ -85,7 +85,7 @@ export default function NewUserPage() {
 
       await createUser.mutateAsync(payload as unknown as User);
       toast.success("Kullanıcı başarıyla oluşturuldu");
-      router.push("/admin/users");
+      router.back();
     } catch (error) {
       toast.error("Kullanıcı oluşturulurken bir hata oluştu");
 

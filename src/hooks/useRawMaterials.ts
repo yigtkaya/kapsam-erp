@@ -1,7 +1,20 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { RawMaterial, ApiPaginatedResponse } from "@/types/inventory";
-import { fetchRawMaterials } from "@/app/warehouse/raw-materials/api/fetch";
-import { createRawMaterial } from "@/app/warehouse/raw-materials/api/post";
+import {
+  RawMaterial,
+  ApiPaginatedResponse,
+  UnitOfMeasure,
+  MaterialType,
+} from "@/types/inventory";
+import {
+  fetchRawMaterials,
+  fetchRawMaterial,
+  fetchUnitOfMeasures,
+} from "@/app/warehouse/raw-materials/api/fetch";
+import {
+  createRawMaterial,
+  deleteRawMaterial,
+  updateRawMaterial,
+} from "@/app/warehouse/raw-materials/api/post";
 
 interface UseRawMaterialsParams {
   category?: string;
@@ -9,6 +22,17 @@ interface UseRawMaterialsParams {
   material_code?: string;
   page?: number;
   page_size?: number;
+}
+
+interface RawMaterialParams {
+  id: string;
+}
+
+export function useRawMaterial({ id }: RawMaterialParams) {
+  return useQuery<RawMaterial>({
+    queryKey: ["rawMaterial", id],
+    queryFn: () => fetchRawMaterial({ id }),
+  });
 }
 
 export function useRawMaterials({
@@ -44,7 +68,48 @@ export function useCreateRawMaterial() {
   return useMutation({
     mutationFn: createRawMaterial,
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["rawMaterials"] });
+      queryClient.invalidateQueries({
+        queryKey: ["rawMaterials"],
+        exact: false,
+      });
     },
+  });
+}
+
+export function useUpdateRawMaterial() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: updateRawMaterial,
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: ["rawMaterials"],
+        exact: false,
+      });
+    },
+  });
+}
+
+export function useDeleteRawMaterial() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: deleteRawMaterial,
+    onSuccess: (_, deletedRawMaterial) => {
+      // Invalidate and force a refetch
+      queryClient.invalidateQueries({ queryKey: ["rawMaterials"] });
+      queryClient.refetchQueries({ queryKey: ["rawMaterials"] });
+      // Remove the individual user cache
+      queryClient.removeQueries({
+        queryKey: ["rawMaterials", deletedRawMaterial],
+      });
+    },
+  });
+}
+
+export function useUnitOfMeasures() {
+  return useQuery<UnitOfMeasure[]>({
+    queryKey: ["unitOfMeasures"],
+    queryFn: fetchUnitOfMeasures,
   });
 }
