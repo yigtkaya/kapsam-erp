@@ -7,7 +7,6 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Suspense } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Separator } from "@radix-ui/react-dropdown-menu";
 import { Plus } from "lucide-react";
 
 export default function AdminUsersPage() {

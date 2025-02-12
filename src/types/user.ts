@@ -8,12 +8,12 @@ export interface User {
   is_active: boolean;
   created_at: string;
   updated_at: string;
+  profile: UserProfile;
 }
 
-export interface UpdateUserInput {
-  username?: string;
-  role?: UserRole;
-  is_active?: boolean;
+export interface UserProfile {
+  employee_id: string;
+  phone_number: string;
 }
 
 export interface ChangeRoleInput {

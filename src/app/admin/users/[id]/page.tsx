@@ -1,6 +1,6 @@
 "use client";
 
-import { useUpdateUserRole, useUsers } from "@/hooks/useUsers";
+import { useUpdateUser, useUser } from "@/hooks/useUsers";
 import { Button } from "@/components/ui/button";
 import {
   Form,
@@ -26,7 +26,7 @@ import * as z from "zod";
 import { useParams, useRouter } from "next/navigation";
 import { Loader2 } from "lucide-react";
 import { useEffect } from "react";
-import { User, UserRole } from "@/types/user";
+import { User } from "@/types/user";
 import { toast } from "sonner";
 
 const formSchema = z.object({
@@ -34,7 +34,11 @@ const formSchema = z.object({
     message: "İsim en az 2 karakter olmalıdır.",
   }),
   role: z.enum(["ADMIN", "ENGINEER", "OPERATOR", "VIEWER"]),
-  isActive: z.boolean(),
+  is_active: z.boolean(),
+  profile: z.object({
+    employee_id: z.string().min(1, { message: "Çalışan ID gerekli" }),
+    phone_number: z.string().min(1, { message: "Telefon numarası gerekli" }),
+  }),
 });
 
 export default function EditUserPage() {
@@ -42,16 +46,19 @@ export default function EditUserPage() {
   const router = useRouter();
   const userId = params.id as string;
 
-  const { data: users, isLoading } = useUsers();
-  const currentUser = users?.find((user) => user.id === userId);
-  const updateUser = useUpdateUserRole();
+  const { data: currentUser, isLoading, error } = useUser(userId);
+  const updateUser = useUpdateUser();
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
       username: "",
       role: "VIEWER",
-      isActive: true,
+      is_active: true,
+      profile: {
+        employee_id: "",
+        phone_number: "",
+      },
     },
   });
 
@@ -60,7 +67,13 @@ export default function EditUserPage() {
       form.reset({
         username: currentUser.username,
         role: currentUser.role,
-        isActive: currentUser.is_active,
+        is_active: currentUser.is_active,
+        profile: currentUser.profile
+          ? {
+              employee_id: currentUser.profile.employee_id,
+              phone_number: currentUser.profile.phone_number,
+            }
+          : undefined,
       });
     }
   }, [currentUser, form]);
@@ -68,10 +81,14 @@ export default function EditUserPage() {
   async function onSubmit(values: z.infer<typeof formSchema>) {
     try {
       await updateUser.mutateAsync({
-        id: userId,
-        role: values.role,
+        id: currentUser?.id,
         username: values.username,
-        is_active: values.isActive,
+        role: values.role,
+        is_active: values.is_active,
+        profile: {
+          employee_id: values.profile.employee_id,
+          phone_number: values.profile.phone_number,
+        },
       } as User);
 
       toast.success("Kullanıcı başarıyla güncellendi");
@@ -90,7 +107,7 @@ export default function EditUserPage() {
     );
   }
 
-  if (!currentUser) {
+  if (error || !currentUser) {
     return (
       <div className="flex h-full items-center justify-center">
         <p className="text-muted-foreground">Kullanıcı bulunamadı</p>
@@ -104,83 +121,124 @@ export default function EditUserPage() {
         <h2 className="text-3xl font-bold tracking-tight">Kullanıcı Düzenle</h2>
       </div>
 
-      <div className="grid gap-6">
-        <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
-            <FormField
-              control={form.control}
-              name="username"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>İsim</FormLabel>
-                  <FormControl>
-                    <Input {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name="role"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Rol</FormLabel>
-                  <Select
-                    onValueChange={field.onChange}
-                    defaultValue={field.value}
-                  >
+      <Form {...form}>
+        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+            <div className="space-y-6">
+              <FormField
+                control={form.control}
+                name="username"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>İsim</FormLabel>
                     <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Rol seçin" />
-                      </SelectTrigger>
+                      <Input {...field} />
                     </FormControl>
-                    <SelectContent>
-                      <SelectItem value="ADMIN">Admin</SelectItem>
-                      <SelectItem value="ENGINEER">Mühendis</SelectItem>
-                      <SelectItem value="OPERATOR">Operatör</SelectItem>
-                      <SelectItem value="VIEWER">İzleyici</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  <FormDescription>
-                    Kullanıcının sistem içindeki rolü
-                  </FormDescription>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
 
-            <FormField
-              control={form.control}
-              name="isActive"
-              render={({ field }) => (
-                <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
-                  <div className="space-y-0.5">
-                    <FormLabel className="text-base">Aktif</FormLabel>
+              <FormField
+                control={form.control}
+                name="role"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Rol</FormLabel>
+                    <Select
+                      onValueChange={field.onChange}
+                      defaultValue={field.value}
+                    >
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Rol seçin" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="ADMIN">Admin</SelectItem>
+                        <SelectItem value="ENGINEER">Mühendis</SelectItem>
+                        <SelectItem value="OPERATOR">Operatör</SelectItem>
+                        <SelectItem value="VIEWER">İzleyici</SelectItem>
+                      </SelectContent>
+                    </Select>
                     <FormDescription>
-                      Kullanıcının hesabının aktif olup olmadığı
+                      Kullanıcının sistem içindeki rolü
                     </FormDescription>
-                  </div>
-                  <FormControl>
-                    <Switch
-                      checked={field.value}
-                      onCheckedChange={field.onChange}
-                    />
-                  </FormControl>
-                </FormItem>
-              )}
-            />
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
 
+              <FormField
+                control={form.control}
+                name="is_active"
+                render={({ field }) => (
+                  <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
+                    <div className="space-y-0.5">
+                      <FormLabel className="text-base">Aktif</FormLabel>
+                      <FormDescription>
+                        Kullanıcının hesabının aktif olup olmadığı
+                      </FormDescription>
+                    </div>
+                    <FormControl>
+                      <Switch
+                        checked={field.value}
+                        onCheckedChange={field.onChange}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+
+            <div>
+              <fieldset className="border rounded p-4 space-y-4">
+                <legend className="px-2 text-sm font-semibold">
+                  Profil Bilgileri
+                </legend>
+
+                <FormField
+                  control={form.control}
+                  name="profile.employee_id"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Çalışan ID</FormLabel>
+                      <FormControl>
+                        <Input {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="profile.phone_number"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Telefon Numarası</FormLabel>
+                      <FormControl>
+                        <Input {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </fieldset>
+            </div>
+          </div>
+
+          <div className="mt-8">
             <Button type="submit" disabled={updateUser.isPending}>
               {updateUser.isPending && (
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
               )}
               Kaydet
             </Button>
-          </form>
-        </Form>
-      </div>
+          </div>
+        </form>
+      </Form>
     </div>
   );
 }
