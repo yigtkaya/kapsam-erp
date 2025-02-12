@@ -55,22 +55,31 @@ export interface Product {
   current_stock: number;
   created_at: string;
   modified_at: string;
-  inventory_category?: InventoryCategory;
+  inventory_category?: number;
+  inventory_category_display?: string; // Added this field
   technical_drawings?: TechnicalDrawing[];
 }
 
-// Technical Drawing
 export interface TechnicalDrawing {
   id: number;
-  product: Product;
   version: string;
   drawing_code: string;
-  drawing_url: string;
-  effective_date: string; // ISO formatted date string
+  drawing_file?: string;
+  drawing_url?: string; // Added this field
+  effective_date: string;
   is_current: boolean;
   revision_notes?: string;
-  approved_by?: User;
+  created_at: string;
+  updated_at: string;
 }
+
+// The API endpoints for technical drawings will be available at:
+// List/Create: /api/inventory/technical-drawings/
+// Detail/Update/Delete: /api/inventory/technical-drawings/<id>/
+// And you can filter technical drawings using query parameters:
+// By product: /api/inventory/technical-drawings/?product=1
+// By current version: /api/inventory/technical-drawings/?is_current=true
+// Let me know if you need any clarification or run into other issues!
 
 export type MaterialType = "STEEL" | "ALUMINUM";
 

@@ -85,7 +85,7 @@ export default function StandardPartsDataTable() {
     );
   }
 
-  if (!data?.results || data.results.length === 0) {
+  if (data?.results && data.results.length === 0) {
     return (
       <div className="text-center py-10 text-muted-foreground">
         No standard parts found.

@@ -14,6 +14,7 @@ import {
   FileSliders,
   Layers,
   Workflow,
+  Users,
 } from "lucide-react";
 import Link from "next/link";
 
@@ -175,6 +176,14 @@ const modules = [
     icon: PackageSearch,
     href: "/warehouse",
     color: "bg-gray-500",
+    backgroundColor: "bg-blue-100",
+  },
+  {
+    title: "Kullanıcı Yönetimi",
+    description: "Kullanıcı hesaplarının yönetimi ve izinleri",
+    icon: Users,
+    href: "/admin/users",
+    color: "bg-indigo-500",
     backgroundColor: "bg-blue-100",
   },
 ];

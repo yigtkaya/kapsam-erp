@@ -45,8 +45,6 @@ export async function fetchRawMaterials({
     }
   );
 
-  console.log(response);
-
   if (!response.ok) {
     return {
       count: 0,
@@ -102,6 +100,8 @@ export async function fetchProducts({
     }
   );
 
+  console.log(response);
+
   if (!response.ok) {
     return {
       count: 0,
@@ -111,5 +111,7 @@ export async function fetchProducts({
     };
   }
 
-  return response.json();
+  const data = await response.json();
+  console.log(data);
+  return data;
 }
