@@ -78,8 +78,9 @@ export function useDeleteUser() {
   return useMutation<User, Error, User>({
     mutationFn: (user) => deleteUser(user.id),
     onSuccess: (_, deletedUser) => {
-      // Remove from users list cache
+      // Invalidate and force a refetch
       queryClient.invalidateQueries({ queryKey: ["users"] });
+      queryClient.refetchQueries({ queryKey: ["users"] });
       // Remove the individual user cache
       queryClient.removeQueries({ queryKey: ["users", deletedUser.id] });
     },

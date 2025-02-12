@@ -57,7 +57,13 @@ export async function updateUser(userId: string, user: User) {
   const csrftoken = cookieStore.get("csrftoken")?.value;
   const sessionid = cookieStore.get("sessionid")?.value;
 
-  console.log(user);
+  console.log({
+    username: user.username,
+    email: user.email,
+    role: user.role,
+    is_active: user.is_active,
+    profile: user.profile,
+  });
 
   const response = await fetch(`${API_URL}/api/users/${userId}`, {
     method: "PUT",
@@ -67,7 +73,12 @@ export async function updateUser(userId: string, user: User) {
       "X-CSRFToken": csrftoken || "",
       Cookie: `sessionid=${sessionid}; csrftoken=${csrftoken}`,
     },
-    body: JSON.stringify(user),
+    body: JSON.stringify({
+      username: user.username,
+      email: user.email,
+      role: user.role,
+      is_active: user.is_active,
+    }),
   });
 
   console.log(response);
@@ -132,13 +143,19 @@ export async function deleteUser(userId: string) {
   console.log(response);
 
   if (!response.ok) {
-    throw new Error("Failed to delete user");
+    // Optionally handle the error here
+    throw new Error("Network response was not ok");
   }
 
+  // If the status is 204 No Content, do not attempt to parse JSON
+  if (response.status === 204) {
+    console.log("User deleted successfully with no content returned");
+    return null;
+  }
+
+  // Otherwise, attempt to parse the JSON response
   const data = await response.json();
-
   console.log(data);
-
   return data;
 }
 

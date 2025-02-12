@@ -33,12 +33,11 @@ const formSchema = z.object({
   username: z.string().min(2, {
     message: "İsim en az 2 karakter olmalıdır.",
   }),
+  email: z.string().email({
+    message: "Geçerli bir e-posta adresi giriniz.",
+  }),
   role: z.enum(["ADMIN", "ENGINEER", "OPERATOR", "VIEWER"]),
   is_active: z.boolean(),
-  profile: z.object({
-    employee_id: z.string().min(1, { message: "Çalışan ID gerekli" }),
-    phone_number: z.string().min(1, { message: "Telefon numarası gerekli" }),
-  }),
 });
 
 export default function EditUserPage() {
@@ -52,13 +51,10 @@ export default function EditUserPage() {
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      username: "",
-      role: "VIEWER",
-      is_active: true,
-      profile: {
-        employee_id: "",
-        phone_number: "",
-      },
+      username: currentUser?.username || "",
+      email: currentUser?.email || "",
+      role: currentUser?.role || "VIEWER",
+      is_active: currentUser?.is_active ?? true,
     },
   });
 
@@ -66,14 +62,9 @@ export default function EditUserPage() {
     if (currentUser) {
       form.reset({
         username: currentUser.username,
+        email: currentUser.email,
         role: currentUser.role,
         is_active: currentUser.is_active,
-        profile: currentUser.profile
-          ? {
-              employee_id: currentUser.profile.employee_id,
-              phone_number: currentUser.profile.phone_number,
-            }
-          : undefined,
       });
     }
   }, [currentUser, form]);
@@ -81,14 +72,11 @@ export default function EditUserPage() {
   async function onSubmit(values: z.infer<typeof formSchema>) {
     try {
       await updateUser.mutateAsync({
-        id: currentUser?.id,
+        id: userId,
         username: values.username,
+        email: values.email,
         role: values.role,
         is_active: values.is_active,
-        profile: {
-          employee_id: values.profile.employee_id,
-          phone_number: values.profile.phone_number,
-        },
       } as User);
 
       toast.success("Kullanıcı başarıyla güncellendi");
@@ -123,7 +111,7 @@ export default function EditUserPage() {
 
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+          <div className="grid grid-cols-1 gap-8">
             <div className="space-y-6">
               <FormField
                 control={form.control}
@@ -131,6 +119,20 @@ export default function EditUserPage() {
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>İsim</FormLabel>
+                    <FormControl>
+                      <Input {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="email"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>E-posta</FormLabel>
                     <FormControl>
                       <Input {...field} />
                     </FormControl>
@@ -190,42 +192,6 @@ export default function EditUserPage() {
                   </FormItem>
                 )}
               />
-            </div>
-
-            <div>
-              <fieldset className="border rounded p-4 space-y-4">
-                <legend className="px-2 text-sm font-semibold">
-                  Profil Bilgileri
-                </legend>
-
-                <FormField
-                  control={form.control}
-                  name="profile.employee_id"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Çalışan ID</FormLabel>
-                      <FormControl>
-                        <Input {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="profile.phone_number"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Telefon Numarası</FormLabel>
-                      <FormControl>
-                        <Input {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </fieldset>
             </div>
           </div>
 

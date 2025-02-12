@@ -42,7 +42,7 @@ const formSchema = z
       message: "Şifre doğrulaması en az 8 karakter olmalıdır.",
     }),
     role: z.enum(["ADMIN", "ENGINEER", "OPERATOR", "VIEWER"]),
-    isActive: z.boolean(),
+    is_active: z.boolean(),
     profile: z.object({
       employee_id: z.string().min(1, { message: "Çalışan ID gerekli" }),
       phone_number: z.string().min(1, { message: "Telefon numarası gerekli" }),
@@ -65,7 +65,7 @@ export default function NewUserPage() {
       password: "",
       confirm_password: "",
       role: "VIEWER",
-      isActive: true,
+      is_active: true,
       profile: {
         employee_id: "",
         phone_number: "",
@@ -78,7 +78,7 @@ export default function NewUserPage() {
       const payload = {
         ...values,
         id: "temp-" + Date.now(),
-        isActive: values.isActive,
+        is_active: values.is_active,
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
       };
@@ -198,7 +198,7 @@ export default function NewUserPage() {
               {/* isActive Field */}
               <FormField
                 control={form.control}
-                name="isActive"
+                name="is_active"
                 render={({ field }) => (
                   <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
                     <div className="space-y-0.5">
