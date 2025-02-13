@@ -1,41 +1,16 @@
 "use client";
 
-import { useParams, useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
-import { Product } from "@/types/inventory";
+import { useParams } from "next/navigation";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { EditStandardPartForm } from "../components/edit-standard-part";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useProduct } from "@/hooks/useProducts";
 
 export default function EditStandardPartPage() {
   const params = useParams();
-  const router = useRouter();
-  const [part, setPart] = useState<Product | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const { data: part, isLoading, error } = useProduct(params.id as string);
 
-  useEffect(() => {
-    const fetchPart = async () => {
-      try {
-        const response = await fetch(`/api/standard-parts/${params.id}`);
-        if (!response.ok) {
-          throw new Error("Failed to fetch standard part");
-        }
-        const data = await response.json();
-        setPart(data);
-      } catch (err) {
-        setError(err instanceof Error ? err.message : "An error occurred");
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    if (params.id) {
-      fetchPart();
-    }
-  }, [params.id]);
-
-  if (loading) {
+  if (isLoading) {
     return (
       <Card>
         <CardHeader>
@@ -61,7 +36,7 @@ export default function EditStandardPartPage() {
           <CardTitle className="text-red-500">Error</CardTitle>
         </CardHeader>
         <CardContent>
-          <p>{error}</p>
+          <p>{error.message}</p>
         </CardContent>
       </Card>
     );

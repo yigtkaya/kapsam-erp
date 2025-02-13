@@ -18,14 +18,33 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
 
-const formSchema = z.object({
-  product_code: z.string().min(1, "Ürün kodu gerekli"),
-  product_name: z.string().min(1, "Ürün adı gerekli"),
+// Define the Zod schema for Standard Parts (Product with type STANDARD_PART)
+export const standardPartSchema = z.object({
+  product_code: z.string().nonempty("Parça kodu zorunludur"),
+  product_name: z.string().nonempty("Parça adı zorunludur"),
+  product_type: z.literal("STANDARD_PART"),
   description: z.string().optional(),
-  current_stock: z.number().min(0, "Stok miktarı 0'dan küçük olamaz"),
+  current_stock: z.preprocess(
+    (a) => Number(a),
+    z.number().min(0, "Mevcut stok negatif olamaz")
+  ),
+  inventory_category: z
+    .object({
+      id: z.number(),
+      name: z.string(),
+      description: z.string().optional(),
+    })
+    .optional(),
+  technical_drawing: z
+    .object({
+      file: z.instanceof(File).optional(),
+      drawing_code: z.string().min(1, "Teknik çizim kodu zorunludur"),
+      version: z.string().min(1, "Versiyon zorunludur"),
+    })
+    .optional(),
 });
 
-type FormValues = z.infer<typeof formSchema>;
+type FormValues = z.infer<typeof standardPartSchema>;
 
 interface EditStandardPartFormProps {
   part: Product;
@@ -34,7 +53,7 @@ interface EditStandardPartFormProps {
 export function EditStandardPartForm({ part }: EditStandardPartFormProps) {
   const router = useRouter();
   const form = useForm<FormValues>({
-    resolver: zodResolver(formSchema),
+    resolver: zodResolver(standardPartSchema),
     defaultValues: {
       product_code: part.product_code,
       product_name: part.product_name,

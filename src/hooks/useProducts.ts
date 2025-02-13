@@ -1,7 +1,15 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { fetchProducts } from "@/app/warehouse/raw-materials/api/fetch";
-import { Product, ApiPaginatedResponse } from "@/types/inventory";
-import { createProduct } from "@/app/warehouse/raw-materials/api/post";
+import {
+  fetchProduct,
+  fetchProducts,
+  createProduct,
+  createTechnicalDrawing,
+} from "@/api/products";
+import {
+  Product,
+  ApiPaginatedResponse,
+  TechnicalDrawing,
+} from "@/types/inventory";
 
 interface UseProductsParams {
   category?: string;
@@ -42,6 +50,13 @@ export function useProducts({
   });
 }
 
+export function useProduct(id: string) {
+  return useQuery<Product>({
+    queryKey: ["product", id],
+    queryFn: () => fetchProduct({ id }),
+  });
+}
+
 export function useCreateProduct() {
   const queryClient = useQueryClient();
 
@@ -49,6 +64,23 @@ export function useCreateProduct() {
     mutationFn: createProduct,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["products"] });
+    },
+  });
+}
+
+export function useCreateTechnicalDrawing() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({
+      technicalDrawing,
+      product_id,
+    }: {
+      technicalDrawing: TechnicalDrawing;
+      product_id: number;
+    }) => createTechnicalDrawing(technicalDrawing, product_id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["products"], exact: false });
     },
   });
 }

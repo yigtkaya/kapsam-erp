@@ -1,6 +1,6 @@
 "use server";
 
-import { login as authLogin } from "@/lib/auth";
+import { login as authLogin } from "@/api/auth";
 import { cookies } from "next/headers";
 
 export async function login(username: string, password: string) {

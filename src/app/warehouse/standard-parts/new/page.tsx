@@ -23,9 +23,13 @@ import { Upload, X } from "lucide-react";
 import Image from "next/image";
 import { useState } from "react";
 import { StandardPartFormData, standardPartSchema } from "./form";
-
+import { useCreateProduct } from "@/hooks/useProducts";
+import { Product, TechnicalDrawing } from "@/types/inventory";
+import { useCreateTechnicalDrawing } from "@/hooks/useProducts";
 export default function NewStandardPartPage() {
   const router = useRouter();
+  const { mutateAsync: createProduct, isPending } = useCreateProduct();
+  const { mutateAsync: createTechnicalDrawing } = useCreateTechnicalDrawing();
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
 
   const form = useForm<StandardPartFormData>({
@@ -36,73 +40,67 @@ export default function NewStandardPartPage() {
       product_type: "STANDARD_PART",
       description: "",
       current_stock: 0,
-      technical_drawing: {
-        drawing_code: "",
-        version: "1.0",
-      },
+      inventory_category: 1,
+      // technical_drawing: {
+      //   drawing_code: "",
+      //   version: "1.0",
+      // },
     },
   });
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      // Update form
-      form.setValue("technical_drawing.file", file);
+  // const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  //   const file = e.target.files?.[0];
+  //   if (file) {
+  //     // Update form
+  //     form.setValue("technical_drawing.drawing_file", file);
 
-      // Create preview URL
-      const url = URL.createObjectURL(file);
-      setPreviewUrl(url);
+  //     // Create preview URL
+  //     const url = URL.createObjectURL(file);
+  //     setPreviewUrl(url);
 
-      // Clean up old preview URL when component unmounts
-      return () => URL.revokeObjectURL(url);
-    }
-  };
+  //     // Clean up old preview URL when component unmounts
+  //     return () => URL.revokeObjectURL(url);
+  //   }
+  // };
 
-  const removeFile = () => {
-    form.setValue("technical_drawing.file", undefined);
-    if (previewUrl) {
-      URL.revokeObjectURL(previewUrl);
-      setPreviewUrl(null);
-    }
-  };
+  // const removeFile = () => {
+  //   form.setValue("technical_drawing.drawing_file", undefined);
+  //   if (previewUrl) {
+  //     URL.revokeObjectURL(previewUrl);
+  //     setPreviewUrl(null);
+  //   }
+  // };
 
   const onSubmit = async (data: StandardPartFormData) => {
     try {
-      // Create FormData for file upload
-      const formData = new FormData();
+      console.log("pressed");
+      const response = await createProduct(data as Product);
 
-      // Add all non-file data
-      formData.append(
-        "data",
-        JSON.stringify({
-          product_code: data.product_code,
-          product_name: data.product_name,
-          product_type: data.product_type,
-          description: data.description,
-          current_stock: data.current_stock,
-          inventory_category: data.inventory_category,
-          technical_drawing: {
-            drawing_code: data.technical_drawing?.drawing_code,
-            version: data.technical_drawing?.version,
-          },
-        })
-      );
-
-      // Add file if exists
-      if (data.technical_drawing?.file) {
-        formData.append("technical_drawing", data.technical_drawing.file);
-      }
-
-      const response = await fetch("/api/warehouse/standard-parts", {
-        method: "POST",
-        body: formData,
-      });
-
-      if (response.ok) {
+      if (response.success) {
         toast.success("Standart parça başarıyla oluşturuldu");
-        router.push("/warehouse/raw-materials?tab=standard-parts");
+        router.back();
+        return;
+        //  if (data.technical_drawing?.drawing_file) {
+        //   const technicalDrawingResponse = await createTechnicalDrawing({
+        //     technicalDrawing: {
+        //       drawing_code: data.technical_drawing?.drawing_code || "",
+        //       version: data.technical_drawing?.version || "1.0",
+        //       drawing_file: data.technical_drawing?.drawing_file,
+        //       effective_date: new Date().toISOString(),
+        //     } as unknown as TechnicalDrawing,
+        //     product_id: response.data.id,
+        //   });
+        //   if (technicalDrawingResponse.success) {
+        //     toast.success("Standart parça başarıyla oluşturuldu");
+        //     router.back();
+        //   } else {
+        //     toast.error("Teknik çizim oluşturulamadı", {
+        //       description: technicalDrawingResponse.message,
+        //     });
+        //   }
+        // }
       } else {
-        const error = await response.text();
+        const error = await response.data;
         toast.error("Standart parça oluşturulamadı", {
           description: error,
         });
@@ -111,6 +109,26 @@ export default function NewStandardPartPage() {
       toast.error("Form gönderilirken hata oluştu", {
         description:
           error instanceof Error ? error.message : "Bilinmeyen bir hata oluştu",
+      });
+    }
+  };
+
+  const oUploadPhoto = async (drawing_file: File) => {
+    const technicalDrawingResponse = await createTechnicalDrawing({
+      technicalDrawing: {
+        drawing_code: "123",
+        version: "1.0",
+        drawing_file: drawing_file,
+        effective_date: new Date().toISOString(),
+      } as unknown as TechnicalDrawing,
+      product_id: 1,
+    });
+
+    if (technicalDrawingResponse.success) {
+      toast.success("Resim başarıyla yüklendi");
+    } else {
+      toast.error("Resim yüklenemedi", {
+        description: technicalDrawingResponse.message,
       });
     }
   };
@@ -204,7 +222,7 @@ export default function NewStandardPartPage() {
           </div>
 
           {/* Technical Drawing */}
-          <div>
+          {/* <div>
             <h3 className="text-lg font-medium mb-2">Teknik Çizim</h3>
             <Separator className="mb-4" />
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -269,7 +287,7 @@ export default function NewStandardPartPage() {
                   <div className="relative w-full h-64 border rounded-lg overflow-hidden">
                     {previewUrl.endsWith(".pdf") ? (
                       <div className="flex items-center justify-center w-full h-full bg-gray-100">
-                        <p className="text-gray-500">PDF Dosyası Yüklendi</p>
+                        <p className="text-gray-500">Fotoğraf Yüklendi</p>
                       </div>
                     ) : (
                       <Image
@@ -290,7 +308,7 @@ export default function NewStandardPartPage() {
                 )}
               </div>
             </div>
-          </div>
+          </div> */}
 
           <Button
             type="submit"

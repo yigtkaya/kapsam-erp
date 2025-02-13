@@ -10,20 +10,15 @@ export const standardPartSchema = z.object({
     (a) => Number(a),
     z.number().min(0, "Mevcut stok negatif olamaz")
   ),
-  inventory_category: z
-    .object({
-      id: z.number(),
-      name: z.string(),
-      description: z.string().optional(),
-    })
-    .optional(),
-  technical_drawing: z
-    .object({
-      file: z.instanceof(File).optional(),
-      drawing_code: z.string().min(1, "Teknik çizim kodu zorunludur"),
-      version: z.string().min(1, "Versiyon zorunludur"),
-    })
-    .optional(),
+  inventory_category: z.number().optional(),
+  // technical_drawing: z
+  //   .object({
+  //     drawing_file: z.instanceof(File).optional(),
+  //     drawing_code: z.string().min(1, "Teknik çizim kodu zorunludur"),
+  //     version: z.string().min(1, "Versiyon zorunludur"),
+  //     effective_date: z.string().default(() => new Date().toISOString()),
+  //   })
+  //   .optional(),
 });
 
 export type StandardPartFormData = z.infer<typeof standardPartSchema>;

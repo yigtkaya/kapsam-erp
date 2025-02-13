@@ -4,7 +4,7 @@ import {
   checkSession,
   login as loginApi,
   logout as logoutApi,
-} from "@/lib/auth";
+} from "@/api/auth";
 import { useCallback } from "react";
 import { useRouter } from "next/navigation";
 

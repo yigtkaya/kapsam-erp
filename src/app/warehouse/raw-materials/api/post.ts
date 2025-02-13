@@ -50,33 +50,6 @@ export const createRawMaterial = async (rawMaterial: RawMaterial) => {
   return data;
 };
 
-export const createProduct = async (product: Product) => {
-  const cookieStore = await cookies();
-  const csrftoken = cookieStore.get("csrftoken")?.value;
-  const sessionid = cookieStore.get("sessionid")?.value;
-
-  const response = await fetch(`${API_URL}/api/inventory/products/`, {
-    method: "POST",
-    body: JSON.stringify(product),
-    headers: {
-      "Content-Type": "application/json",
-      "X-CSRFToken": csrftoken || "",
-      Cookie: `sessionid=${sessionid}${
-        csrftoken ? `; csrftoken=${csrftoken}` : ""
-      }`,
-    },
-  });
-
-  if (!response.ok) {
-    return {
-      success: false,
-      message: "Failed to create product",
-    };
-  }
-
-  return response.json();
-};
-
 export const updateRawMaterial = async (rawMaterial: RawMaterial) => {
   const cookieStore = await cookies();
   const csrftoken = cookieStore.get("csrftoken")?.value;
