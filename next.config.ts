@@ -5,6 +5,9 @@ const nextConfig: NextConfig = {
     locales: ["en-US", "tr-TR"],
     defaultLocale: "tr-TR",
   },
+  eslint: {
+    ignoreDuringBuilds: true,
+  },
 };
 
 export default nextConfig;

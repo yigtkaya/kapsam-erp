@@ -139,7 +139,7 @@ export const standardPartsColumns: ColumnDef<Product>[] = [
             <DropdownMenuContent align="end">
               <DropdownMenuItem asChild>
                 <Link
-                  href={`/warehouse/raw-materials/standard/${row.original.id}`}
+                  href={`/warehouse/standard-parts/${row.original.id}`}
                   className="flex items-center justify-center"
                 >
                   <Pen className="mr-2 h-4 w-4" />

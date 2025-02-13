@@ -17,7 +17,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
-
+import { useUpdateProduct } from "@/hooks/useProducts";
 // Define the Zod schema for Standard Parts (Product with type STANDARD_PART)
 export const standardPartSchema = z.object({
   product_code: z.string().nonempty("Parça kodu zorunludur"),
@@ -28,20 +28,6 @@ export const standardPartSchema = z.object({
     (a) => Number(a),
     z.number().min(0, "Mevcut stok negatif olamaz")
   ),
-  inventory_category: z
-    .object({
-      id: z.number(),
-      name: z.string(),
-      description: z.string().optional(),
-    })
-    .optional(),
-  technical_drawing: z
-    .object({
-      file: z.instanceof(File).optional(),
-      drawing_code: z.string().min(1, "Teknik çizim kodu zorunludur"),
-      version: z.string().min(1, "Versiyon zorunludur"),
-    })
-    .optional(),
 });
 
 type FormValues = z.infer<typeof standardPartSchema>;
@@ -52,6 +38,7 @@ interface EditStandardPartFormProps {
 
 export function EditStandardPartForm({ part }: EditStandardPartFormProps) {
   const router = useRouter();
+  const { mutateAsync: updateProduct } = useUpdateProduct();
   const form = useForm<FormValues>({
     resolver: zodResolver(standardPartSchema),
     defaultValues: {
@@ -59,31 +46,28 @@ export function EditStandardPartForm({ part }: EditStandardPartFormProps) {
       product_name: part.product_name,
       description: part.description || "",
       current_stock: part.current_stock,
+      product_type: "STANDARD_PART",
     },
   });
 
   const onSubmit = async (values: FormValues) => {
     try {
-      const response = await fetch(`/api/standard-parts/${part.id}`, {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          ...values,
-          product_type: "STANDARD_PART",
-        }),
-      });
+      // Merge the existing product details with the form values
+      const updatedProduct = await updateProduct({
+        ...values,
+        id: part.id,
+      } as unknown as Product);
 
-      if (!response.ok) {
-        throw new Error("Failed to update standard part");
+      if (updatedProduct.success) {
+        toast.success("Standart parça başarıyla güncellendi");
+        router.back();
+        router.refresh();
+      } else {
+        toast.error("Standart parça güncellenirken bir hata oluştu");
       }
-
-      toast.success("Standart parça başarıyla güncellendi");
-      router.push("/warehouse/standard-parts");
-      router.refresh();
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Bir hata oluştu");
+      console.error("Error updating product:", error);
+      toast.error("Standart parça güncellenirken bir hata oluştu");
     }
   };
 

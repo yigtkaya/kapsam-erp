@@ -4,6 +4,8 @@ import {
   fetchProducts,
   createProduct,
   createTechnicalDrawing,
+  updateProduct,
+  deleteProduct,
 } from "@/api/products";
 import {
   Product,
@@ -64,6 +66,30 @@ export function useCreateProduct() {
     mutationFn: createProduct,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["products"] });
+    },
+  });
+}
+
+export function useUpdateProduct() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: updateProduct,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["products"] });
+    },
+  });
+}
+
+export function useDeleteProduct() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: deleteProduct,
+    onSuccess: (_, deletedProduct) => {
+      queryClient.invalidateQueries({ queryKey: ["products"] });
+
+      queryClient.removeQueries({ queryKey: ["product", deletedProduct] });
     },
   });
 }

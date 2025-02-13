@@ -7,10 +7,14 @@ const API_URL = "http://localhost:8000";
 
 export const createRawMaterial = async (rawMaterial: RawMaterial) => {
   const cookieStore = await cookies();
-  const csrftoken = cookieStore.get("csrftoken")?.value;
+  const rawCSRFCookie = cookieStore.get("csrftoken")?.value || "";
   const sessionid = cookieStore.get("sessionid")?.value;
 
-  console.log(rawMaterial);
+  // Extract the token value from the raw cookie string.
+  // This regex looks for `csrftoken=` followed by a group of non-semicolon characters.
+  const tokenMatch = rawCSRFCookie.match(/csrftoken=([^;]+)/);
+  const csrftoken = tokenMatch ? tokenMatch[1] : rawCSRFCookie;
+  console.log("extracted token", csrftoken);
 
   const response = await fetch(`${API_URL}/api/inventory/raw-materials/`, {
     method: "POST",
@@ -52,10 +56,14 @@ export const createRawMaterial = async (rawMaterial: RawMaterial) => {
 
 export const updateRawMaterial = async (rawMaterial: RawMaterial) => {
   const cookieStore = await cookies();
-  const csrftoken = cookieStore.get("csrftoken")?.value;
+  const rawCSRFCookie = cookieStore.get("csrftoken")?.value || "";
   const sessionid = cookieStore.get("sessionid")?.value;
 
-  console.log(rawMaterial);
+  // Extract the token value from the raw cookie string.
+  // This regex looks for `csrftoken=` followed by a group of non-semicolon characters.
+  const tokenMatch = rawCSRFCookie.match(/csrftoken=([^;]+)/);
+  const csrftoken = tokenMatch ? tokenMatch[1] : rawCSRFCookie;
+  console.log("extracted token", csrftoken);
 
   const response = await fetch(
     `${API_URL}/api/inventory/raw-materials/${rawMaterial.id}/`,
@@ -65,7 +73,9 @@ export const updateRawMaterial = async (rawMaterial: RawMaterial) => {
       headers: {
         "Content-Type": "application/json",
         "X-CSRFToken": csrftoken || "",
-        Cookie: `sessionid=${sessionid}; csrftoken=${csrftoken}`,
+        Cookie: `sessionid=${sessionid}${
+          csrftoken ? `; csrftoken=${csrftoken}` : ""
+        }`,
       },
     }
   );
@@ -85,8 +95,14 @@ export const updateRawMaterial = async (rawMaterial: RawMaterial) => {
 
 export const deleteRawMaterial = async (id: number) => {
   const cookieStore = await cookies();
-  const csrftoken = cookieStore.get("csrftoken")?.value;
+  const rawCSRFCookie = cookieStore.get("csrftoken")?.value || "";
   const sessionid = cookieStore.get("sessionid")?.value;
+
+  // Extract the token value from the raw cookie string.
+  // This regex looks for `csrftoken=` followed by a group of non-semicolon characters.
+  const tokenMatch = rawCSRFCookie.match(/csrftoken=([^;]+)/);
+  const csrftoken = tokenMatch ? tokenMatch[1] : rawCSRFCookie;
+  console.log("extracted token", csrftoken);
 
   const response = await fetch(
     `${API_URL}/api/inventory/raw-materials/${id}/`,
@@ -95,7 +111,9 @@ export const deleteRawMaterial = async (id: number) => {
       headers: {
         "Content-Type": "application/json",
         "X-CSRFToken": csrftoken || "",
-        Cookie: `sessionid=${sessionid}; csrftoken=${csrftoken}`,
+        Cookie: `sessionid=${sessionid}${
+          csrftoken ? `; csrftoken=${csrftoken}` : ""
+        }`,
       },
     }
   );

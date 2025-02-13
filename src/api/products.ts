@@ -17,6 +17,10 @@ interface ProductsParams {
   page_size?: number;
 }
 
+interface ProductParams {
+  id: string;
+}
+
 export async function fetchProducts({
   category,
   product_type,
@@ -50,8 +54,6 @@ export async function fetchProducts({
     }
   );
 
-  console.log(response);
-
   if (!response.ok) {
     return {
       count: 0,
@@ -62,41 +64,45 @@ export async function fetchProducts({
   }
 
   const data = await response.json();
-  console.log(data);
   return data;
 }
 
-export async function fetchProduct({ id }: { id: string }): Promise<Product> {
+export async function fetchProduct({ id }: ProductParams): Promise<Product> {
   const params = new URLSearchParams();
 
   const cookieStore = await cookies();
   const csrftoken = cookieStore.get("csrftoken")?.value;
   const sessionid = cookieStore.get("sessionid")?.value;
-  const response = await fetch(
-    `${API_URL}/api/inventory/products/?${params.toString()}`,
-    {
-      headers: {
-        "Content-Type": "application/json",
-        "X-CSRFToken": csrftoken || "",
-        Cookie: `sessionid=${sessionid}${
-          csrftoken ? `; csrftoken=${csrftoken}` : ""
-        }`,
-      },
-    }
-  );
+  const response = await fetch(`${API_URL}/api/inventory/products/${id}/`, {
+    headers: {
+      "Content-Type": "application/json",
+      "X-CSRFToken": csrftoken || "",
+      Cookie: `sessionid=${sessionid}${
+        csrftoken ? `; csrftoken=${csrftoken}` : ""
+      }`,
+    },
+  });
+
+  console.log(response);
 
   if (!response.ok) {
     throw new Error("Failed to fetch product");
   }
 
   const data = await response.json();
+
+  console.log(data);
   return data;
 }
 
 export const createProduct = async (product: Product) => {
   const cookieStore = await cookies();
-  const csrftoken = cookieStore.get("csrftoken")?.value;
+  const rawCSRFCookie = cookieStore.get("csrftoken")?.value || "";
   const sessionid = cookieStore.get("sessionid")?.value;
+  // Extract the token value from the raw cookie string.
+  // This regex looks for `csrftoken=` followed by a group of non-semicolon characters.
+  const tokenMatch = rawCSRFCookie.match(/csrftoken=([^;]+)/);
+  const csrftoken = tokenMatch ? tokenMatch[1] : rawCSRFCookie;
 
   const productJson = {
     product_code: product.product_code,
@@ -141,13 +147,74 @@ export const createProduct = async (product: Product) => {
   };
 };
 
+export const updateProduct = async (product: Product) => {
+  const cookieStore = await cookies();
+  const rawCSRFCookie = cookieStore.get("csrftoken")?.value || "";
+  const sessionid = cookieStore.get("sessionid")?.value;
+
+  // Extract the token value from the raw cookie string.
+  // This regex looks for `csrftoken=` followed by a group of non-semicolon characters.
+  const tokenMatch = rawCSRFCookie.match(/csrftoken=([^;]+)/);
+  const csrftoken = tokenMatch ? tokenMatch[1] : rawCSRFCookie;
+  console.log("extracted token", csrftoken);
+
+  const productJson = {
+    product_code: product.product_code,
+    product_name: product.product_name,
+    product_type: product.product_type,
+    description: product.description,
+    current_stock: product.current_stock,
+    inventory_category: product.inventory_category,
+  };
+
+  const response = await fetch(
+    `${API_URL}/api/inventory/products/${product.id}/`,
+    {
+      method: "PATCH",
+      body: JSON.stringify(productJson),
+      credentials: "include",
+      headers: {
+        "Content-Type": "application/json",
+        "X-CSRFToken": csrftoken || "",
+        Cookie: `sessionid=${sessionid}${
+          csrftoken ? `; csrftoken=${csrftoken}` : ""
+        }`,
+      },
+    }
+  );
+
+  if (!response.ok) {
+    console.log(response);
+    return {
+      success: false,
+      message: "Failed to update product",
+    };
+  }
+
+  const data = await response.json();
+
+  console.log(data);
+
+  return {
+    success: true,
+    message: "Product updated successfully",
+    data: data,
+  };
+};
+
 export const createTechnicalDrawing = async (
   technicalDrawing: TechnicalDrawing,
   product_id: number
 ) => {
   const cookieStore = await cookies();
-  const csrftoken = cookieStore.get("csrftoken")?.value;
+  const rawCSRFCookie = cookieStore.get("csrftoken")?.value || "";
   const sessionid = cookieStore.get("sessionid")?.value;
+
+  // Extract the token value from the raw cookie string.
+  // This regex looks for `csrftoken=` followed by a group of non-semicolon characters.
+  const tokenMatch = rawCSRFCookie.match(/csrftoken=([^;]+)/);
+  const csrftoken = tokenMatch ? tokenMatch[1] : rawCSRFCookie;
+  console.log("extracted token", csrftoken);
 
   const formData = new FormData();
   formData.append("drawing_code", technicalDrawing.drawing_code);
@@ -185,4 +252,41 @@ export const createTechnicalDrawing = async (
 
   const data = await response.json();
   return data;
+};
+
+export const deleteProduct = async (id: string) => {
+  const cookieStore = await cookies();
+  const rawCSRFCookie = cookieStore.get("csrftoken")?.value || "";
+  const sessionid = cookieStore.get("sessionid")?.value;
+
+  const tokenMatch = rawCSRFCookie.match(/csrftoken=([^;]+)/);
+  const csrftoken = tokenMatch ? tokenMatch[1] : rawCSRFCookie;
+
+  const response = await fetch(`${API_URL}/api/inventory/products/${id}/`, {
+    method: "DELETE",
+    credentials: "include",
+    headers: {
+      "X-CSRFToken": csrftoken || "",
+      Cookie: `sessionid=${sessionid}${
+        csrftoken ? `; csrftoken=${csrftoken}` : ""
+      }`,
+    },
+  });
+
+  if (!response.ok) {
+    return {
+      success: false,
+      message: "Failed to delete product",
+    };
+  }
+
+  const data = await response.json();
+
+  console.log(data);
+
+  return {
+    success: true,
+    message: "Product deleted successfully",
+    data: data,
+  };
 };
