@@ -167,8 +167,10 @@ export const updateProduct = async (product: Product) => {
     inventory_category: product.inventory_category,
   };
 
+  console.log(productJson);
+
   const response = await fetch(
-    `${API_URL}/api/inventory/products/${product.id}/`,
+    `${API_URL}/api/inventory/products/${product.id}`,
     {
       method: "PATCH",
       body: JSON.stringify(productJson),
@@ -274,19 +276,18 @@ export const deleteProduct = async (id: string) => {
   });
 
   if (!response.ok) {
-    return {
-      success: false,
-      message: "Failed to delete product",
-    };
+    // Optionally handle the error here
+    throw new Error("Network response was not ok");
   }
 
+  // If the status is 204 No Content, do not attempt to parse JSON
+  if (response.status === 204) {
+    console.log("Raw material deleted successfully with no content returned");
+    return null;
+  }
+
+  // Otherwise, attempt to parse the JSON response
   const data = await response.json();
-
   console.log(data);
-
-  return {
-    success: true,
-    message: "Product deleted successfully",
-    data: data,
-  };
+  return data;
 };
