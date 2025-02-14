@@ -14,6 +14,7 @@ import { Product } from "@/types/inventory";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
+import { useDeleteProduct } from "@/hooks/useProducts";
 
 export const standardPartsColumns: ColumnDef<Product>[] = [
   {
@@ -128,6 +129,8 @@ export const standardPartsColumns: ColumnDef<Product>[] = [
       </div>
     ),
     cell: ({ row }) => {
+      const deleteProduct = useDeleteProduct();
+
       return (
         <div className="flex justify-center items-center">
           <DropdownMenu>
@@ -146,7 +149,16 @@ export const standardPartsColumns: ColumnDef<Product>[] = [
                   <span>Düzenle</span>
                 </Link>
               </DropdownMenuItem>
-              <DropdownMenuItem className="text-red-600 flex items-center justify-center">
+              <DropdownMenuItem
+                className="text-red-600 flex items-center justify-center"
+                onClick={() => {
+                  if (
+                    window.confirm("Ürünü silmek istediğinize emin misiniz?")
+                  ) {
+                    deleteProduct.mutate(row.original.id.toString());
+                  }
+                }}
+              >
                 <Trash className="mr-2 h-4 w-4" />
                 <span>Sil</span>
               </DropdownMenuItem>
