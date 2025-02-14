@@ -6,7 +6,7 @@ import {
 } from "@/types/inventory";
 import { cookies } from "next/headers";
 
-const API_URL = "http://localhost:8000";
+const API_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
 
 interface ProductsParams {
   category?: string;

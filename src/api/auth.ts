@@ -2,7 +2,7 @@
 import { User, AuthResponse } from "@/types/auth";
 import { cookies } from "next/headers";
 
-const API_URL = "http://localhost:8000";
+const API_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
 
 export async function checkSession(): Promise<{
   isAuthenticated: boolean;
@@ -67,6 +67,7 @@ export async function login(
   password: string
 ): Promise<AuthResponse> {
   try {
+    console.log("API_URL", API_URL);
     const response = await fetch(`${API_URL}/auth/login/`, {
       method: "POST",
       credentials: "include",
