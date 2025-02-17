@@ -4,9 +4,9 @@ import { useParams } from "next/navigation";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useProduct } from "@/hooks/useProducts";
-import { EditMontagedProductForm } from "../components/edit-single-products";
+import { EditSingleProductForm } from "../components/edit-single-products";
 
-export default function EditSingleProductPage() {
+export default function EditWarehousePage() {
   const params = useParams();
   const {
     data: singleProduct,
@@ -53,7 +53,7 @@ export default function EditSingleProductPage() {
           <CardTitle className="text-muted-foreground">Not Found</CardTitle>
         </CardHeader>
         <CardContent>
-          <p>Montajlı ürün bulunamadı</p>
+          <p>Tekli ürün bulunamadı</p>
         </CardContent>
       </Card>
     );
@@ -62,10 +62,10 @@ export default function EditSingleProductPage() {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Montajlı Ürün Düzenle</CardTitle>
+        <CardTitle>Tekli Ürün Düzenle</CardTitle>
       </CardHeader>
       <CardContent>
-        <EditMontagedProductForm montagedProduct={singleProduct} />
+        <EditSingleProductForm singleProduct={singleProduct} />
       </CardContent>
     </Card>
   );

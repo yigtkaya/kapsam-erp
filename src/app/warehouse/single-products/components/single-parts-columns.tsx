@@ -1,21 +1,20 @@
 "use client";
 
+import * as React from "react";
 import { ColumnDef } from "@tanstack/react-table";
-import { Product } from "@/types/inventory";
-import { Link, MoreHorizontal } from "lucide-react";
-import { Pen } from "lucide-react";
+import { MoreHorizontal, Pen, Trash } from "lucide-react";
+import { DataTableColumnHeader } from "@/components/ui/column-header";
 import {
   DropdownMenu,
+  DropdownMenuTrigger,
   DropdownMenuContent,
   DropdownMenuItem,
-  DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Trash } from "lucide-react";
+import { Product } from "@/types/inventory";
+import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useDeleteProduct } from "@/hooks/useProducts";
-// ... reuse similar column definitions from finishedProductsColumns...
-// Modify to match single part fields
 
 export const singlePartsColumns: ColumnDef<Product>[] = [
   {
@@ -43,25 +42,92 @@ export const singlePartsColumns: ColumnDef<Product>[] = [
   },
   {
     id: "product_code",
-    accessorFn: (row) => row.product_code,
-    header: "Ürün Kodu",
-    // ... same cell formatting ...
+    accessorFn: (row: Product) => row.product_code,
+    header: ({ column }) => (
+      <div className="flex justify-center items-center">
+        <DataTableColumnHeader column={column} title="Ürün Kodu" />
+      </div>
+    ),
+    cell: ({ row }) => (
+      <div className="flex justify-center items-center">
+        {row.original.product_code}
+      </div>
+    ),
+    enableSorting: true,
+    enableHiding: false,
   },
   {
     id: "product_name",
-    accessorFn: (row) => row.product_name,
-    header: "Ürün Adı",
+    accessorFn: (row: Product) => row.product_name,
+    header: ({ column }) => (
+      <div className="flex justify-center items-center">
+        <DataTableColumnHeader column={column} title="Ürün Adı" />
+      </div>
+    ),
+    cell: ({ row }) => (
+      <div className="flex justify-center items-center">
+        {row.original.product_name}
+      </div>
+    ),
+    enableSorting: true,
+    enableHiding: false,
   },
-  // Remove technical_drawing column if not needed
+  {
+    id: "technical_drawing",
+    accessorFn: (row: Product) =>
+      row.technical_drawings?.find((drawing) => drawing.is_current)
+        ?.drawing_code,
+    header: ({ column }) => (
+      <div className="flex justify-center items-center">
+        <DataTableColumnHeader column={column} title="Teknik Çizim Kodu" />
+      </div>
+    ),
+    cell: ({ row }) => {
+      const currentDrawing = row.original.technical_drawings?.find(
+        (drawing) => drawing.is_current
+      );
+      return (
+        <div className="flex justify-center items-center">
+          {currentDrawing && currentDrawing.drawing_url ? (
+            <Link
+              href={currentDrawing.drawing_url}
+              className="hover:text-blue-700"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              {currentDrawing.drawing_code}
+            </Link>
+          ) : (
+            <span>{currentDrawing?.drawing_code ?? "-"}</span>
+          )}
+        </div>
+      );
+    },
+    enableSorting: true,
+    enableHiding: false,
+  },
   {
     id: "current_stock",
-    accessorFn: (row) => row.current_stock,
-    header: "Stok Miktarı",
+    accessorFn: (row: Product) => row.current_stock,
+    header: ({ column }) => (
+      <div className="flex justify-center items-center">
+        <DataTableColumnHeader column={column} title="Stok Miktarı" />
+      </div>
+    ),
+    cell: ({ row }) => (
+      <div className="flex justify-center items-center">
+        {row.original.current_stock}
+      </div>
+    ),
+    enableSorting: true,
   },
-  // ... keep actions column ...
   {
     id: "actions",
-    header: "İşlemler",
+    header: ({ column }) => (
+      <div className="flex justify-center items-center">
+        <DataTableColumnHeader column={column} title="İşlemler" />
+      </div>
+    ),
     cell: ({ row }) => {
       const deleteProduct = useDeleteProduct();
       return (
@@ -75,7 +141,7 @@ export const singlePartsColumns: ColumnDef<Product>[] = [
             <DropdownMenuContent align="end">
               <DropdownMenuItem asChild>
                 <Link
-                  href={`/warehouse/finished-products/${row.original.id}`}
+                  href={`/warehouse/single-products/${row.original.id}`}
                   className="flex items-center justify-center"
                 >
                   <Pen className="mr-2 h-4 w-4" />
@@ -89,12 +155,11 @@ export const singlePartsColumns: ColumnDef<Product>[] = [
                     "Bu ürünü silmek istediğinize emin misiniz?"
                   );
                   if (confirm) {
-                    deleteProduct.mutate(row.original.id.toString());
+                    deleteProduct.mutate(row.original.id);
                   }
                 }}
               >
                 <Trash className="mr-2 h-4 w-4" />
-
                 <span>Sil</span>
               </DropdownMenuItem>
             </DropdownMenuContent>
@@ -102,5 +167,7 @@ export const singlePartsColumns: ColumnDef<Product>[] = [
         </div>
       );
     },
+    enableSorting: false,
+    enableHiding: false,
   },
 ];

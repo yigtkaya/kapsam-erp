@@ -23,7 +23,23 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { toast } from "sonner";
-import { useUpdateRawMaterial } from "@/hooks/useRawMaterials";
+import { useUpdateRawMaterial, useRawMaterials } from "@/hooks/useRawMaterials";
+import { Check, ChevronsUpDown } from "lucide-react";
+import { cn } from "@/api/utils";
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+} from "@/components/ui/command";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import { useState } from "react";
 
 const formSchema = z.object({
   material_code: z.string().min(1, "Malzeme kodu gerekli"),
@@ -45,6 +61,11 @@ export function EditRawMaterialForm({ material }: EditRawMaterialFormProps) {
   const params = useParams();
   const updateRawMaterial = useUpdateRawMaterial();
   const router = useRouter();
+  const { data: rawMaterials, isLoading } = useRawMaterials({});
+  const [openMaterialCode, setOpenMaterialCode] = useState(false);
+  const [openMaterialName, setOpenMaterialName] = useState(false);
+
+  const materials = rawMaterials?.results ?? [];
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
@@ -73,11 +94,76 @@ export function EditRawMaterialForm({ material }: EditRawMaterialFormProps) {
           control={form.control}
           name="material_code"
           render={({ field }) => (
-            <FormItem>
+            <FormItem className="flex flex-col">
               <FormLabel>Malzeme Kodu</FormLabel>
-              <FormControl>
-                <Input {...field} />
-              </FormControl>
+              <Popover
+                open={openMaterialCode}
+                onOpenChange={setOpenMaterialCode}
+              >
+                <PopoverTrigger asChild>
+                  <FormControl>
+                    <Button
+                      variant="outline"
+                      role="combobox"
+                      className={cn(
+                        "w-full justify-between",
+                        !field.value && "text-muted-foreground"
+                      )}
+                      disabled={isLoading}
+                    >
+                      {field.value
+                        ? materials.find(
+                            (material) => material.material_code === field.value
+                          )?.material_code
+                        : isLoading
+                        ? "Yükleniyor..."
+                        : "Malzeme kodu seçin"}
+                      <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                    </Button>
+                  </FormControl>
+                </PopoverTrigger>
+                <PopoverContent className="min-w-[var(--radix-popover-trigger-width)] max-w-[var(--radix-popover-trigger-width)] p-0">
+                  <Command>
+                    <CommandList>
+                      <CommandInput placeholder="Malzeme kodu ara..." />
+                      <CommandEmpty>
+                        {isLoading
+                          ? "Yükleniyor..."
+                          : "Malzeme kodu bulunamadı."}
+                      </CommandEmpty>
+                      <CommandGroup>
+                        {materials?.map((material) => (
+                          <CommandItem
+                            value={material.material_code}
+                            key={material.id}
+                            onSelect={() => {
+                              form.setValue(
+                                "material_code",
+                                material.material_code
+                              );
+                              form.setValue(
+                                "material_name",
+                                material.material_name
+                              );
+                              setOpenMaterialCode(false);
+                            }}
+                          >
+                            <Check
+                              className={cn(
+                                "mr-2 h-4 w-4",
+                                material.material_code === field.value
+                                  ? "opacity-100"
+                                  : "opacity-0"
+                              )}
+                            />
+                            {material.material_code}
+                          </CommandItem>
+                        ))}
+                      </CommandGroup>
+                    </CommandList>
+                  </Command>
+                </PopoverContent>
+              </Popover>
               <FormMessage />
             </FormItem>
           )}
@@ -87,11 +173,76 @@ export function EditRawMaterialForm({ material }: EditRawMaterialFormProps) {
           control={form.control}
           name="material_name"
           render={({ field }) => (
-            <FormItem>
+            <FormItem className="flex flex-col">
               <FormLabel>Malzeme Adı</FormLabel>
-              <FormControl>
-                <Input {...field} />
-              </FormControl>
+              <Popover
+                open={openMaterialName}
+                onOpenChange={setOpenMaterialName}
+              >
+                <PopoverTrigger asChild>
+                  <FormControl>
+                    <Button
+                      variant="outline"
+                      role="combobox"
+                      className={cn(
+                        "w-full justify-between",
+                        !field.value && "text-muted-foreground"
+                      )}
+                      disabled={isLoading}
+                    >
+                      {field.value
+                        ? materials.find(
+                            (material) => material.material_name === field.value
+                          )?.material_name
+                        : isLoading
+                        ? "Yükleniyor..."
+                        : "Malzeme adı seçin"}
+                      <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                    </Button>
+                  </FormControl>
+                </PopoverTrigger>
+                <PopoverContent className="min-w-[var(--radix-popover-trigger-width)] max-w-[var(--radix-popover-trigger-width)] p-0">
+                  <Command>
+                    <CommandList>
+                      <CommandInput placeholder="Malzeme adı ara..." />
+                      <CommandEmpty>
+                        {isLoading
+                          ? "Yükleniyor..."
+                          : "Malzeme adı bulunamadı."}
+                      </CommandEmpty>
+                      <CommandGroup>
+                        {materials?.map((material) => (
+                          <CommandItem
+                            value={material.material_name}
+                            key={material.id}
+                            onSelect={() => {
+                              form.setValue(
+                                "material_name",
+                                material.material_name
+                              );
+                              form.setValue(
+                                "material_code",
+                                material.material_code
+                              );
+                              setOpenMaterialName(false);
+                            }}
+                          >
+                            <Check
+                              className={cn(
+                                "mr-2 h-4 w-4",
+                                material.material_name === field.value
+                                  ? "opacity-100"
+                                  : "opacity-0"
+                              )}
+                            />
+                            {material.material_name}
+                          </CommandItem>
+                        ))}
+                      </CommandGroup>
+                    </CommandList>
+                  </Command>
+                </PopoverContent>
+              </Popover>
               <FormMessage />
             </FormItem>
           )}

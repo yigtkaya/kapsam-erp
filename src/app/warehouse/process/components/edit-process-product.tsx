@@ -17,7 +17,23 @@ import {
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
-import { useUpdateProduct } from "@/hooks/useProducts";
+import { useUpdateProduct, useProducts } from "@/hooks/useProducts";
+import { Check, ChevronsUpDown } from "lucide-react";
+import { cn } from "@/api/utils";
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+} from "@/components/ui/command";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import { useState } from "react";
+import { CommandList } from "cmdk";
 
 // Define the Zod schema for Process Products, with product_type "PROCESS"
 export const processProductSchema = z.object({
@@ -43,6 +59,11 @@ export function EditProcessProductForm({
 }: EditProcessProductFormProps) {
   const router = useRouter();
   const { mutateAsync: updateProduct } = useUpdateProduct();
+  const { data: products, isLoading } = useProducts({ product_type: "SEMI" });
+  const [openProductCode, setOpenProductCode] = useState(false);
+  const [openProductName, setOpenProductName] = useState(false);
+
+  const productsList = products?.results ?? [];
 
   const form = useForm<FormValues>({
     resolver: zodResolver(processProductSchema),
@@ -83,11 +104,72 @@ export function EditProcessProductForm({
           control={form.control}
           name="product_code"
           render={({ field }) => (
-            <FormItem>
+            <FormItem className="flex flex-col">
               <FormLabel>Ürün Kodu</FormLabel>
-              <FormControl>
-                <Input {...field} />
-              </FormControl>
+              <Popover open={openProductCode} onOpenChange={setOpenProductCode}>
+                <PopoverTrigger asChild>
+                  <FormControl>
+                    <Button
+                      variant="outline"
+                      role="combobox"
+                      aria-expanded={openProductCode}
+                      className={cn(
+                        "w-full justify-between",
+                        !field.value && "text-muted-foreground"
+                      )}
+                      disabled={isLoading}
+                    >
+                      {field.value
+                        ? productsList.find(
+                            (product) => product.product_code === field.value
+                          )?.product_code
+                        : isLoading
+                        ? "Yükleniyor..."
+                        : "Ürün kodu seçin"}
+                      <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                    </Button>
+                  </FormControl>
+                </PopoverTrigger>
+                <PopoverContent className="min-w-[var(--radix-popover-trigger-width)] max-w-[var(--radix-popover-trigger-width)] p-0">
+                  <Command>
+                    <CommandList>
+                      <CommandInput placeholder="Ürün kodu ara..." />
+                      <CommandEmpty>
+                        {isLoading ? "Yükleniyor..." : "Ürün kodu bulunamadı."}
+                      </CommandEmpty>
+                      <CommandGroup>
+                        {productsList.map((product) => (
+                          <CommandItem
+                            value={product.product_code}
+                            key={product.id}
+                            onSelect={() => {
+                              form.setValue(
+                                "product_code",
+                                product.product_code
+                              );
+                              form.setValue(
+                                "product_name",
+                                product.product_name
+                              );
+                              setOpenProductCode(false);
+                            }}
+                          >
+                            <Check
+                              className={cn(
+                                "mr-2 h-4 w-4",
+                                product.product_code === field.value
+                                  ? "opacity-100"
+                                  : "opacity-0"
+                              )}
+                            />
+                            {product.product_code}
+                          </CommandItem>
+                        ))}
+                      </CommandGroup>
+                    </CommandList>
+                  </Command>
+                </PopoverContent>
+              </Popover>
               <FormMessage />
             </FormItem>
           )}
@@ -97,11 +179,72 @@ export function EditProcessProductForm({
           control={form.control}
           name="product_name"
           render={({ field }) => (
-            <FormItem>
+            <FormItem className="flex flex-col">
               <FormLabel>Ürün Adı</FormLabel>
-              <FormControl>
-                <Input {...field} />
-              </FormControl>
+              <Popover open={openProductName} onOpenChange={setOpenProductName}>
+                <PopoverTrigger asChild>
+                  <FormControl>
+                    <Button
+                      variant="outline"
+                      role="combobox"
+                      aria-expanded={openProductName}
+                      className={cn(
+                        "w-full justify-between",
+                        !field.value && "text-muted-foreground"
+                      )}
+                      disabled={isLoading}
+                    >
+                      {field.value
+                        ? productsList.find(
+                            (product) => product.product_name === field.value
+                          )?.product_name
+                        : isLoading
+                        ? "Yükleniyor..."
+                        : "Ürün adı seçin"}
+                      <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                    </Button>
+                  </FormControl>
+                </PopoverTrigger>
+                <PopoverContent className="min-w-[var(--radix-popover-trigger-width)] max-w-[var(--radix-popover-trigger-width)] p-0">
+                  <Command>
+                    <CommandList>
+                      <CommandInput placeholder="Ürün adı ara..." />
+                      <CommandEmpty>
+                        {isLoading ? "Yükleniyor..." : "Ürün adı bulunamadı."}
+                      </CommandEmpty>
+                      <CommandGroup>
+                        {productsList.map((product) => (
+                          <CommandItem
+                            value={product.product_name}
+                            key={product.id}
+                            onSelect={() => {
+                              form.setValue(
+                                "product_name",
+                                product.product_name
+                              );
+                              form.setValue(
+                                "product_code",
+                                product.product_code
+                              );
+                              setOpenProductName(false);
+                            }}
+                          >
+                            <Check
+                              className={cn(
+                                "mr-2 h-4 w-4",
+                                product.product_name === field.value
+                                  ? "opacity-100"
+                                  : "opacity-0"
+                              )}
+                            />
+                            {product.product_name}
+                          </CommandItem>
+                        ))}
+                      </CommandGroup>
+                    </CommandList>
+                  </Command>
+                </PopoverContent>
+              </Popover>
               <FormMessage />
             </FormItem>
           )}

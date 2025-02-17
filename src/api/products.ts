@@ -54,6 +54,8 @@ export async function fetchProducts({
     }
   );
 
+  console.log(response);
+
   if (!response.ok) {
     return {
       count: 0,
@@ -64,6 +66,9 @@ export async function fetchProducts({
   }
 
   const data = await response.json();
+
+  console.log(data);
+
   return data;
 }
 
@@ -83,15 +88,12 @@ export async function fetchProduct({ id }: ProductParams): Promise<Product> {
     },
   });
 
-  console.log(response);
-
   if (!response.ok) {
     throw new Error("Failed to fetch product");
   }
 
   const data = await response.json();
 
-  console.log(data);
   return data;
 }
 
@@ -112,8 +114,6 @@ export const createProduct = async (product: Product) => {
     current_stock: product.current_stock,
     inventory_category: product.inventory_category,
   };
-
-  console.log(productJson);
 
   const response = await fetch(`${API_URL}/api/inventory/products/`, {
     method: "POST",
@@ -137,8 +137,6 @@ export const createProduct = async (product: Product) => {
   }
 
   const data = await response.json();
-
-  console.log(data);
 
   return {
     success: true,
@@ -167,8 +165,6 @@ export const updateProduct = async (product: Product) => {
     inventory_category: product.inventory_category,
   };
 
-  console.log(productJson);
-
   const response = await fetch(
     `${API_URL}/api/inventory/products/${product.id}`,
     {
@@ -194,8 +190,6 @@ export const updateProduct = async (product: Product) => {
   }
 
   const data = await response.json();
-
-  console.log(data);
 
   return {
     success: true,
@@ -256,7 +250,7 @@ export const createTechnicalDrawing = async (
   return data;
 };
 
-export const deleteProduct = async (id: string) => {
+export const deleteProduct = async (id: number) => {
   const cookieStore = await cookies();
   const rawCSRFCookie = cookieStore.get("csrftoken")?.value || "";
   const sessionid = cookieStore.get("sessionid")?.value;
@@ -288,6 +282,5 @@ export const deleteProduct = async (id: string) => {
 
   // Otherwise, attempt to parse the JSON response
   const data = await response.json();
-  console.log(data);
   return data;
 };

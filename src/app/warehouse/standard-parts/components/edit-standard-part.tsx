@@ -18,6 +18,24 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
 import { useUpdateProduct } from "@/hooks/useProducts";
+import { useProducts } from "@/hooks/useProducts";
+import { Check, ChevronsUpDown } from "lucide-react";
+import { cn } from "@/api/utils";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+} from "@/components/ui/command";
+import { useState } from "react";
+
 // Define the Zod schema for Standard Parts (Product with type STANDARD_PART)
 export const standardPartSchema = z.object({
   product_code: z.string().nonempty("Parça kodu zorunludur"),
@@ -39,6 +57,12 @@ interface EditStandardPartFormProps {
 export function EditStandardPartForm({ part }: EditStandardPartFormProps) {
   const router = useRouter();
   const { mutateAsync: updateProduct } = useUpdateProduct();
+  const { data: products, isLoading } = useProducts({
+    product_type: "STANDARD_PART",
+  });
+  const productsList = products?.results ?? [];
+  const [openProductCode, setOpenProductCode] = useState(false);
+  const [openProductName, setOpenProductName] = useState(false);
   const form = useForm<FormValues>({
     resolver: zodResolver(standardPartSchema),
     defaultValues: {
@@ -78,11 +102,68 @@ export function EditStandardPartForm({ part }: EditStandardPartFormProps) {
           control={form.control}
           name="product_code"
           render={({ field }) => (
-            <FormItem>
+            <FormItem className="flex flex-col">
               <FormLabel>Ürün Kodu</FormLabel>
-              <FormControl>
-                <Input {...field} />
-              </FormControl>
+              <Popover open={openProductCode} onOpenChange={setOpenProductCode}>
+                <PopoverTrigger asChild>
+                  <FormControl>
+                    <Button
+                      variant="outline"
+                      role="combobox"
+                      aria-expanded={openProductCode}
+                      className={cn(
+                        "w-full justify-between",
+                        !field.value && "text-muted-foreground"
+                      )}
+                      disabled={isLoading}
+                    >
+                      {field.value
+                        ? productsList.find(
+                            (product) => product.product_code === field.value
+                          )?.product_code
+                        : "Ürün kodu seçin"}
+                      <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                    </Button>
+                  </FormControl>
+                </PopoverTrigger>
+                <PopoverContent className="min-w-[var(--radix-popover-trigger-width)] max-w-[var(--radix-popover-trigger-width)] p-0">
+                  <Command>
+                    <CommandList>
+                      <CommandInput placeholder="Ürün kodu ara..." />
+                      <CommandEmpty>Ürün kodu bulunamadı</CommandEmpty>
+                      <CommandGroup>
+                        {productsList.map((product) => (
+                          <CommandItem
+                            value={product.product_code}
+                            key={product.id}
+                            onSelect={() => {
+                              form.setValue(
+                                "product_code",
+                                product.product_code
+                              );
+                              form.setValue(
+                                "product_name",
+                                product.product_name
+                              );
+                              setOpenProductCode(false);
+                            }}
+                          >
+                            <Check
+                              className={cn(
+                                "mr-2 h-4 w-4",
+                                product.product_code === field.value
+                                  ? "opacity-100"
+                                  : "opacity-0"
+                              )}
+                            />
+                            {product.product_code}
+                          </CommandItem>
+                        ))}
+                      </CommandGroup>
+                    </CommandList>
+                  </Command>
+                </PopoverContent>
+              </Popover>
               <FormMessage />
             </FormItem>
           )}
@@ -92,11 +173,67 @@ export function EditStandardPartForm({ part }: EditStandardPartFormProps) {
           control={form.control}
           name="product_name"
           render={({ field }) => (
-            <FormItem>
+            <FormItem className="flex flex-col">
               <FormLabel>Ürün Adı</FormLabel>
-              <FormControl>
-                <Input {...field} />
-              </FormControl>
+              <Popover open={openProductName} onOpenChange={setOpenProductName}>
+                <PopoverTrigger asChild>
+                  <FormControl>
+                    <Button
+                      variant="outline"
+                      role="combobox"
+                      aria-expanded={openProductName}
+                      className={cn(
+                        "w-full justify-between",
+                        !field.value && "text-muted-foreground"
+                      )}
+                    >
+                      {field.value
+                        ? productsList.find(
+                            (product) => product.product_name === field.value
+                          )?.product_name
+                        : "Ürün adı seçiniz"}
+                      <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                    </Button>
+                  </FormControl>
+                </PopoverTrigger>
+                <PopoverContent className="min-w-[var(--radix-popover-trigger-width)] max-w-[var(--radix-popover-trigger-width)] p-0">
+                  <Command>
+                    <CommandInput placeholder="Ürün adı ara..." />
+                    <CommandList>
+                      <CommandEmpty>Ürün bulunamadı</CommandEmpty>
+                      <CommandGroup>
+                        {productsList.map((product) => (
+                          <CommandItem
+                            key={product.id}
+                            value={product.product_name}
+                            onSelect={() => {
+                              form.setValue(
+                                "product_name",
+                                product.product_name
+                              );
+                              form.setValue(
+                                "product_code",
+                                product.product_code
+                              );
+                              setOpenProductName(false);
+                            }}
+                          >
+                            {product.product_name}
+                            <Check
+                              className={cn(
+                                "ml-auto h-4 w-4",
+                                product.product_name === field.value
+                                  ? "opacity-100"
+                                  : "opacity-0"
+                              )}
+                            />
+                          </CommandItem>
+                        ))}
+                      </CommandGroup>
+                    </CommandList>
+                  </Command>
+                </PopoverContent>
+              </Popover>
               <FormMessage />
             </FormItem>
           )}
