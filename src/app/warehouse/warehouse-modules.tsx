@@ -14,21 +14,21 @@ import Link from "next/link";
 const salesModules = [
   {
     title: "Hammadde",
-    description: "Hammadde depo yönetimi",
+    description: "Hammadde ve Standart Parçalar",
     icon: Package,
     href: "/warehouse/raw-materials",
     color: "bg-emerald-500",
   },
   {
     title: "Proses",
-    description: "Proses depo yönetimi",
+    description: "Yarı Mamül ve Operasyondaki parçalar",
     icon: Activity,
     href: "/warehouse/process",
     color: "bg-indigo-500",
   },
   {
-    title: "Mamül Depo",
-    description: "Mamül depo ve sevkiyat yönetimi",
+    title: "Sevk Depo",
+    description: "Montajlı ve Tekil Parçalar",
     icon: Truck,
     href: "/warehouse/finished-products",
     color: "bg-blue-500",
