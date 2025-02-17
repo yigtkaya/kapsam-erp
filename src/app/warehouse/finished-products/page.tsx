@@ -13,7 +13,7 @@ export default function FinishedProductsPage() {
       <div className="flex justify-between items-start">
         <div>
           <h1 className="text-3xl font-bold tracking-tight">
-            Montajlanmış Ürünler
+            Montajlanmış Ürünler ve Tekil Ürünler
           </h1>
           <p className="text-muted-foreground">
             Montajlanmış ürünleri görüntüleyin ve yönetin
