@@ -2,7 +2,7 @@
 import { User, UserRole } from "@/types/user";
 import { cookies } from "next/headers";
 
-const API_URL = "http://localhost:8000";
+const API_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
 
 export async function getUsers(): Promise<User[]> {
   const cookieStore = await cookies();
