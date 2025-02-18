@@ -1,11 +1,7 @@
 "use server";
 
-import {
-  ApiPaginatedResponse,
-  MaterialType,
-  UnitOfMeasure,
-} from "@/types/inventory";
-import { Product, RawMaterial } from "@/types/inventory";
+import { UnitOfMeasure } from "@/types/inventory";
+import { RawMaterial } from "@/types/inventory";
 import { cookies } from "next/headers";
 
 const API_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
@@ -74,7 +70,7 @@ export async function fetchRawMaterials({
   thickness_max,
   diameter_min,
   diameter_max,
-}: RawMaterialsParams): Promise<ApiPaginatedResponse<RawMaterial>> {
+}: RawMaterialsParams): Promise<RawMaterial[]> {
   const params = new URLSearchParams();
   if (category) params.append("category", category);
   if (material_name) params.append("material_name", material_name);
@@ -108,12 +104,7 @@ export async function fetchRawMaterials({
   );
 
   if (!response.ok) {
-    return {
-      count: 0,
-      next: null,
-      previous: null,
-      results: [],
-    };
+    return [];
   }
 
   const data = await response.json();

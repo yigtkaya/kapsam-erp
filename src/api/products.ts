@@ -1,9 +1,5 @@
 "use server";
-import {
-  ApiPaginatedResponse,
-  Product,
-  TechnicalDrawing,
-} from "@/types/inventory";
+import { Product, TechnicalDrawing } from "@/types/inventory";
 import { cookies } from "next/headers";
 
 const API_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
@@ -13,8 +9,6 @@ interface ProductsParams {
   product_type?: string;
   product_name?: string;
   product_code?: string;
-  page?: number;
-  page_size?: number;
 }
 
 interface ProductParams {
@@ -26,17 +20,13 @@ export async function fetchProducts({
   product_type,
   product_name,
   product_code,
-  page = 1,
-  page_size = 50,
-}: ProductsParams): Promise<ApiPaginatedResponse<Product>> {
+}: ProductsParams): Promise<Product[]> {
   const params = new URLSearchParams();
 
   if (category) params.append("category", category);
   if (product_type) params.append("product_type", product_type);
   if (product_name) params.append("product_name", product_name);
   if (product_code) params.append("product_code", product_code);
-  params.append("page", page.toString());
-  params.append("page_size", page_size.toString());
 
   const cookieStore = await cookies();
   const csrftoken = cookieStore.get("csrftoken")?.value;
@@ -57,12 +47,7 @@ export async function fetchProducts({
   console.log(response);
 
   if (!response.ok) {
-    return {
-      count: 0,
-      next: null,
-      previous: null,
-      results: [],
-    };
+    return [];
   }
 
   const data = await response.json();

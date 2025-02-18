@@ -31,42 +31,15 @@ export default function StandardPartsDataTable() {
   const [sorting, setSorting] = useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
   const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({});
-  const [pageIndex, setPageIndex] = useState(0);
-  const [pageSize, setPageSize] = useState(10);
-  const [debouncedProductCode, setDebouncedProductCode] = useState("");
-  const [debouncedProductName, setDebouncedProductName] = useState("");
+  const [pageSize, setPageSize] = useState(50);
 
-  // Extract column filter values
-  const productCodeFilter =
-    (columnFilters.find((f) => f.id === "product_code")?.value as string) || "";
-  const productNameFilter =
-    (columnFilters.find((f) => f.id === "product_name")?.value as string) || "";
-
-  // Debounce effects
-  useEffect(() => {
-    const handler = setTimeout(() => {
-      setDebouncedProductCode(productCodeFilter);
-    }, 500);
-    return () => clearTimeout(handler);
-  }, [productCodeFilter]);
-
-  useEffect(() => {
-    const handler = setTimeout(() => {
-      setDebouncedProductName(productNameFilter);
-    }, 500);
-    return () => clearTimeout(handler);
-  }, [productNameFilter]);
   const { data, isLoading, error } = useProducts({
     category: "HAMMADDE",
     product_type: "STANDARD_PART",
-    page: pageIndex + 1,
-    page_size: pageSize,
-    product_code: debouncedProductCode,
-    product_name: debouncedProductName,
   });
 
   const table = useReactTable({
-    data: data?.results ?? [],
+    data: data ?? [],
     columns: standardPartsColumns,
     getCoreRowModel: getCoreRowModel(),
     getPaginationRowModel: getPaginationRowModel(),
@@ -79,23 +52,7 @@ export default function StandardPartsDataTable() {
       sorting,
       columnFilters,
       columnVisibility,
-      pagination: {
-        pageIndex,
-        pageSize,
-      },
     },
-    pageCount: data ? Math.ceil(data.count / pageSize) : -1,
-    onPaginationChange: (updater) => {
-      if (typeof updater === "function") {
-        const newState = updater({
-          pageIndex,
-          pageSize,
-        });
-        setPageIndex(newState.pageIndex);
-        setPageSize(newState.pageSize);
-      }
-    },
-    manualPagination: true,
   });
 
   return (
@@ -138,7 +95,7 @@ export default function StandardPartsDataTable() {
                 rowCount={pageSize}
                 columnCount={standardPartsColumns.length}
               />
-            ) : data?.results && data.results.length === 0 ? (
+            ) : data && data.length === 0 ? (
               <TableRow>
                 <TableCell
                   colSpan={standardPartsColumns.length}

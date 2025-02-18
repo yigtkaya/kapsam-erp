@@ -30,49 +30,16 @@ export default function ProcessDataTable() {
   const [sorting, setSorting] = useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
   const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({});
-  const [globalFilter, setGlobalFilter] = useState("");
   const [pageIndex, setPageIndex] = useState(0);
   const [pageSize, setPageSize] = useState(50);
-  const [debouncedProductCode, setDebouncedProductCode] = useState("");
-  const [debouncedProductName, setDebouncedProductName] = useState("");
-
-  // Extract column filter values
-  const productCodeFilter =
-    (columnFilters.find((f) => f.id === "product_code")?.value as string) || "";
-  const productNameFilter =
-    (columnFilters.find((f) => f.id === "product_name")?.value as string) || "";
-
-  // Debounce effects
-  useEffect(() => {
-    const handler = setTimeout(() => {
-      setDebouncedProductCode(productCodeFilter);
-    }, 500);
-    return () => clearTimeout(handler);
-  }, [productCodeFilter]);
-
-  useEffect(() => {
-    const handler = setTimeout(() => {
-      setDebouncedProductName(productNameFilter);
-    }, 500);
-    return () => clearTimeout(handler);
-  }, [productNameFilter]);
-
-  // Reset to first page when filters change
-  useEffect(() => {
-    setPageIndex(0);
-  }, [debouncedProductCode, debouncedProductName]);
 
   const { data, isLoading, error } = useProducts({
     product_type: "SEMI",
     category: "PROSES",
-    page: pageIndex + 1,
-    page_size: pageSize,
-    product_code: debouncedProductCode,
-    product_name: debouncedProductName,
   });
 
   const table = useReactTable({
-    data: data?.results ?? [],
+    data: data ?? [],
     columns: processProductsColumns,
     getCoreRowModel: getCoreRowModel(),
     getPaginationRowModel: getPaginationRowModel(),
@@ -90,8 +57,6 @@ export default function ProcessDataTable() {
         pageSize,
       },
     },
-    manualPagination: true,
-    pageCount: data ? Math.ceil(data.count / pageSize) : -1,
     onPaginationChange: (updater) => {
       if (typeof updater === "function") {
         const newState = updater({ pageIndex, pageSize });
@@ -113,7 +78,7 @@ export default function ProcessDataTable() {
     );
   }
 
-  if (data?.results && data.results.length === 0) {
+  if (data && data.length === 0) {
     return (
       <div className="text-center py-10 text-muted-foreground">
         Process ürün bulunamadı.
@@ -161,7 +126,7 @@ export default function ProcessDataTable() {
                 rowCount={pageSize}
                 columnCount={processProductsColumns.length}
               />
-            ) : data?.results && data.results.length === 0 ? (
+            ) : data && data.length === 0 ? (
               <TableRow>
                 <TableCell
                   colSpan={processProductsColumns.length}

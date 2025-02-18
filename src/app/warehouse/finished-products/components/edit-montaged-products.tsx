@@ -61,14 +61,12 @@ export function EditMontagedProductForm({
   const { mutateAsync: updateProduct } = useUpdateProduct();
   const { data: products, isLoading } = useProducts({
     product_type: "MONTAGED",
-    page: 1,
-    page_size: 100,
   });
 
   const [openProductCode, setOpenProductCode] = useState(false);
   const [openProductName, setOpenProductName] = useState(false);
 
-  const productsList = products?.results ?? [];
+  const productsList = products ?? [];
 
   const form = useForm<FormValues>({
     resolver: zodResolver(montagedProductSchema),
@@ -126,7 +124,8 @@ export function EditMontagedProductForm({
                     >
                       {field.value
                         ? productsList.find(
-                            (product) => product.product_code === field.value
+                            (product: Product) =>
+                              product.product_code === field.value
                           )?.product_code
                         : isLoading
                         ? "Yükleniyor..."
@@ -143,7 +142,7 @@ export function EditMontagedProductForm({
                         {isLoading ? "Yükleniyor..." : "Ürün kodu bulunamadı."}
                       </CommandEmpty>
                       <CommandGroup>
-                        {productsList.map((product) => (
+                        {productsList.map((product: Product) => (
                           <CommandItem
                             value={product.product_code}
                             key={product.id}
@@ -201,7 +200,8 @@ export function EditMontagedProductForm({
                     >
                       {field.value
                         ? productsList.find(
-                            (product) => product.product_name === field.value
+                            (product: Product) =>
+                              product.product_name === field.value
                           )?.product_name
                         : isLoading
                         ? "Yükleniyor..."
@@ -218,7 +218,7 @@ export function EditMontagedProductForm({
                         {isLoading ? "Yükleniyor..." : "Ürün adı bulunamadı."}
                       </CommandEmpty>
                       <CommandGroup>
-                        {productsList.map((product) => (
+                        {productsList.map((product: Product) => (
                           <CommandItem
                             value={product.product_name}
                             key={product.id}

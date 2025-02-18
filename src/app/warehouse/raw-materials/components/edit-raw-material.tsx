@@ -69,7 +69,7 @@ export function EditRawMaterialForm({ material }: EditRawMaterialFormProps) {
   const [openMaterialCode, setOpenMaterialCode] = useState(false);
   const [openMaterialName, setOpenMaterialName] = useState(false);
 
-  const materials = rawMaterials?.results ?? [];
+  const materials = rawMaterials ?? [];
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),

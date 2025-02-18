@@ -63,7 +63,7 @@ export function EditProcessProductForm({
   const [openProductCode, setOpenProductCode] = useState(false);
   const [openProductName, setOpenProductName] = useState(false);
 
-  const productsList = products?.results ?? [];
+  const productsList = products ?? [];
 
   const form = useForm<FormValues>({
     resolver: zodResolver(processProductSchema),

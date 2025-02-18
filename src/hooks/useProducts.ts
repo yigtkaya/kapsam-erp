@@ -7,19 +7,13 @@ import {
   updateProduct,
   deleteProduct,
 } from "@/api/products";
-import {
-  Product,
-  ApiPaginatedResponse,
-  TechnicalDrawing,
-} from "@/types/inventory";
+import { Product, TechnicalDrawing } from "@/types/inventory";
 
 interface UseProductsParams {
   category?: string;
   product_type?: string;
   product_name?: string;
   product_code?: string;
-  page?: number;
-  page_size?: number;
 }
 
 export function useProducts({
@@ -27,27 +21,15 @@ export function useProducts({
   product_type,
   product_name,
   product_code,
-  page = 1,
-  page_size = 50,
 }: UseProductsParams) {
-  return useQuery<ApiPaginatedResponse<Product>>({
-    queryKey: [
-      "products",
-      category,
-      product_type,
-      product_name,
-      product_code,
-      page,
-      page_size,
-    ],
+  return useQuery<Product[]>({
+    queryKey: ["products", category, product_type, product_name, product_code],
     queryFn: () =>
       fetchProducts({
         category,
         product_type,
         product_name,
         product_code,
-        page,
-        page_size,
       }),
   });
 }

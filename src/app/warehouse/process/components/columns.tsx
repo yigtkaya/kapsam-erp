@@ -56,9 +56,8 @@ export const processProductsColumns: ColumnDef<Product>[] = [
     enableSorting: true,
     enableColumnFilter: true,
     filterFn: (row, columnId, filterValue) => {
-      const rowValue =
-        row.getValue(columnId)?.toString().toLocaleLowerCase("tr-TR") || "";
-      const filter = filterValue?.toString().toLocaleLowerCase("tr-TR") || "";
+      const rowValue = row.getValue(columnId)?.toString().toLowerCase() || "";
+      const filter = filterValue.toString().toLowerCase();
       return rowValue.includes(filter);
     },
     enableHiding: false,
@@ -79,9 +78,8 @@ export const processProductsColumns: ColumnDef<Product>[] = [
     enableSorting: true,
     enableColumnFilter: true,
     filterFn: (row, columnId, filterValue) => {
-      const rowValue =
-        row.getValue(columnId)?.toString().toLocaleLowerCase("tr-TR") || "";
-      const filter = filterValue?.toString().toLocaleLowerCase("tr-TR") || "";
+      const rowValue = row.getValue(columnId)?.toString().toLowerCase() || "";
+      const filter = filterValue.toString().toLowerCase();
       return rowValue.includes(filter);
     },
     enableHiding: false,

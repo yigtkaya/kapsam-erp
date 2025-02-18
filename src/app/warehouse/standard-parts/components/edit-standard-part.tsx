@@ -60,7 +60,7 @@ export function EditStandardPartForm({ part }: EditStandardPartFormProps) {
   const { data: products, isLoading } = useProducts({
     product_type: "STANDARD_PART",
   });
-  const productsList = products?.results ?? [];
+  const productsList = products ?? [];
   const [openProductCode, setOpenProductCode] = useState(false);
   const [openProductName, setOpenProductName] = useState(false);
   const form = useForm<FormValues>({
@@ -117,11 +117,7 @@ export function EditStandardPartForm({ part }: EditStandardPartFormProps) {
                       )}
                       disabled={isLoading}
                     >
-                      {field.value
-                        ? productsList.find(
-                            (product) => product.product_code === field.value
-                          )?.product_code
-                        : "Ürün kodu seçin"}
+                      {field.value || "Ürün kodu seçiniz"}
                       <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                     </Button>
                   </FormControl>
@@ -187,11 +183,7 @@ export function EditStandardPartForm({ part }: EditStandardPartFormProps) {
                         !field.value && "text-muted-foreground"
                       )}
                     >
-                      {field.value
-                        ? productsList.find(
-                            (product) => product.product_name === field.value
-                          )?.product_name
-                        : "Ürün adı seçiniz"}
+                      {field.value || "Ürün adı seçiniz"}
                       <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                     </Button>
                   </FormControl>

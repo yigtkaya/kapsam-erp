@@ -60,14 +60,12 @@ export function EditSingleProductForm({
   const { mutateAsync: updateProduct } = useUpdateProduct();
   const { data: products, isLoading } = useProducts({
     product_type: "SINGLE",
-    page: 1,
-    page_size: 100,
   });
 
   const [openProductCode, setOpenProductCode] = useState(false);
   const [openProductName, setOpenProductName] = useState(false);
 
-  const productsList = products?.results ?? [];
+  const productsList = products ?? [];
 
   const form = useForm<FormValues>({
     resolver: zodResolver(singleProductSchema),

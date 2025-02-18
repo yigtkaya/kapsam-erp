@@ -23,10 +23,6 @@ import {
   ColumnFiltersState,
   Column,
   useReactTable,
-  Row,
-  Cell,
-  HeaderGroup,
-  Header,
 } from "@tanstack/react-table";
 import { DataTablePagination } from "@/components/ui/data-table-pagination";
 import { DataTableViewOptions } from "@/components/ui/data-table-view-options";
@@ -41,17 +37,14 @@ export default function RawMaterialsDataTable() {
   const [sorting, setSorting] = useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
   const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({});
-  const [pageIndex, setPageIndex] = useState(0);
-  const [pageSize, setPageSize] = useState(50);
+  const [rowSelection, setRowSelection] = useState({});
 
   const { data, isLoading, error } = useRawMaterials({
     category: "HAMMADDE",
-    page: pageIndex + 1,
-    page_size: pageSize,
   });
 
   const table = useReactTable({
-    data: data?.results ?? [],
+    data: data ?? [],
     columns: rawMaterialsColumns,
     getCoreRowModel: getCoreRowModel(),
     getPaginationRowModel: getPaginationRowModel(),
@@ -60,27 +53,18 @@ export default function RawMaterialsDataTable() {
     onSortingChange: setSorting,
     onColumnFiltersChange: setColumnFilters,
     onColumnVisibilityChange: setColumnVisibility,
+    onRowSelectionChange: setRowSelection,
     state: {
       sorting,
       columnFilters,
       columnVisibility,
+      rowSelection,
+    },
+    initialState: {
       pagination: {
-        pageIndex,
-        pageSize,
+        pageSize: 50,
       },
     },
-    pageCount: data ? Math.ceil(data.count / pageSize) : -1,
-    onPaginationChange: (updater) => {
-      if (typeof updater === "function") {
-        const newState = updater({
-          pageIndex,
-          pageSize,
-        });
-        setPageIndex(newState.pageIndex);
-        setPageSize(newState.pageSize);
-      }
-    },
-    manualPagination: true,
   });
 
   if (isLoading) {
@@ -95,10 +79,10 @@ export default function RawMaterialsDataTable() {
     );
   }
 
-  if (!data?.results || data.results.length === 0) {
+  if (!data || data.length === 0) {
     return (
       <div className="text-center py-10 text-muted-foreground">
-        No raw materials found.
+        Hammadde bulunamadı
       </div>
     );
   }
@@ -130,29 +114,76 @@ export default function RawMaterialsDataTable() {
                     {["width", "height", "thickness", "diameter_mm"].includes(
                       header.column.id
                     ) && (
-                      <DimensionFilter
-                        column={header.column as Column<RawMaterial, number>}
-                        label={
-                          header.column.id === "width"
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm font-medium text-muted-foreground">
+                          {header.column.id === "width"
                             ? "Genişlik"
                             : header.column.id === "height"
                             ? "Yükseklik"
                             : header.column.id === "thickness"
                             ? "Kalınlık"
-                            : "Çap (mm)"
-                        }
-                      />
+                            : "Çap (mm)"}
+                        </span>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="h-7 w-7 p-0"
+                          onClick={() =>
+                            header.column.toggleSorting(
+                              header.column.getIsSorted() === "asc"
+                            )
+                          }
+                        >
+                          {header.column.getIsSorted() === "asc" ? (
+                            <ArrowUpIcon className="h-4 w-4" />
+                          ) : header.column.getIsSorted() === "desc" ? (
+                            <ArrowDownIcon className="h-4 w-4" />
+                          ) : (
+                            <ArrowUpIcon className="h-4 w-4 opacity-50" />
+                          )}
+                        </Button>
+                        <DimensionFilter
+                          column={header.column as Column<RawMaterial, number>}
+                          label={
+                            header.column.id === "width"
+                              ? "Genişlik"
+                              : header.column.id === "height"
+                              ? "Yükseklik"
+                              : header.column.id === "thickness"
+                              ? "Kalınlık"
+                              : "Çap (mm)"
+                          }
+                        />
+                      </div>
                     )}
                     {["material_code", "material_name"].includes(
                       header.column.id
                     ) && (
                       <div className="flex flex-col gap-1">
-                        <div className="flex items-center gap-1">
+                        <div className="flex items-center gap-1 justify-between">
                           <span className="text-sm font-medium text-muted-foreground">
                             {header.column.id === "material_code"
                               ? "Malzeme Kodu"
                               : "Malzeme Adı"}
                           </span>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="h-7 w-7 p-0"
+                            onClick={() =>
+                              header.column.toggleSorting(
+                                header.column.getIsSorted() === "asc"
+                              )
+                            }
+                          >
+                            {header.column.getIsSorted() === "asc" ? (
+                              <ArrowUpIcon className="h-4 w-4" />
+                            ) : header.column.getIsSorted() === "desc" ? (
+                              <ArrowDownIcon className="h-4 w-4" />
+                            ) : (
+                              <ArrowUpIcon className="h-4 w-4 opacity-50" />
+                            )}
+                          </Button>
                         </div>
                         <Input
                           placeholder="Filtrele..."
