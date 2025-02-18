@@ -154,7 +154,7 @@ export const finishedProductsColumns: ColumnDef<Product>[] = [
                     "Bu ürünü silmek istediğinize emin misiniz?"
                   );
                   if (confirm) {
-                    deleteProduct.mutate(row.original.id.toString());
+                    deleteProduct.mutate(row.original.id);
                   }
                 }}
               >

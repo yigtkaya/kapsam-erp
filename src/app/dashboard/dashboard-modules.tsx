@@ -1,6 +1,6 @@
 "use client";
 
-import { cn } from "@/api/utils";
+import { cn } from "@/lib/utils";
 import {
   Hammer,
   Factory,

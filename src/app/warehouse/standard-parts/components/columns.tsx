@@ -155,7 +155,7 @@ export const standardPartsColumns: ColumnDef<Product>[] = [
                   if (
                     window.confirm("Ürünü silmek istediğinize emin misiniz?")
                   ) {
-                    deleteProduct.mutate(row.original.id.toString());
+                    deleteProduct.mutate(row.original.id);
                   }
                 }}
               >

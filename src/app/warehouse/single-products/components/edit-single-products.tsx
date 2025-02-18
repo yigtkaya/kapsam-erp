@@ -19,7 +19,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
 import { useUpdateProduct, useProducts } from "@/hooks/useProducts";
 import { Check, ChevronsUpDown } from "lucide-react";
-import { cn } from "@/api/utils";
+import { cn } from "@/lib/utils";
 import {
   Command,
   CommandEmpty,

@@ -25,7 +25,7 @@ import {
 import { toast } from "sonner";
 import { useUpdateRawMaterial, useRawMaterials } from "@/hooks/useRawMaterials";
 import { Check, ChevronsUpDown } from "lucide-react";
-import { cn } from "@/api/utils";
+import { cn } from "@/lib/utils";
 import {
   Command,
   CommandEmpty,
