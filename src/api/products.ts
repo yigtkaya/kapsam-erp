@@ -115,6 +115,8 @@ export const createProduct = async (product: Product) => {
     inventory_category: product.inventory_category,
   };
 
+  console.log(productJson);
+
   const response = await fetch(`${API_URL}/api/inventory/products/`, {
     method: "POST",
     body: JSON.stringify(productJson),

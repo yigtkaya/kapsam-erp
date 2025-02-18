@@ -49,6 +49,10 @@ const formSchema = z.object({
   height: z.number().nullable(),
   thickness: z.number().nullable(),
   diameter_mm: z.number().nullable(),
+  current_stock: z.preprocess(
+    (a) => Number(a),
+    z.number().min(0, "Mevcut stok negatif olamaz")
+  ),
 });
 
 type FormValues = z.infer<typeof formSchema>;
@@ -82,7 +86,7 @@ export function EditRawMaterialForm({ material }: EditRawMaterialFormProps) {
       toast.success("Hammadde başarıyla güncellendi");
       router.back();
     } catch (error) {
-      console.error("Failed to update user:", error);
+      console.error("Failed to update raw material:", error);
       toast.error("Hammadde güncellenirken bir hata oluştu");
     }
   }
@@ -265,6 +269,25 @@ export function EditRawMaterialForm({ material }: EditRawMaterialFormProps) {
                   <SelectItem value="ALUMINUM">Alüminyum</SelectItem>
                 </SelectContent>
               </Select>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        <FormField
+          control={form.control}
+          name="current_stock"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Mevcut Stok</FormLabel>
+              <FormControl>
+                <Input
+                  type="number"
+                  placeholder="0"
+                  {...field}
+                  onChange={(e) => field.onChange(Number(e.target.value))}
+                />
+              </FormControl>
               <FormMessage />
             </FormItem>
           )}

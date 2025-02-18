@@ -34,7 +34,7 @@ export default function NewProcessProductPage() {
       product_type: "SEMI",
       description: "",
       current_stock: 0,
-      inventory_category: 3,
+      inventory_category: 2,
     },
   });
 
