@@ -3,7 +3,6 @@
 import { cn } from "@/lib/utils";
 import {
   Hammer,
-  Factory,
   Wrench,
   Gauge,
   PackageSearch,
@@ -17,6 +16,8 @@ import {
   Users,
 } from "lucide-react";
 import Link from "next/link";
+import { useAuth } from "@/hooks/use-auth";
+import { UserRole } from "@/types/core";
 
 const modules = [
   // {
@@ -32,6 +33,7 @@ const modules = [
     icon: Hammer,
     href: "/design/MKI",
     color: "bg-blue-500",
+    roles: ["ADMIN"],
   },
   {
     title: "Konfigürasyon Yönetimi",
@@ -39,6 +41,7 @@ const modules = [
     icon: FileSliders,
     href: "/design/configuration",
     color: "bg-blue-100",
+    roles: ["ADMIN"],
   },
   {
     title: "Müşteri Teknik Resimleri",
@@ -46,6 +49,7 @@ const modules = [
     icon: FolderKanban,
     href: "/design/customer-technical-drawings",
     color: "bg-green-500",
+    roles: ["ADMIN"],
   },
   {
     title: "Ürün Reçeteleri",
@@ -53,6 +57,7 @@ const modules = [
     icon: Workflow,
     href: "/production-planning/boms",
     color: "bg-blue-100",
+    roles: ["ADMIN"],
   },
   {
     title: "İş Emirleri",
@@ -60,6 +65,7 @@ const modules = [
     icon: Layers,
     href: "/production-planning/work-orders",
     color: "bg-green-500",
+    roles: ["ADMIN"],
   },
   {
     title: "Üretim Raporları",
@@ -67,6 +73,7 @@ const modules = [
     icon: Hammer,
     href: "/production/production-reports",
     color: "bg-blue-500",
+    roles: ["ADMIN"],
   },
   // {
   //   title: "Üretim Planlama",
@@ -82,6 +89,7 @@ const modules = [
     href: "/maintanence",
     color: "bg-purple-500",
     backgroundColor: "bg-blue-100",
+    roles: ["ADMIN"],
   },
   {
     title: "Satış",
@@ -90,6 +98,7 @@ const modules = [
     href: "/sales",
     color: "bg-red-500",
     backgroundColor: "bg-blue-100",
+    roles: ["ADMIN"],
   },
   {
     title: "Kalite Yönetim Sistemi",
@@ -98,6 +107,7 @@ const modules = [
     href: "/quality-management",
     color: "bg-yellow-500",
     backgroundColor: "bg-blue-100",
+    roles: ["ADMIN"],
   },
   {
     title: "Satın Alma",
@@ -106,6 +116,7 @@ const modules = [
     href: "/purchasing",
     color: "bg-yellow-500",
     backgroundColor: "bg-blue-100",
+    roles: ["ADMIN"],
   },
   // {
   //   title: "Kalite Kontrol",
@@ -127,6 +138,7 @@ const modules = [
     icon: Hammer,
     href: "/design",
     color: "bg-blue-500",
+    roles: ["ADMIN"],
   },
   {
     title: "Proses Kontrol",
@@ -134,6 +146,7 @@ const modules = [
     icon: FolderKanban,
     href: "/production",
     color: "bg-green-500",
+    roles: ["ADMIN"],
   },
   {
     title: "Operasyon Teknik Resimleri",
@@ -141,6 +154,7 @@ const modules = [
     icon: Wrench,
     href: "/maintanence",
     color: "bg-purple-500",
+    roles: ["ADMIN"],
   },
   {
     title: "Son Kontrol",
@@ -148,6 +162,7 @@ const modules = [
     icon: BringToFront,
     href: "/sales",
     color: "bg-red-500",
+    roles: ["ADMIN"],
   },
   {
     title: "FAI",
@@ -155,6 +170,7 @@ const modules = [
     icon: Gauge,
     href: "/quality/documentation",
     color: "bg-yellow-500",
+    roles: ["ADMIN"],
   },
   {
     title: "Kalibrasyon",
@@ -162,6 +178,7 @@ const modules = [
     icon: Barcode,
     href: "/purchasing",
     color: "bg-yellow-500",
+    roles: ["ADMIN"],
   },
   // {
   //   title: "Karantina Listesi",
@@ -177,6 +194,7 @@ const modules = [
     href: "/warehouse",
     color: "bg-gray-500",
     backgroundColor: "bg-blue-100",
+    roles: ["ADMIN", "ENGINEER"],
   },
   {
     title: "Kullanıcı Yönetimi",
@@ -185,13 +203,21 @@ const modules = [
     href: "/admin/users",
     color: "bg-indigo-500",
     backgroundColor: "bg-blue-100",
+    roles: ["ADMIN"],
   },
 ];
 
 export function DashboardModules() {
+  const { user } = useAuth();
+  const userRole = user?.role as UserRole;
+
+  const filteredModules = modules.filter((module) =>
+    hasModuleAccess(userRole, module.roles as UserRole[])
+  );
+
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-      {modules.map((module) => (
+      {filteredModules.map((module) => (
         <Link
           key={module.title}
           href={module.href}
@@ -224,3 +250,12 @@ export function DashboardModules() {
     </div>
   );
 }
+
+export const hasModuleAccess = (
+  userRole: UserRole,
+  moduleRoles?: UserRole[]
+) => {
+  if (userRole === "ADMIN") return true;
+  if (!moduleRoles) return false;
+  return moduleRoles.includes(userRole);
+};

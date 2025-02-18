@@ -8,15 +8,27 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
 import Image from "next/image";
+import { hasSidebarAccess } from "@/components/sidebar/sidebar-desktop";
+import { UserRole } from "@/types/core";
 
 interface SidebarMobileProps {
   items: SidebarItems;
+  userRole?: UserRole;
 }
 
-export default function SidebarMobile({ items }: SidebarMobileProps) {
+export default function SidebarMobile({ items, userRole }: SidebarMobileProps) {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
-  const itemsToDisplay = items.admin || [];
+
+  const filteredItems = (items.admin || [])
+    .filter((item) => hasSidebarAccess(userRole as UserRole, item.roles))
+    .map((item) => ({
+      ...item,
+      subItems: item.subItems?.filter((subItem) =>
+        hasSidebarAccess(userRole as UserRole, subItem.roles)
+      ),
+    }))
+    .filter((item) => (item.subItems ? item.subItems.length > 0 : true));
 
   return (
     <Sheet open={open} onOpenChange={setOpen}>
@@ -31,7 +43,7 @@ export default function SidebarMobile({ items }: SidebarMobileProps) {
           <div className="p-4 border-b border-gray-200">
             <div className="flex justify-center">
               <Image
-                src="/images/LOGO.jpg"
+                src="/logo.jpg"
                 alt="Logo"
                 width={150}
                 height={40}
@@ -43,7 +55,7 @@ export default function SidebarMobile({ items }: SidebarMobileProps) {
           {/* Navigation */}
           <nav className="flex-1 overflow-y-auto py-4">
             <div className="space-y-1 px-2">
-              {itemsToDisplay.map((item, index) => (
+              {filteredItems.map((item, index) => (
                 <div key={index}>
                   {item.subItems ? (
                     <div className="mb-2">

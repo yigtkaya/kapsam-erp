@@ -34,3 +34,5 @@ This frontend application handles:
 | DataTable       | Sortable/filterable tables | Planned |
 | BOMTree         | Visual BOM hierarchy       | Planned |
 | InventoryCard   | Real-time stock display    | Planned |
+
+    v

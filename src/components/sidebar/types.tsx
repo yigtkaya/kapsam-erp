@@ -1,4 +1,5 @@
 // types.ts
+import { UserRole } from "@/types/core";
 import { LucideIcon } from "lucide-react";
 import { ReactNode } from "react";
 
@@ -7,6 +8,7 @@ export interface SidebarItem {
   href: string;
   icon: LucideIcon;
   subItems?: SidebarItem[];
+  roles?: UserRole[];
 }
 
 export interface SidebarItems {
@@ -17,10 +19,5 @@ export interface SidebarItems {
 }
 
 export interface SidebarProps {
-  user?: {
-    id: string;
-    email?: string;
-    role?: string;
-  };
   className?: string;
 }

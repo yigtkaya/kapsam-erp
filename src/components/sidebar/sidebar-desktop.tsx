@@ -8,18 +8,20 @@ import { useState, useEffect } from "react";
 import { cn } from "@/lib/utils";
 import { SidebarItems } from "./types";
 import { logout } from "@/api/auth";
+import { UserRole } from "@/types/core";
 
 interface SidebarDesktopProps {
   items: SidebarItems;
   className?: string;
+  userRole?: UserRole;
 }
 
 export default function SidebarDesktop({
   items,
   className,
+  userRole,
 }: SidebarDesktopProps) {
   const pathname = usePathname();
-  const itemsToDisplay = items.admin || [];
   const [isExpanded, setIsExpanded] = useState(false);
   const [expandedItems, setExpandedItems] = useState<string[]>([]);
   const [mounted, setMounted] = useState(false);
@@ -48,6 +50,16 @@ export default function SidebarDesktop({
     return pathname === link.href;
   };
 
+  const filteredItems = (items.admin || [])
+    .filter((item) => hasSidebarAccess(userRole as UserRole, item.roles))
+    .map((item) => ({
+      ...item,
+      subItems: item.subItems?.filter((subItem) =>
+        hasSidebarAccess(userRole as UserRole, subItem.roles)
+      ),
+    }))
+    .filter((item) => (item.subItems ? item.subItems.length > 0 : true));
+
   return (
     <aside
       className={cn(
@@ -67,7 +79,7 @@ export default function SidebarDesktop({
           {isExpanded ? (
             <div className="w-full flex justify-center">
               <Image
-                src="/images/LOGO.jpg"
+                src="/logo.jpg"
                 alt="Logo"
                 width={150}
                 height={40}
@@ -90,7 +102,7 @@ export default function SidebarDesktop({
         {/* Navigation Links */}
         <nav className="flex-1 overflow-y-auto py-4">
           <div className="space-y-1 px-2">
-            {itemsToDisplay.map((link: any, index: number) => (
+            {filteredItems.map((link: any, index: number) => (
               <div key={index}>
                 {link.subItems ? (
                   // Parent item with subitems
@@ -204,3 +216,12 @@ export default function SidebarDesktop({
     </aside>
   );
 }
+
+export const hasSidebarAccess = (
+  userRole: UserRole,
+  moduleRoles?: UserRole[]
+) => {
+  if (userRole === "ADMIN") return true;
+  if (!moduleRoles) return false;
+  return moduleRoles.includes(userRole);
+};
