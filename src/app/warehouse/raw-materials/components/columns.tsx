@@ -119,6 +119,13 @@ export const rawMaterialsColumns: ColumnDef<RawMaterial>[] = [
       return value ? `${value} mm` : "-";
     },
     enableSorting: true,
+    enableColumnFilter: true,
+    filterFn: (row, columnId, filterValue) => {
+      const value = row.getValue(columnId) as number;
+      const min = filterValue?.min || -Infinity;
+      const max = filterValue?.max || Infinity;
+      return value >= min && value <= max;
+    },
     enableHiding: true,
   },
   {
@@ -134,6 +141,13 @@ export const rawMaterialsColumns: ColumnDef<RawMaterial>[] = [
       return value ? `${value} mm` : "-";
     },
     enableSorting: true,
+    enableColumnFilter: true,
+    filterFn: (row, columnId, filterValue) => {
+      const value = row.getValue(columnId) as number;
+      const min = filterValue?.min || -Infinity;
+      const max = filterValue?.max || Infinity;
+      return value >= min && value <= max;
+    },
     enableHiding: true,
   },
   {
@@ -149,6 +163,13 @@ export const rawMaterialsColumns: ColumnDef<RawMaterial>[] = [
       return value ? `${value} mm` : "-";
     },
     enableSorting: true,
+    enableColumnFilter: true,
+    filterFn: (row, columnId, filterValue) => {
+      const value = row.getValue(columnId) as number;
+      const min = filterValue?.min || -Infinity;
+      const max = filterValue?.max || Infinity;
+      return value >= min && value <= max;
+    },
     enableHiding: true,
   },
   {
@@ -164,6 +185,13 @@ export const rawMaterialsColumns: ColumnDef<RawMaterial>[] = [
       return value ? `${value} mm` : "-";
     },
     enableSorting: true,
+    enableColumnFilter: true,
+    filterFn: (row, columnId, filterValue) => {
+      const value = row.getValue(columnId) as number;
+      const min = filterValue?.min || -Infinity;
+      const max = filterValue?.max || Infinity;
+      return value >= min && value <= max;
+    },
     enableHiding: true,
   },
   {

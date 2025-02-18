@@ -105,6 +105,7 @@ export const standardPartsColumns: ColumnDef<Product>[] = [
     },
     enableSorting: true,
     enableHiding: false,
+    enableColumnFilter: false,
   },
   {
     id: "current_stock",
@@ -120,6 +121,7 @@ export const standardPartsColumns: ColumnDef<Product>[] = [
       </div>
     ),
     enableSorting: true,
+    enableColumnFilter: false,
   },
   {
     id: "actions",

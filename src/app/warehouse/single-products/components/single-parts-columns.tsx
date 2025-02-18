@@ -103,6 +103,7 @@ export const singlePartsColumns: ColumnDef<Product>[] = [
         </div>
       );
     },
+    enableColumnFilter: false,
     enableSorting: true,
     enableHiding: false,
   },
@@ -120,6 +121,7 @@ export const singlePartsColumns: ColumnDef<Product>[] = [
       </div>
     ),
     enableSorting: true,
+    enableColumnFilter: false,
   },
   {
     id: "actions",

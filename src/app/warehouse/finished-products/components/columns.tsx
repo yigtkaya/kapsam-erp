@@ -102,6 +102,7 @@ export const finishedProductsColumns: ColumnDef<Product>[] = [
         </div>
       );
     },
+    enableColumnFilter: false,
     enableSorting: true,
     enableHiding: false,
   },
@@ -119,6 +120,7 @@ export const finishedProductsColumns: ColumnDef<Product>[] = [
       </div>
     ),
     enableSorting: true,
+    enableColumnFilter: false,
   },
   {
     id: "actions",

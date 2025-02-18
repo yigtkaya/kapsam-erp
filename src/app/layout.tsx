@@ -29,11 +29,11 @@ export default function RootLayout({
   return (
     <html>
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+        className={`${geistSans.variable} ${geistMono.variable} antialiased bg-[#f8f9fc] min-h-screen`}
       >
         <QueryProvider>
           <ProtectedRoute>
-            <div className="min-h-screen flex bg-[#f8f9fc]">
+            <div className="flex w-full">
               <Sidebar className="hidden lg:flex" />
               <div className="flex-1 lg:pl-16">
                 <UnifiedHeader />

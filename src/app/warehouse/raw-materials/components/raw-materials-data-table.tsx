@@ -21,19 +21,28 @@ import {
   VisibilityState,
   getFilteredRowModel,
   ColumnFiltersState,
+  Column,
+  useReactTable,
+  Row,
+  Cell,
+  HeaderGroup,
+  Header,
 } from "@tanstack/react-table";
 import { DataTablePagination } from "@/components/ui/data-table-pagination";
 import { DataTableViewOptions } from "@/components/ui/data-table-view-options";
 import { DataTableSkeleton } from "@/components/ui/data-table-skeleton";
 import { Input } from "@/components/ui/input";
-import { useReactTable } from "@tanstack/react-table";
+import { Button } from "@/components/ui/button";
+import { ArrowDownIcon, ArrowUpIcon } from "lucide-react";
+import { Checkbox } from "@/components/ui/checkbox";
+import { DimensionFilter } from "./dimension-filter";
 
 export default function RawMaterialsDataTable() {
   const [sorting, setSorting] = useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
   const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({});
   const [pageIndex, setPageIndex] = useState(0);
-  const [pageSize, setPageSize] = useState(10);
+  const [pageSize, setPageSize] = useState(50);
 
   const { data, isLoading, error } = useRawMaterials({
     category: "HAMMADDE",
@@ -99,16 +108,129 @@ export default function RawMaterialsDataTable() {
       <div className="rounded-md border border-muted/200 shadow-sm bg-background">
         <Table>
           <TableHeader className="bg-muted/90">
-            <TableRow>
-              {table.getFlatHeaders().map((header) => (
-                <TableHead key={header.id} className="text-center">
-                  {flexRender(
-                    header.column.columnDef.header,
-                    header.getContext()
-                  )}
-                </TableHead>
-              ))}
-            </TableRow>
+            {table.getHeaderGroups().map((headerGroup) => (
+              <TableRow key={headerGroup.id}>
+                {headerGroup.headers.map((header) => (
+                  <TableHead
+                    key={header.id}
+                    className="px-3 py-2 text-left min-w-[140px]"
+                  >
+                    {header.column.id === "select" && (
+                      <div className="flex justify-center items-center p-1">
+                        <Checkbox
+                          className="h-4 w-4"
+                          checked={table.getIsAllPageRowsSelected()}
+                          onCheckedChange={(value) =>
+                            table.toggleAllPageRowsSelected(!!value)
+                          }
+                          aria-label="Select all"
+                        />
+                      </div>
+                    )}
+                    {["width", "height", "thickness", "diameter_mm"].includes(
+                      header.column.id
+                    ) && (
+                      <DimensionFilter
+                        column={header.column as Column<RawMaterial, number>}
+                        label={
+                          header.column.id === "width"
+                            ? "Genişlik"
+                            : header.column.id === "height"
+                            ? "Yükseklik"
+                            : header.column.id === "thickness"
+                            ? "Kalınlık"
+                            : "Çap (mm)"
+                        }
+                      />
+                    )}
+                    {["material_code", "material_name"].includes(
+                      header.column.id
+                    ) && (
+                      <div className="flex flex-col gap-1">
+                        <div className="flex items-center gap-1">
+                          <span className="text-sm font-medium text-muted-foreground">
+                            {header.column.id === "material_code"
+                              ? "Malzeme Kodu"
+                              : "Malzeme Adı"}
+                          </span>
+                        </div>
+                        <Input
+                          placeholder="Filtrele..."
+                          value={
+                            (header.column.getFilterValue() ?? "") as string
+                          }
+                          onChange={(e) =>
+                            header.column.setFilterValue(e.target.value)
+                          }
+                          className="h-8"
+                        />
+                      </div>
+                    )}
+                    {header.column.id === "current_stock" && (
+                      <div className="flex flex-col gap-2">
+                        <div className="flex items-center justify-between">
+                          <span className="text-sm font-medium text-muted-foreground">
+                            Stok Miktarı
+                          </span>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="h-7 w-7 p-0"
+                            onClick={() =>
+                              header.column.toggleSorting(
+                                header.column.getIsSorted() === "asc"
+                              )
+                            }
+                          >
+                            {header.column.getIsSorted() === "asc" ? (
+                              <ArrowUpIcon className="h-4 w-4" />
+                            ) : header.column.getIsSorted() === "desc" ? (
+                              <ArrowDownIcon className="h-4 w-4" />
+                            ) : (
+                              <ArrowUpIcon className="h-4 w-4 opacity-50" />
+                            )}
+                          </Button>
+                        </div>
+                      </div>
+                    )}
+                    {header.column.id === "material_type" && (
+                      <div className="flex flex-col gap-2">
+                        <div className="flex items-center justify-between">
+                          <span className="text-sm font-medium text-muted-foreground">
+                            Malzeme Tipi
+                          </span>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="h-7 w-7 p-0"
+                            onClick={() =>
+                              header.column.toggleSorting(
+                                header.column.getIsSorted() === "asc"
+                              )
+                            }
+                          >
+                            {header.column.getIsSorted() === "asc" ? (
+                              <ArrowUpIcon className="h-4 w-4" />
+                            ) : header.column.getIsSorted() === "desc" ? (
+                              <ArrowDownIcon className="h-4 w-4" />
+                            ) : (
+                              <ArrowUpIcon className="h-4 w-4 opacity-50" />
+                            )}
+                          </Button>
+                        </div>
+                      </div>
+                    )}
+                    {header.column.id === "actions" && (
+                      <div className="flex flex-col gap-2">
+                        <span className="text-sm font-medium text-muted-foreground">
+                          İşlemler
+                        </span>
+                      </div>
+                    )}
+                  </TableHead>
+                ))}
+              </TableRow>
+            ))}
           </TableHeader>
           <TableBody>
             {table.getRowModel().rows.map((row) => (

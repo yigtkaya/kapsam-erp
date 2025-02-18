@@ -54,6 +54,13 @@ export const processProductsColumns: ColumnDef<Product>[] = [
       </div>
     ),
     enableSorting: true,
+    enableColumnFilter: true,
+    filterFn: (row, columnId, filterValue) => {
+      const rowValue =
+        row.getValue(columnId)?.toString().toLocaleLowerCase("tr-TR") || "";
+      const filter = filterValue?.toString().toLocaleLowerCase("tr-TR") || "";
+      return rowValue.includes(filter);
+    },
     enableHiding: false,
   },
   {
@@ -70,6 +77,13 @@ export const processProductsColumns: ColumnDef<Product>[] = [
       </div>
     ),
     enableSorting: true,
+    enableColumnFilter: true,
+    filterFn: (row, columnId, filterValue) => {
+      const rowValue =
+        row.getValue(columnId)?.toString().toLocaleLowerCase("tr-TR") || "";
+      const filter = filterValue?.toString().toLocaleLowerCase("tr-TR") || "";
+      return rowValue.includes(filter);
+    },
     enableHiding: false,
   },
   {
@@ -103,6 +117,7 @@ export const processProductsColumns: ColumnDef<Product>[] = [
         </div>
       );
     },
+    enableColumnFilter: false,
     enableSorting: true,
     enableHiding: false,
   },
@@ -120,6 +135,7 @@ export const processProductsColumns: ColumnDef<Product>[] = [
       </div>
     ),
     enableSorting: true,
+    enableColumnFilter: false,
   },
   {
     id: "actions",
