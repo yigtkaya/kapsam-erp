@@ -108,7 +108,7 @@ export const machinesColumns: ColumnDef<Machine>[] = [
     ),
     cell: ({ row }) => {
       const axisCount = row.getValue<string>("axis_count");
-      const normalizedCount = axisCount.replace(/\s/g, ""); // Remove any existing spaces
+      const normalizedCount = axisCount.toString().replace(/\s/g, ""); // Remove any existing spaces
 
       const axisCountMap: Record<string, string> = {
         "9EKSEN": "9 Eksen",
