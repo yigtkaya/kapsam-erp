@@ -89,7 +89,7 @@ export default function SidebarDesktop({
           ) : (
             <div className="w-8 h-8">
               <Image
-                src="/images/LOGO.jpg"
+                src="/logo.jpg"
                 alt="Logo"
                 width={32}
                 height={32}

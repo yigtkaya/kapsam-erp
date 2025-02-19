@@ -12,16 +12,6 @@ export type ComponentType =
   | "RAW_MATERIAL"
   | "STANDARD_PART";
 
-// MachineStatus choices
-export type MachineStatus = "AVAILABLE" | "IN_USE" | "MAINTENANCE" | "RETIRED";
-
-// WorkOrderStatus choices
-export type WorkOrderStatus =
-  | "PLANNED"
-  | "IN_PROGRESS"
-  | "COMPLETED"
-  | "DELAYED";
-
 // UserRole choices
 export type UserRole = "ADMIN" | "ENGINEER" | "OPERATOR" | "VIEWER";
 
