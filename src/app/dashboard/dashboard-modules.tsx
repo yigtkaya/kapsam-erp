@@ -55,7 +55,7 @@ const modules = [
     title: "Ürün Reçeteleri",
     description: "Ürün reçetelerinin takibi ve yönetimi",
     icon: Workflow,
-    href: "/production-planning/boms",
+    href: "/boms",
     color: "bg-blue-100",
     roles: ["ADMIN"],
   },

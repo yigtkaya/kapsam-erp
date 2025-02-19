@@ -15,6 +15,34 @@ interface ProductParams {
   id: string;
 }
 
+export async function fetchAllProducts(): Promise<Product[]> {
+  const params = new URLSearchParams();
+
+  const cookieStore = await cookies();
+  const csrftoken = cookieStore.get("csrftoken")?.value;
+  const sessionid = cookieStore.get("sessionid")?.value;
+
+  console.log("params", params.toString());
+
+  const response = await fetch(`${API_URL}/api/products/`, {
+    headers: {
+      "Content-Type": "application/json",
+      "X-CSRFToken": csrftoken || "",
+      Cookie: `sessionid=${sessionid}${
+        csrftoken ? `; csrftoken=${csrftoken}` : ""
+      }`,
+    },
+  });
+
+  if (!response.ok) {
+    return [];
+  }
+
+  const data = await response.json();
+
+  return data;
+}
+
 export async function fetchProducts({
   category,
   product_type,
@@ -31,6 +59,9 @@ export async function fetchProducts({
   const cookieStore = await cookies();
   const csrftoken = cookieStore.get("csrftoken")?.value;
   const sessionid = cookieStore.get("sessionid")?.value;
+
+  console.log("params", params.toString());
+
   const response = await fetch(
     `${API_URL}/api/inventory/products/?${params.toString()}`,
     {
@@ -44,15 +75,11 @@ export async function fetchProducts({
     }
   );
 
-  console.log(response);
-
   if (!response.ok) {
     return [];
   }
 
   const data = await response.json();
-
-  console.log(data);
 
   return data;
 }

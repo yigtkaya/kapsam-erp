@@ -6,8 +6,10 @@ import {
   createTechnicalDrawing,
   updateProduct,
   deleteProduct,
+  fetchAllProducts,
 } from "@/api/products";
 import { Product, TechnicalDrawing } from "@/types/inventory";
+import { fetchProducts as clientFetchProducts } from "@/api/products";
 
 interface UseProductsParams {
   category?: string;
@@ -16,16 +18,23 @@ interface UseProductsParams {
   product_code?: string;
 }
 
+export function useAllProducts() {
+  return useQuery<Product[]>({
+    queryKey: ["products"],
+    queryFn: () => fetchAllProducts(),
+  });
+}
+
 export function useProducts({
   category,
   product_type,
   product_name,
   product_code,
-}: UseProductsParams) {
+}: UseProductsParams = {}) {
   return useQuery<Product[]>({
     queryKey: ["products", category, product_type, product_name, product_code],
     queryFn: () =>
-      fetchProducts({
+      clientFetchProducts({
         category,
         product_type,
         product_name,

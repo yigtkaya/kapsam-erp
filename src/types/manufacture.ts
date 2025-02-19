@@ -81,7 +81,9 @@ export interface BOM {
   product: string; // Product ID
   version: string;
   is_active: boolean;
-  components: BOMComponent[];
+  created_at: Date;
+  modified_at: Date;
+  components: BOMComponent[] | null;
 }
 
 export type BOMComponentType =
