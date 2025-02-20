@@ -117,7 +117,7 @@ export default function NewMachinePage() {
         tool_count: values.tool_count || 0,
         nc_control_unit: values.nc_control_unit || "",
         manufacturing_year: values.manufacturing_year
-          ? values.manufacturing_year.toISOString().split("T")[0]
+          ? new Date(values.manufacturing_year)
           : null,
         machine_weight_kg: values.machine_weight_kg || 0,
         max_part_size: values.max_part_size || "",
@@ -125,6 +125,11 @@ export default function NewMachinePage() {
         status: values.status,
         maintenance_interval: values.maintenance_interval,
         serial_number: null,
+        last_maintenance_date: null,
+        next_maintenance_date: new Date(
+          Date.now() + values.maintenance_interval * 24 * 60 * 60 * 1000
+        ),
+        maintenance_notes: "",
       };
 
       console.log("About to call createMachineAction"); // Debug log

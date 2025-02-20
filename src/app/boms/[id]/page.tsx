@@ -6,17 +6,21 @@ export const metadata: Metadata = {
   description: "Edit your bill of materials",
 };
 
-interface EditBOMPageProps {
-  params: {
+interface PageProps {
+  params: Promise<{
     id: string;
-  };
+  }>;
 }
 
-export default function EditBOMPage({ params }: EditBOMPageProps) {
+const EditBOMPage = async ({ params }: PageProps) => {
+  const resolvedParams = await params;
+
   return (
     <div className="container mx-auto py-10">
       <h1 className="text-2xl font-bold mb-8">Edit BOM</h1>
-      <BOMDetails id={Number(params.id)} />
+      <BOMDetails id={Number(resolvedParams.id)} />
     </div>
   );
-}
+};
+
+export default EditBOMPage;
