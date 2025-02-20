@@ -81,7 +81,7 @@ export interface BOMProcessConfig {
 
 export interface BOM {
   id: string;
-  product: number;
+  product: string;
   version: string;
   is_active: boolean;
   created_at: Date;

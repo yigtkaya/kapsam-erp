@@ -84,7 +84,7 @@ export async function createBOM(data: Omit<BOM, "id">) {
   }
 }
 
-export async function updateBOM(id: number, data: Partial<BOM>) {
+export async function updateBOM(id: string, data: Partial<BOM>) {
   const cookieStore = await cookies();
   const csrftoken = cookieStore.get("csrftoken")?.value;
   const sessionid = cookieStore.get("sessionid")?.value;

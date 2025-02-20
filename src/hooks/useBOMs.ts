@@ -9,7 +9,7 @@ import {
 } from "@/api/boms";
 
 interface UseBOMsParams {
-  product?: number;
+  product?: string;
   version?: string;
   is_active?: boolean;
 }
@@ -51,7 +51,7 @@ export function useCreateBOM() {
 export function useUpdateBOM() {
   const queryClient = useQueryClient();
 
-  return useMutation<BOM, Error, { id: number; data: Partial<BOM> }>({
+  return useMutation<BOM, Error, { id: string; data: Partial<BOM> }>({
     mutationFn: ({ id, data }) => updateBOM(id, data),
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: ["boms"] });

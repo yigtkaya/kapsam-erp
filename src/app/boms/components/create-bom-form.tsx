@@ -39,7 +39,7 @@ import { Product } from "@/types/inventory";
 import { createBOM } from "@/api/boms";
 
 const createBomFormSchema = z.object({
-  product: z.number().min(1, "Product is required"),
+  product: z.string().min(1, "Product is required"),
   version: z.string().min(1, "Version is required"),
   is_active: z.boolean().default(true),
 });
@@ -75,7 +75,7 @@ function BOMFormContent() {
   const form = useForm<CreateBomFormData>({
     resolver: zodResolver(createBomFormSchema),
     defaultValues: {
-      product: 0,
+      product: "",
       version: "",
       is_active: true,
     },
@@ -91,7 +91,9 @@ function BOMFormContent() {
 
   async function onSubmit(data: CreateBomFormData) {
     try {
-      const selectedProduct = products.find((p) => p.id === data.product);
+      const selectedProduct = products.find(
+        (p) => p.product_code === data.product
+      );
       if (!selectedProduct) {
         throw new Error("Selected product not found");
       }
@@ -138,7 +140,8 @@ function BOMFormContent() {
                     >
                       {field.value
                         ? products.find(
-                            (product: Product) => product.id === field.value
+                            (product: Product) =>
+                              product.product_code === field.value
                           )?.product_code
                         : isLoading
                         ? "Yükleniyor..."
@@ -160,14 +163,14 @@ function BOMFormContent() {
                             value={product.product_code}
                             key={product.id}
                             onSelect={() => {
-                              form.setValue("product", product.id);
+                              form.setValue("product", product.product_code);
                               setOpen(false);
                             }}
                           >
                             <Check
                               className={cn(
                                 "mr-2 h-4 w-4",
-                                product.id === field.value
+                                product.product_code === field.value
                                   ? "opacity-100"
                                   : "opacity-0"
                               )}
@@ -230,24 +233,6 @@ function BOMFormContent() {
 }
 
 export function CreateBOMForm() {
-  const { data: products = [], isLoading, error } = useProducts({});
-
-  if (error) {
-    console.error("Error loading products:", error);
-    return (
-      <div className="p-4 border border-red-200 rounded-md bg-red-50">
-        <p className="text-red-700">
-          Error loading products. Please try again later.
-        </p>
-        <p className="text-sm text-red-500 mt-2">{error.message}</p>
-      </div>
-    );
-  }
-
-  if (isLoading) {
-    return <BOMFormSkeleton />;
-  }
-
   return (
     <Suspense fallback={<BOMFormSkeleton />}>
       <BOMFormContent />

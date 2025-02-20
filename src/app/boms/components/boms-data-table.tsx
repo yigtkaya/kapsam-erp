@@ -11,6 +11,7 @@ import {
   getPaginationRowModel,
   getSortedRowModel,
   useReactTable,
+  FilterFn,
 } from "@tanstack/react-table";
 import {
   Table,
@@ -34,6 +35,11 @@ export function BOMsDataTable() {
 
   const { data: boms, isLoading } = useBOMs();
 
+  const fuzzyFilter: FilterFn<any> = (row, columnId, filterValue) => {
+    const value = row.getValue(columnId) as string;
+    return value?.toLowerCase().includes(filterValue.toLowerCase());
+  };
+
   const table = useReactTable({
     data: boms || [],
     columns,
@@ -51,6 +57,9 @@ export function BOMsDataTable() {
       columnVisibility,
       rowSelection,
     },
+    filterFns: {
+      fuzzy: fuzzyFilter,
+    },
   });
 
   if (isLoading) {
@@ -62,11 +71,13 @@ export function BOMsDataTable() {
         <div className="rounded-md border">
           <Table>
             <TableHeader>
-              {columns.map((column, index) => (
-                <TableHead key={`skeleton-header-${index}`}>
-                  <Skeleton className="h-4 w-[100px]" />
-                </TableHead>
-              ))}
+              <TableRow>
+                {columns.map((column, index) => (
+                  <TableHead key={`skeleton-header-${index}`}>
+                    <Skeleton className="h-4 w-[100px]" />
+                  </TableHead>
+                ))}
+              </TableRow>
             </TableHeader>
             <TableBody>
               {Array.from({ length: 5 }).map((_, rowIndex) => (
@@ -107,7 +118,7 @@ export function BOMsDataTable() {
     <div className="space-y-4">
       <div className="flex items-center py-4">
         <Input
-          placeholder="Filter by product..."
+          placeholder="Ürünlere göre filtrele..."
           value={(table.getColumn("product")?.getFilterValue() as string) ?? ""}
           onChange={(event) =>
             table.getColumn("product")?.setFilterValue(event.target.value)
@@ -122,7 +133,7 @@ export function BOMsDataTable() {
               <TableRow key={headerGroup.id}>
                 {headerGroup.headers.map((header) => {
                   return (
-                    <TableHead key={header.id}>
+                    <TableHead key={header.id} className="p-4">
                       {header.isPlaceholder
                         ? null
                         : flexRender(
@@ -143,7 +154,7 @@ export function BOMsDataTable() {
                   data-state={row.getIsSelected() && "selected"}
                 >
                   {row.getVisibleCells().map((cell) => (
-                    <TableCell key={cell.id}>
+                    <TableCell key={cell.id} className="p-4">
                       {flexRender(
                         cell.column.columnDef.cell,
                         cell.getContext()

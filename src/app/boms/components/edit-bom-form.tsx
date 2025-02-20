@@ -40,7 +40,7 @@ import { useState, Suspense } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
 
 const editBomFormSchema = z.object({
-  product: z.number().min(1, "Product is required"),
+  product: z.string().min(1, "Product is required"),
   version: z.string().min(1, "Version is required"),
   is_active: z.boolean().default(true),
 });
@@ -77,7 +77,7 @@ function EditBOMFormContent({ initialData }: EditBOMFormProps) {
   const form = useForm<EditBomFormData>({
     resolver: zodResolver(editBomFormSchema),
     defaultValues: {
-      product: initialData.product || 0,
+      product: initialData.product || "",
       version: initialData.version || "",
       is_active: initialData.is_active ?? true,
     },
@@ -136,7 +136,8 @@ function EditBOMFormContent({ initialData }: EditBOMFormProps) {
                     >
                       {field.value
                         ? products.find(
-                            (product: Product) => product.id === field.value
+                            (product: Product) =>
+                              product.product_code === field.value
                           )?.product_code
                         : isLoading
                         ? "Yükleniyor..."
@@ -158,14 +159,14 @@ function EditBOMFormContent({ initialData }: EditBOMFormProps) {
                             value={product.product_code}
                             key={product.id}
                             onSelect={() => {
-                              form.setValue("product", product.id);
+                              form.setValue("product", product.product_code);
                               setOpen(false);
                             }}
                           >
                             <Check
                               className={cn(
                                 "mr-2 h-4 w-4",
-                                product.id === field.value
+                                product.product_code === field.value
                                   ? "opacity-100"
                                   : "opacity-0"
                               )}
