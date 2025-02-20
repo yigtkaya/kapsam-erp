@@ -17,6 +17,7 @@ import { toast } from "sonner";
 import { DataTableColumnHeader } from "@/components/ui/column-header";
 import { deleteBOM } from "@/api/boms";
 import { Checkbox } from "@/components/ui/checkbox";
+import { useRouter } from "next/navigation";
 
 export const columns: ColumnDef<BOM>[] = [
   {
@@ -31,7 +32,10 @@ export const columns: ColumnDef<BOM>[] = [
       </div>
     ),
     cell: ({ row }) => (
-      <div className="flex justify-center items-center">
+      <div
+        className="flex justify-center items-center"
+        onClick={(e) => e.stopPropagation()}
+      >
         <Checkbox
           checked={row.getIsSelected()}
           onCheckedChange={(value) => row.toggleSelected(!!value)}
@@ -109,7 +113,7 @@ export const columns: ColumnDef<BOM>[] = [
       const bom = row.original;
 
       return (
-        <div className="text-right">
+        <div className="text-right" onClick={(e) => e.stopPropagation()}>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" className="h-8 w-8 p-0">
