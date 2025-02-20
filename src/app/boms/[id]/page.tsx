@@ -1,26 +1,25 @@
-import { Metadata } from "next";
-import { BOMDetails } from "../components/bom-details";
+"use client";
 
-export const metadata: Metadata = {
-  title: "Edit BOM | Kapsam ERP",
-  description: "Edit your bill of materials",
-};
+import { EditBOMForm } from "../components/bom-form";
+import { useBOM } from "@/hooks/useBOMs";
+import { useParams } from "next/navigation";
 
-interface PageProps {
-  params: Promise<{
-    id: string;
-  }>;
-}
+export default function EditBOMPage() {
+  const params = useParams();
+  const { data: bom, isLoading } = useBOM(Number(params.id));
 
-const EditBOMPage = async ({ params }: PageProps) => {
-  const resolvedParams = await params;
+  if (isLoading) {
+    return <div>Loading...</div>;
+  }
+
+  if (!bom) {
+    return <div>BOM not found</div>;
+  }
 
   return (
     <div className="container mx-auto py-10">
       <h1 className="text-2xl font-bold mb-8">Edit BOM</h1>
-      <BOMDetails id={Number(resolvedParams.id)} />
+      <EditBOMForm initialData={bom} />
     </div>
   );
-};
-
-export default EditBOMPage;
+}

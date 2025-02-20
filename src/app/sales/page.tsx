@@ -17,6 +17,7 @@ export default function SalesOrdersPage() {
       <PageHeader
         title="Siparişler   "
         description="Siparişleri yönetin"
+        showBackButton
         action={
           <Button onClick={() => router.push("/sales/new")}>
             <Plus className="mr-2 h-4 w-4" /> Yeni Sipariş

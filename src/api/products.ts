@@ -4,6 +4,8 @@ import { cookies } from "next/headers";
 
 const API_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
 
+//  /api/products/?search=03.1.13.0000.04.00.00
+
 interface ProductsParams {
   category?: string;
   product_type?: string;
@@ -13,6 +15,10 @@ interface ProductsParams {
 
 interface ProductParams {
   id: string;
+}
+
+interface ProductCodeParams {
+  product_code: string;
 }
 
 export async function fetchProducts({

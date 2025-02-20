@@ -9,7 +9,7 @@ import { Plus } from "lucide-react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import StandardPartsDataTable from "../standard-parts/components/standart-parts-data-table";
-
+import { PageHeader } from "@/components/ui/page-header";
 export default function RawMaterialsPage() {
   const searchParams = useSearchParams();
   const defaultTab = searchParams.get("tab") || "raw-materials";
@@ -22,12 +22,11 @@ export default function RawMaterialsPage() {
     <div className="p-6 space-y-4">
       <div className="flex justify-between items-start">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">
-            Hammadde ve Standart Parçalar
-          </h1>
-          <p className="text-muted-foreground">
-            Hammadde ve standart parçaları görüntüleyin ve yönetin
-          </p>
+          <PageHeader
+            title="Hammadde ve Standart Parçalar"
+            description="Hammadde ve standart parçaları görüntüleyin ve yönetin"
+            showBackButton
+          />
         </div>
         <Link
           href={

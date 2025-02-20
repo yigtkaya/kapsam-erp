@@ -9,6 +9,7 @@ import FinishedProductsDataTable from "./components/finished-products-data-table
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { DataTableSkeleton } from "@/components/ui/data-table-skeleton";
 import SinglePartsDataTable from "../single-products/components/single-parts-data-table";
+import { PageHeader } from "@/components/ui/page-header";
 
 export default function FinishedProductsPage() {
   const [activeTab, setActiveTab] = useState<
@@ -18,14 +19,11 @@ export default function FinishedProductsPage() {
   return (
     <div className="p-6 space-y-4">
       <div className="flex justify-between items-start">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight">
-            Sevke Hazır Ürün Yönetimi
-          </h1>
-          <p className="text-muted-foreground">
-            Montajlı ürünleri ve tekil parçaları görüntüleyin ve yönetin
-          </p>
-        </div>
+        <PageHeader
+          title="Sevke Hazır Ürün Yönetimi"
+          description="Montajlı ürünleri ve tekil parçaları görüntüleyin ve yönetin"
+          showBackButton
+        />
         <Link href={`/warehouse/${activeTab}/new/`}>
           <Button>
             <Plus className="mr-2 h-4 w-4" />

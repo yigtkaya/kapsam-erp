@@ -15,8 +15,9 @@ export default async function BOMsPage() {
     <div className="flex flex-col gap-5 p-8">
       <div className="flex items-center justify-between">
         <PageHeader
-          title="Bill of Materials"
-          description="Manage your bill of materials and their components"
+          title="Ürün Reçeteleri"
+          description="Ürün reçetelerini yönetin ve onların bileşenlerini düzenleyin"
+          showBackButton
         />
         <Link href="/boms/new">
           <Button>

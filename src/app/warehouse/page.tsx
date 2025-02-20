@@ -1,13 +1,15 @@
 // create a page for warehouse with modules
 
 import { WarehouseModules } from "./warehouse-modules";
-
+import { PageHeader } from "@/components/ui/page-header";
 export default function WarehousePage() {
   return (
     <div>
-      <div className="flex justify-between items-center">
-        <h1 className="text-2xl font-bold pb-4">Depo Yönetimi</h1>
-      </div>
+      <PageHeader
+        title="Depo Yönetimi"
+        description="Depo yönetimi modülleri"
+        showBackButton
+      />
       <WarehouseModules />
     </div>
   );

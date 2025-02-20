@@ -6,18 +6,16 @@ import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
 import Link from "next/link";
 import ProcessDataTable from "./components/process-data-table";
+import { PageHeader } from "@/components/ui/page-header";
 export default function ProcessPage() {
   return (
     <div className="p-6 space-y-4">
       <div className="flex justify-between items-start">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight">
-            Process Ürünleri
-          </h1>
-          <p className="text-muted-foreground">
-            Process ürünlerini görüntüleyin ve yönetin
-          </p>
-        </div>
+        <PageHeader
+          title="Process Ürünleri"
+          description="Process ürünlerini görüntüleyin ve yönetin"
+          showBackButton
+        />
         <Link href="/warehouse/process/new">
           <Button>
             <Plus className="mr-2 h-4 w-4" />
