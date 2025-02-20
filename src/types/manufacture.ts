@@ -1,4 +1,4 @@
-import { Product, RawMaterial } from "./inventory";
+import { Product, ProductType, RawMaterial } from "./inventory";
 
 // MachineStatus enum
 export enum MachineStatus {
@@ -37,25 +37,28 @@ export interface Machine {
   id?: string;
   machine_code: string;
   machine_type: MachineType;
-  brand: string;
-  model: string;
+  brand: string | null;
+  model: string | null;
   axis_count?: AxisCount;
   internal_cooling: number | null;
   motor_power_kva: number | null;
-  holder_type: string;
+  holder_type: string | null;
   spindle_motor_power_10_percent_kw: number | null;
   spindle_motor_power_30_percent_kw: number | null;
   power_hp: number | null;
   spindle_speed_rpm: number | null;
   tool_count: number | null;
-  nc_control_unit: string;
-  manufacturing_year: string | null;
+  nc_control_unit: string | null;
+  manufacturing_year: Date | null;
   machine_weight_kg: number | null;
-  max_part_size: string;
-  description: string;
+  max_part_size: string | null;
+  description: string | null;
   status: MachineStatus;
   maintenance_interval: number;
-  serial_number: null;
+  serial_number: string | null;
+  last_maintenance_date: Date | null;
+  next_maintenance_date: Date | null;
+  maintenance_notes: string | null;
 }
 
 export interface ManufacturingProcess {
@@ -69,8 +72,8 @@ export interface ManufacturingProcess {
 
 export interface BOMProcessConfig {
   id: string;
-  process: string; // ManufacturingProcess ID
-  machine_type: MachineType;
+  process: string;
+  axis_count?: AxisCount;
   estimated_duration_minutes: number;
   tooling_requirements?: Record<string, unknown>;
   quality_checks?: Record<string, unknown>;
@@ -78,33 +81,29 @@ export interface BOMProcessConfig {
 
 export interface BOM {
   id: string;
-  product: string; // Product ID
+  product: number;
   version: string;
   is_active: boolean;
   created_at: Date;
   modified_at: Date;
-  components: BOMComponent[] | null;
+  components: BOMComponent[];
+  product_type: ProductType;
 }
 
-export type BOMComponentType =
-  | "PROCESS"
-  | "SEMI"
-  | "MONTAGED"
-  | "STANDARD"
-  | "RAW";
+export type BOMComponentType = "PRODUCT" | "PROCESS";
 
 export interface BOMComponent {
   id: string;
-  bom: string; // BOM ID
+  bom: string;
   component_type: BOMComponentType;
   sequence_order: number;
-  process?: string; // ManufacturingProcess ID
-  process_config?: string; // BOMProcessConfig ID
-  product?: string; // Product ID (SEMI/MONTAGED)
-  standard_part?: string; // Product ID (STANDARD)
-  raw_material?: string; // RawMaterial ID
   quantity: number;
   notes?: string;
+  // Product-specific fields
+  product?: string;
+  // Process-specific fields
+  process_config?: string;
+  raw_material?: string;
 }
 
 export interface WorkOrder {
@@ -125,8 +124,8 @@ export interface WorkOrder {
 
 export interface SubWorkOrder {
   id: string;
-  parent_work_order: string; // WorkOrder ID
-  bom_component: string; // BOMComponent ID
+  parent_work_order: string;
+  bom_component: string;
   quantity: number;
   planned_start: Date;
   planned_end: Date;
@@ -135,16 +134,16 @@ export interface SubWorkOrder {
   status: WorkOrderStatus;
   output_quantity?: number;
   scrap_quantity: number;
-  target_category?: string; // InventoryCategory ID
+  target_category?: string;
   notes?: string;
   processes: SubWorkOrderProcess[];
 }
 
 export interface SubWorkOrderProcess {
   id: string;
-  sub_work_order: string; // SubWorkOrder ID
-  process: string; // ManufacturingProcess ID
-  machine: string; // Machine ID
+  sub_work_order: string;
+  process: string;
+  machine: string;
   sequence_order: number;
   planned_duration_minutes: number;
   actual_duration_minutes?: number;

@@ -13,10 +13,9 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import Link from "next/link";
-import { deleteBOM } from "../actions";
 import { toast } from "sonner";
 import { DataTableColumnHeader } from "@/components/ui/column-header";
-
+import { deleteBOM } from "@/api/boms";
 export const columns: ColumnDef<BOM>[] = [
   {
     accessorKey: "id",
@@ -65,8 +64,6 @@ export const columns: ColumnDef<BOM>[] = [
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
-            <DropdownMenuLabel>Actions</DropdownMenuLabel>
-            <DropdownMenuSeparator />
             <DropdownMenuItem asChild>
               <Link href={`/boms/${bom.id}`} className="flex items-center">
                 <Pencil className="mr-2 h-4 w-4" />
@@ -76,11 +73,16 @@ export const columns: ColumnDef<BOM>[] = [
             <DropdownMenuItem
               className="text-red-600"
               onClick={async () => {
-                try {
-                  await deleteBOM(bom.id!);
-                  toast.success("BOM deleted successfully");
-                } catch (error) {
-                  toast.error("Failed to delete BOM");
+                const confirm = window.confirm(
+                  "Bu BOM'ı silmek istediğinize emin misiniz?"
+                );
+                if (confirm) {
+                  try {
+                    await deleteBOM(bom.id!);
+                    toast.success("BOM deleted successfully");
+                  } catch (error) {
+                    toast.error("Failed to delete BOM");
+                  }
                 }
               }}
             >

@@ -18,14 +18,16 @@ import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import { updateBOM } from "../actions";
-import { useAllProducts } from "@/hooks/useProducts";
+import { updateBOM } from "@/api/boms";
+import { useProducts } from "@/hooks/useProducts";
+import { Product } from "@/types/inventory";
 import {
   Command,
   CommandEmpty,
   CommandGroup,
   CommandInput,
   CommandItem,
+  CommandList,
 } from "@/components/ui/command";
 import {
   Popover,
@@ -38,7 +40,7 @@ import { useState, Suspense } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
 
 const editBomFormSchema = z.object({
-  product: z.string().min(1, "Product is required"),
+  product: z.number().min(1, "Product is required"),
   version: z.string().min(1, "Version is required"),
   is_active: z.boolean().default(true),
 });
@@ -70,12 +72,12 @@ function BOMFormSkeleton() {
 function EditBOMFormContent({ initialData }: EditBOMFormProps) {
   const router = useRouter();
   const [open, setOpen] = useState(false);
-  const { data: products, isLoading } = useAllProducts();
+  const { data: products, isLoading } = useProducts({});
 
   const form = useForm<EditBomFormData>({
     resolver: zodResolver(editBomFormSchema),
     defaultValues: {
-      product: initialData.product || "",
+      product: initialData.product || 0,
       version: initialData.version || "",
       is_active: initialData.is_active ?? true,
     },
@@ -99,7 +101,15 @@ function EditBOMFormContent({ initialData }: EditBOMFormProps) {
   }
 
   if (isLoading) {
-    return <BOMFormSkeleton />;
+    return <div>Loading...</div>;
+  }
+
+  if (!products) {
+    return <div>No</div>;
+  }
+
+  if (products.length === 0) {
+    return <div>No products found</div>;
   }
 
   return (
@@ -110,7 +120,7 @@ function EditBOMFormContent({ initialData }: EditBOMFormProps) {
           name="product"
           render={({ field }) => (
             <FormItem className="flex flex-col">
-              <FormLabel>Product</FormLabel>
+              <FormLabel>Ürün Kodu</FormLabel>
               <Popover open={open} onOpenChange={setOpen}>
                 <PopoverTrigger asChild>
                   <FormControl>
@@ -122,54 +132,52 @@ function EditBOMFormContent({ initialData }: EditBOMFormProps) {
                         "w-full justify-between",
                         !field.value && "text-muted-foreground"
                       )}
+                      disabled={isLoading}
                     >
                       {field.value
-                        ? products?.find(
-                            (product) => product.id.toString() === field.value
-                          )?.product_name
-                        : "Select product..."}
+                        ? products.find(
+                            (product: Product) => product.id === field.value
+                          )?.product_code
+                        : isLoading
+                        ? "Yükleniyor..."
+                        : "Ürün kodu seçin"}
                       <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                     </Button>
                   </FormControl>
                 </PopoverTrigger>
-                <PopoverContent className="w-[var(--radix-popover-trigger-width)] p-0">
-                  <Command className="max-h-[300px]">
-                    <CommandInput placeholder="Search products..." />
-                    <CommandEmpty>No product found.</CommandEmpty>
-                    <CommandGroup>
-                      {products && products.length > 0 ? (
-                        products.map((product) => (
+                <PopoverContent className="min-w-[var(--radix-popover-trigger-width)] max-w-[var(--radix-popover-trigger-width)] p-0">
+                  <Command>
+                    <CommandList className="max-h-[300px] overflow-auto">
+                      <CommandInput placeholder="Ürün kodu ara..." />
+                      <CommandEmpty>
+                        {isLoading ? "Yükleniyor..." : "Ürün kodu bulunamadı."}
+                      </CommandEmpty>
+                      <CommandGroup>
+                        {products.map((product: Product) => (
                           <CommandItem
-                            value={product.product_name}
+                            value={product.product_code}
                             key={product.id}
                             onSelect={() => {
-                              form.setValue("product", product.id.toString());
+                              form.setValue("product", product.id);
                               setOpen(false);
                             }}
                           >
                             <Check
                               className={cn(
                                 "mr-2 h-4 w-4",
-                                product.id.toString() === field.value
+                                product.id === field.value
                                   ? "opacity-100"
                                   : "opacity-0"
                               )}
                             />
-                            {product.product_name}
+                            {product.product_code}
                           </CommandItem>
-                        ))
-                      ) : (
-                        <CommandItem disabled>
-                          No products available
-                        </CommandItem>
-                      )}
-                    </CommandGroup>
+                        ))}
+                      </CommandGroup>
+                    </CommandList>
                   </Command>
                 </PopoverContent>
               </Popover>
-              <FormDescription>
-                Select the product this BOM is associated with
-              </FormDescription>
               <FormMessage />
             </FormItem>
           )}

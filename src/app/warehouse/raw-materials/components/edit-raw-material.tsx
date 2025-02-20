@@ -128,7 +128,7 @@ export function EditRawMaterialForm({ material }: EditRawMaterialFormProps) {
                 </PopoverTrigger>
                 <PopoverContent className="min-w-[var(--radix-popover-trigger-width)] max-w-[var(--radix-popover-trigger-width)] p-0">
                   <Command>
-                    <CommandList>
+                    <CommandList className="max-h-[300px] overflow-auto">
                       <CommandInput placeholder="Malzeme kodu ara..." />
                       <CommandEmpty>
                         {isLoading
@@ -207,7 +207,7 @@ export function EditRawMaterialForm({ material }: EditRawMaterialFormProps) {
                 </PopoverTrigger>
                 <PopoverContent className="min-w-[var(--radix-popover-trigger-width)] max-w-[var(--radix-popover-trigger-width)] p-0">
                   <Command>
-                    <CommandList>
+                    <CommandList className="max-h-[300px] overflow-auto">
                       <CommandInput placeholder="Malzeme adı ara..." />
                       <CommandEmpty>
                         {isLoading

@@ -17,14 +17,14 @@ import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import { createBOM } from "../actions";
-import { useAllProducts } from "@/hooks/useProducts";
+import { useProducts } from "@/hooks/useProducts";
 import {
   Command,
   CommandEmpty,
   CommandGroup,
   CommandInput,
   CommandItem,
+  CommandList,
 } from "@/components/ui/command";
 import {
   Popover,
@@ -35,9 +35,11 @@ import { cn } from "@/lib/utils";
 import { Check, ChevronsUpDown } from "lucide-react";
 import { useState, Suspense } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Product } from "@/types/inventory";
+import { createBOM } from "@/api/boms";
 
 const createBomFormSchema = z.object({
-  product: z.string().min(1, "Product is required"),
+  product: z.number().min(1, "Product is required"),
   version: z.string().min(1, "Version is required"),
   is_active: z.boolean().default(true),
 });
@@ -62,26 +64,44 @@ function BOMFormSkeleton() {
   );
 }
 
+interface BOMFormContentProps {
+  products: Product[];
+}
+
 function BOMFormContent() {
   const router = useRouter();
   const [open, setOpen] = useState(false);
-  const { data: products, isLoading } = useAllProducts();
+  const { data: products = [], isLoading, error } = useProducts({});
   const form = useForm<CreateBomFormData>({
     resolver: zodResolver(createBomFormSchema),
     defaultValues: {
-      product: "",
+      product: 0,
       version: "",
       is_active: true,
     },
   });
 
+  if (!products) {
+    return <BOMFormSkeleton />;
+  }
+
+  if (products.length === 0) {
+    return <div>No products found</div>;
+  }
+
   async function onSubmit(data: CreateBomFormData) {
     try {
+      const selectedProduct = products.find((p) => p.id === data.product);
+      if (!selectedProduct) {
+        throw new Error("Selected product not found");
+      }
+
       const bomData = {
         ...data,
         components: [],
         created_at: new Date(),
         modified_at: new Date(),
+        product_type: selectedProduct.product_type,
       };
 
       await createBOM(bomData);
@@ -89,12 +109,9 @@ function BOMFormContent() {
       router.push("/boms");
       router.refresh();
     } catch (error) {
+      console.error("Error creating BOM:", error);
       toast.error("Failed to create BOM");
     }
-  }
-
-  if (isLoading) {
-    return <BOMFormSkeleton />;
   }
 
   return (
@@ -105,7 +122,7 @@ function BOMFormContent() {
           name="product"
           render={({ field }) => (
             <FormItem className="flex flex-col">
-              <FormLabel>Product</FormLabel>
+              <FormLabel>Ürün Kodu</FormLabel>
               <Popover open={open} onOpenChange={setOpen}>
                 <PopoverTrigger asChild>
                   <FormControl>
@@ -117,54 +134,52 @@ function BOMFormContent() {
                         "w-full justify-between",
                         !field.value && "text-muted-foreground"
                       )}
+                      disabled={isLoading}
                     >
                       {field.value
-                        ? products?.find(
-                            (product) => product.id.toString() === field.value
-                          )?.product_name
-                        : "Select product..."}
+                        ? products.find(
+                            (product: Product) => product.id === field.value
+                          )?.product_code
+                        : isLoading
+                        ? "Yükleniyor..."
+                        : "Ürün kodu seçin"}
                       <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                     </Button>
                   </FormControl>
                 </PopoverTrigger>
-                <PopoverContent className="w-[var(--radix-popover-trigger-width)] p-0">
-                  <Command className="max-h-[300px]">
-                    <CommandInput placeholder="Search products..." />
-                    <CommandEmpty>No product found.</CommandEmpty>
-                    <CommandGroup>
-                      {products && products.length > 0 ? (
-                        products.map((product) => (
+                <PopoverContent className="min-w-[var(--radix-popover-trigger-width)] max-w-[var(--radix-popover-trigger-width)] p-0">
+                  <Command>
+                    <CommandList className="max-h-[300px] overflow-auto">
+                      <CommandInput placeholder="Ürün kodu ara..." />
+                      <CommandEmpty>
+                        {isLoading ? "Yükleniyor..." : "Ürün kodu bulunamadı."}
+                      </CommandEmpty>
+                      <CommandGroup>
+                        {products.map((product: Product) => (
                           <CommandItem
-                            value={product.product_name}
+                            value={product.product_code}
                             key={product.id}
                             onSelect={() => {
-                              form.setValue("product", product.id.toString());
+                              form.setValue("product", product.id);
                               setOpen(false);
                             }}
                           >
                             <Check
                               className={cn(
                                 "mr-2 h-4 w-4",
-                                product.id.toString() === field.value
+                                product.id === field.value
                                   ? "opacity-100"
                                   : "opacity-0"
                               )}
                             />
-                            {product.product_name}
+                            {product.product_code}
                           </CommandItem>
-                        ))
-                      ) : (
-                        <CommandItem disabled>
-                          No products available
-                        </CommandItem>
-                      )}
-                    </CommandGroup>
+                        ))}
+                      </CommandGroup>
+                    </CommandList>
                   </Command>
                 </PopoverContent>
               </Popover>
-              <FormDescription>
-                Select the product this BOM is associated with
-              </FormDescription>
               <FormMessage />
             </FormItem>
           )}
@@ -215,6 +230,24 @@ function BOMFormContent() {
 }
 
 export function CreateBOMForm() {
+  const { data: products = [], isLoading, error } = useProducts({});
+
+  if (error) {
+    console.error("Error loading products:", error);
+    return (
+      <div className="p-4 border border-red-200 rounded-md bg-red-50">
+        <p className="text-red-700">
+          Error loading products. Please try again later.
+        </p>
+        <p className="text-sm text-red-500 mt-2">{error.message}</p>
+      </div>
+    );
+  }
+
+  if (isLoading) {
+    return <BOMFormSkeleton />;
+  }
+
   return (
     <Suspense fallback={<BOMFormSkeleton />}>
       <BOMFormContent />

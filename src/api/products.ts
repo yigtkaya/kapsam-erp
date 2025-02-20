@@ -15,34 +15,6 @@ interface ProductParams {
   id: string;
 }
 
-export async function fetchAllProducts(): Promise<Product[]> {
-  const params = new URLSearchParams();
-
-  const cookieStore = await cookies();
-  const csrftoken = cookieStore.get("csrftoken")?.value;
-  const sessionid = cookieStore.get("sessionid")?.value;
-
-  console.log("params", params.toString());
-
-  const response = await fetch(`${API_URL}/api/products/`, {
-    headers: {
-      "Content-Type": "application/json",
-      "X-CSRFToken": csrftoken || "",
-      Cookie: `sessionid=${sessionid}${
-        csrftoken ? `; csrftoken=${csrftoken}` : ""
-      }`,
-    },
-  });
-
-  if (!response.ok) {
-    return [];
-  }
-
-  const data = await response.json();
-
-  return data;
-}
-
 export async function fetchProducts({
   category,
   product_type,
@@ -76,12 +48,12 @@ export async function fetchProducts({
   );
 
   if (!response.ok) {
-    return [];
+    return [] as Product[];
   }
 
   const data = await response.json();
 
-  return data;
+  return data as Product[];
 }
 
 export async function fetchProduct({ id }: ProductParams): Promise<Product> {
@@ -180,7 +152,7 @@ export const updateProduct = async (product: Product) => {
   };
 
   const response = await fetch(
-    `${API_URL}/api/inventory/products/${product.id}`,
+    `${API_URL}/api/inventory/products/${product.id}/`,
     {
       method: "PATCH",
       body: JSON.stringify(productJson),

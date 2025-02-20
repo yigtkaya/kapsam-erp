@@ -62,17 +62,17 @@ export function BOMsDataTable() {
         <div className="rounded-md border">
           <Table>
             <TableHeader>
-              {columns.map((column) => (
-                <TableHead key={column.id}>
+              {columns.map((column, index) => (
+                <TableHead key={`skeleton-header-${index}`}>
                   <Skeleton className="h-4 w-[100px]" />
                 </TableHead>
               ))}
             </TableHeader>
             <TableBody>
-              {Array.from({ length: 5 }).map((_, index) => (
-                <TableRow key={index}>
-                  {columns.map((column) => (
-                    <TableCell key={column.id}>
+              {Array.from({ length: 5 }).map((_, rowIndex) => (
+                <TableRow key={`skeleton-row-${rowIndex}`}>
+                  {columns.map((_, colIndex) => (
+                    <TableCell key={`skeleton-cell-${rowIndex}-${colIndex}`}>
                       <Skeleton className="h-4 w-[90%]" />
                     </TableCell>
                   ))}

@@ -1,5 +1,5 @@
 import { Metadata } from "next";
-import { CreateBOMForm } from "../components/bom-form";
+import { CreateBOMForm } from "../components/create-bom-form";
 
 export const metadata: Metadata = {
   title: "Yeni Ürün Reçetesi | Kapsam ERP",

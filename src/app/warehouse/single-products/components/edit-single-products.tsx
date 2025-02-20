@@ -134,7 +134,7 @@ export function EditSingleProductForm({
                 </PopoverTrigger>
                 <PopoverContent className="min-w-[var(--radix-popover-trigger-width)] max-w-[var(--radix-popover-trigger-width)] p-0">
                   <Command>
-                    <CommandList>
+                    <CommandList className="max-h-[300px] overflow-auto">
                       <CommandInput placeholder="Ürün kodu ara..." />
                       <CommandEmpty>
                         {isLoading ? "Yükleniyor..." : "Ürün kodu bulunamadı."}
@@ -209,7 +209,7 @@ export function EditSingleProductForm({
                 </PopoverTrigger>
                 <PopoverContent className="min-w-[var(--radix-popover-trigger-width)] max-w-[var(--radix-popover-trigger-width)] p-0">
                   <Command>
-                    <CommandList>
+                    <CommandList className="max-h-[300px] overflow-auto">
                       <CommandInput placeholder="Ürün adı ara..." />
                       <CommandEmpty>
                         {isLoading ? "Yükleniyor..." : "Ürün adı bulunamadı."}
