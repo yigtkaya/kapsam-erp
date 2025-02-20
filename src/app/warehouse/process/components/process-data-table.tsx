@@ -67,7 +67,25 @@ export default function ProcessDataTable() {
   });
 
   if (isLoading) {
-    return <DataTableSkeleton />;
+    return (
+      <div className="space-y-4">
+        <div className="rounded-md border border-muted/200 shadow-sm bg-background">
+          <Table>
+            <TableHeader className="bg-muted/90">
+              <TableRow>
+                {[...Array(processProductsColumns.length)].map((_, index) => (
+                  <TableHead key={index} />
+                ))}
+              </TableRow>
+            </TableHeader>
+            <DataTableSkeleton
+              rowCount={pageSize}
+              columnCount={processProductsColumns.length}
+            />
+          </Table>
+        </div>
+      </div>
+    );
   }
 
   if (error) {
@@ -121,12 +139,7 @@ export default function ProcessDataTable() {
             ))}
           </TableHeader>
           <TableBody>
-            {isLoading ? (
-              <DataTableSkeleton
-                rowCount={pageSize}
-                columnCount={processProductsColumns.length}
-              />
-            ) : data && data.length === 0 ? (
+            {data && data.length === 0 ? (
               <TableRow>
                 <TableCell
                   colSpan={processProductsColumns.length}

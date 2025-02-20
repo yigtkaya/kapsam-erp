@@ -20,7 +20,7 @@ export function DataTableSkeleton({
   rowCount = 10,
 }: DataTableSkeletonProps) {
   return (
-    <>
+    <TableBody>
       {[...Array(rowCount)].map((_, i) => (
         <TableRow key={i}>
           {[...Array(columnCount)].map((_, j) => (
@@ -30,6 +30,6 @@ export function DataTableSkeleton({
           ))}
         </TableRow>
       ))}
-    </>
+    </TableBody>
   );
 }
