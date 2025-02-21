@@ -80,7 +80,7 @@ export interface BOMProcessConfig {
 }
 
 export interface BOM {
-  id: string;
+  id: number;
   product: string;
   version: string;
   is_active: boolean;

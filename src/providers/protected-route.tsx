@@ -29,12 +29,8 @@ export function ProtectedRoute({ children }: { children: React.ReactNode }) {
 
   if ((isLoading || !isAuthenticated) && !isPublicRoute) {
     return (
-      <div className="grid place-items-center h-screen">
-        <div
-          role="status"
-          className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900"
-          aria-label="Session check loading"
-        />
+      <div className="flex justify-center items-center h-screen">
+        <div className="w-10 h-10 border-t-2 border-b-2 border-gray-900 rounded-full animate-spin"></div>
       </div>
     );
   }

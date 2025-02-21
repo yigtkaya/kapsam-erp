@@ -86,7 +86,7 @@ function BOMFormContent() {
   }
 
   if (products.length === 0) {
-    return <div>No products found</div>;
+    return <div>Ürün bulunamadı</div>;
   }
 
   async function onSubmit(data: CreateBomFormData) {
@@ -95,7 +95,7 @@ function BOMFormContent() {
         (p) => p.product_code === data.product
       );
       if (!selectedProduct) {
-        throw new Error("Selected product not found");
+        throw new Error("Seçilen ürün bulunamadı");
       }
 
       const bomData = {
@@ -107,12 +107,12 @@ function BOMFormContent() {
       };
 
       await createBOM(bomData);
-      toast.success("BOM created successfully");
+      toast.success("Reçete başarıyla oluşturuldu");
       router.push("/boms");
       router.refresh();
     } catch (error) {
       console.error("Error creating BOM:", error);
-      toast.error("Failed to create BOM");
+      toast.error("Reçete oluşturulurken sorun çıktı");
     }
   }
 
@@ -211,9 +211,9 @@ function BOMFormContent() {
           render={({ field }) => (
             <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
               <div className="space-y-0.5">
-                <FormLabel className="text-base">Active Status</FormLabel>
+                <FormLabel className="text-base">Aktiflik Durumu</FormLabel>
                 <FormDescription>
-                  Whether this BOM is currently active
+                  Bu reçetenin aktif olup olmadığı
                 </FormDescription>
               </div>
               <FormControl>
@@ -226,7 +226,9 @@ function BOMFormContent() {
           )}
         />
 
-        <Button type="submit">Create BOM</Button>
+        <Button className="w-full" type="submit">
+          Reçete Oluştur
+        </Button>
       </form>
     </Form>
   );

@@ -16,7 +16,7 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
-import { useRouter } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { updateBOM } from "@/api/boms";
 import { useProducts } from "@/hooks/useProducts";
@@ -38,6 +38,7 @@ import { cn } from "@/lib/utils";
 import { Check, ChevronsUpDown } from "lucide-react";
 import { useState, Suspense } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useBOM } from "@/hooks/useBOMs";
 
 const editBomFormSchema = z.object({
   product: z.string().min(1, "Product is required"),
@@ -228,10 +229,16 @@ function EditBOMFormContent({ initialData }: EditBOMFormProps) {
   );
 }
 
-export function EditBOMForm({ initialData }: EditBOMFormProps) {
+export function EditBOMForm() {
+  const params = useParams();
+  const { data: bom, isLoading } = useBOM(Number(params.id));
+  if (!bom) {
+    return <div>BOM not found</div>;
+  }
+
   return (
     <Suspense fallback={<BOMFormSkeleton />}>
-      <EditBOMFormContent initialData={initialData} />
+      <EditBOMFormContent initialData={bom} />
     </Suspense>
   );
 }

@@ -1,0 +1,11 @@
+---
+description: forntend rules
+globs: 
+---
+
+# Your rule content
+
+- Always make the button color blue
+- Always create the api on seperate file, create the hooks in hooks file and use the hooks in the pages
+- always divide the view in to components for better readability
+- always put comments on the components so the coder can understand what this component is about

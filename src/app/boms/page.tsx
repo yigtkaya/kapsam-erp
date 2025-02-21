@@ -12,7 +12,7 @@ export const metadata: Metadata = {
 
 export default async function BOMsPage() {
   return (
-    <div className="flex flex-col gap-5 p-8">
+    <div className="container py-4">
       <div className="flex items-center justify-between">
         <PageHeader
           title="Ürün Reçeteleri"

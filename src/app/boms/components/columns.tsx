@@ -8,16 +8,15 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
-  DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import Link from "next/link";
 import { toast } from "sonner";
 import { DataTableColumnHeader } from "@/components/ui/column-header";
-import { deleteBOM } from "@/api/boms";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useRouter } from "next/navigation";
+import { useDeleteBOM } from "@/hooks/useBOMs";
 
 export const columns: ColumnDef<BOM>[] = [
   {
@@ -110,7 +109,24 @@ export const columns: ColumnDef<BOM>[] = [
       />
     ),
     cell: ({ row }) => {
+      const { mutate: deleteBOM } = useDeleteBOM();
       const bom = row.original;
+      const router = useRouter();
+
+      const handleDelete = async () => {
+        const confirm = window.confirm(
+          "Bu reçeteyi silmek istediğinize emin misiniz?"
+        );
+        if (confirm) {
+          try {
+            deleteBOM(bom.id);
+            toast.success("Reçete başarıyla silindi");
+            router.refresh();
+          } catch (error) {
+            toast.error("Reçeteyi silmekte sorun çıktı");
+          }
+        }
+      };
 
       return (
         <div className="text-right" onClick={(e) => e.stopPropagation()}>
@@ -123,27 +139,16 @@ export const columns: ColumnDef<BOM>[] = [
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
               <DropdownMenuItem asChild>
-                <Link href={`/boms/${bom.id}`} className="flex items-center">
+                <Link
+                  href={`/boms/details/${bom.id}`}
+                  className="flex items-center"
+                >
                   <Pencil className="mr-2 h-4 w-4" />
                   Düzenle
                 </Link>
               </DropdownMenuItem>
-              <DropdownMenuItem
-                className="text-red-600"
-                onClick={async () => {
-                  const confirm = window.confirm(
-                    "Bu reçeteyi silmek istediğinize emin misiniz?"
-                  );
-                  if (confirm) {
-                    try {
-                      await deleteBOM(bom.id!);
-                      toast.success("Reçete başarıyla silindi");
-                    } catch (error) {
-                      toast.error("Reçeteyi silmekte sorun çıktı");
-                    }
-                  }
-                }}
-              >
+              <DropdownMenuSeparator />
+              <DropdownMenuItem className="text-red-600" onClick={handleDelete}>
                 <Trash className="mr-2 h-4 w-4" />
                 Sil
               </DropdownMenuItem>

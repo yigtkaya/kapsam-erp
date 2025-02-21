@@ -84,10 +84,16 @@ export async function createBOM(data: Omit<BOM, "id">) {
   }
 }
 
-export async function updateBOM(id: string, data: Partial<BOM>) {
+export async function updateBOM(id: number, data: Partial<BOM>) {
   const cookieStore = await cookies();
-  const csrftoken = cookieStore.get("csrftoken")?.value;
+  const rawCSRFCookie = cookieStore.get("csrftoken")?.value || "";
   const sessionid = cookieStore.get("sessionid")?.value;
+  // Extract the token value from the raw cookie string.
+  // This regex looks for `csrftoken=` followed by a group of non-semicolon characters.
+  const tokenMatch = rawCSRFCookie.match(/csrftoken=([^;]+)/);
+  const csrftoken = tokenMatch ? tokenMatch[1] : rawCSRFCookie;
+
+  console.log("Updating BOM:", id, data);
 
   try {
     const response = await fetch(`${API_URL}/api/manufacturing/boms/${id}/`, {
@@ -104,6 +110,8 @@ export async function updateBOM(id: string, data: Partial<BOM>) {
       body: JSON.stringify(data),
     });
 
+    console.log("BOM update response:", response);
+
     if (!response.ok) {
       throw new Error("Failed to update BOM");
     }
@@ -116,10 +124,14 @@ export async function updateBOM(id: string, data: Partial<BOM>) {
   }
 }
 
-export async function deleteBOM(id: string) {
+export async function deleteBOM(id: number) {
   const cookieStore = await cookies();
-  const csrftoken = cookieStore.get("csrftoken")?.value;
+  const rawCSRFCookie = cookieStore.get("csrftoken")?.value || "";
   const sessionid = cookieStore.get("sessionid")?.value;
+  // Extract the token value from the raw cookie string.
+  // This regex looks for `csrftoken=` followed by a group of non-semicolon characters.
+  const tokenMatch = rawCSRFCookie.match(/csrftoken=([^;]+)/);
+  const csrftoken = tokenMatch ? tokenMatch[1] : rawCSRFCookie;
 
   try {
     const response = await fetch(`${API_URL}/api/manufacturing/boms/${id}/`, {
@@ -128,17 +140,18 @@ export async function deleteBOM(id: string) {
 
       headers: {
         "X-CSRFToken": csrftoken || "",
+        "Content-Type": "application/json",
         Cookie: `sessionid=${sessionid}${
           csrftoken ? `; csrftoken=${csrftoken}` : ""
         }`,
       },
     });
 
+    console.log("BOM deletion response:", response);
+
     if (!response.ok) {
       throw new Error("Failed to delete BOM");
     }
-
-    revalidatePath("/boms");
     return true;
   } catch (error) {
     console.error("Error deleting BOM:", error);

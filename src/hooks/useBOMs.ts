@@ -51,7 +51,7 @@ export function useCreateBOM() {
 export function useUpdateBOM() {
   const queryClient = useQueryClient();
 
-  return useMutation<BOM, Error, { id: string; data: Partial<BOM> }>({
+  return useMutation<BOM, Error, { id: number; data: Partial<BOM> }>({
     mutationFn: ({ id, data }) => updateBOM(id, data),
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: ["boms"] });
@@ -63,7 +63,7 @@ export function useUpdateBOM() {
 export function useDeleteBOM() {
   const queryClient = useQueryClient();
 
-  return useMutation<boolean, Error, string>({
+  return useMutation<boolean, Error, number>({
     mutationFn: deleteBOM,
     onSuccess: (_, id) => {
       queryClient.invalidateQueries({ queryKey: ["boms"] });
