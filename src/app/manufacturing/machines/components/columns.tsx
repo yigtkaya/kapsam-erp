@@ -1,9 +1,9 @@
 "use client";
 
 import { ColumnDef } from "@tanstack/react-table";
-import { BOM } from "@/types/manufacture";
+import { Machine, MachineStatus } from "@/types/manufacture";
 import { Button } from "@/components/ui/button";
-import { MoreHorizontal, Pencil, Trash, List } from "lucide-react";
+import { MoreHorizontal, Pencil, Trash } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -16,9 +16,9 @@ import { toast } from "sonner";
 import { DataTableColumnHeader } from "@/components/ui/column-header";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useRouter } from "next/navigation";
-import { useDeleteBOM } from "@/hooks/useBOMs";
+import { useDeleteMachine } from "@/hooks/useManufacturing";
 
-export const columns: ColumnDef<BOM>[] = [
+export const columns: ColumnDef<Machine>[] = [
   {
     id: "select",
     header: ({ table }) => (
@@ -44,57 +44,61 @@ export const columns: ColumnDef<BOM>[] = [
     ),
   },
   {
-    accessorKey: "id",
+    accessorKey: "machine_code",
     header: ({ column }) => (
       <DataTableColumnHeader
         column={column}
-        title="Reçete Numarası"
-        className="text-left"
-      />
-    ),
-    cell: ({ row }) => <div className="text-left">{row.getValue("id")}</div>,
-  },
-  {
-    accessorKey: "product",
-    header: ({ column }) => (
-      <DataTableColumnHeader
-        column={column}
-        title="Ürün"
-        className="text-left"
-      />
-    ),
-    cell: ({ row }) => {
-      const product = row.getValue("product");
-      let displayText: string = "";
-
-      if (product && typeof product === "object") {
-        // If product has property 'product_name', use it; otherwise, stringify the object
-        displayText =
-          "product_name" in product
-            ? (product as { product_name?: string }).product_name ?? ""
-            : JSON.stringify(product);
-      } else {
-        displayText = String(product);
-      }
-
-      return <div className="text-left">{displayText}</div>;
-    },
-  },
-  {
-    accessorKey: "version",
-    header: ({ column }) => (
-      <DataTableColumnHeader
-        column={column}
-        title="Versiyon"
+        title="Makine Kodu"
         className="text-left"
       />
     ),
     cell: ({ row }) => (
-      <div className="text-left">{row.getValue("version")}</div>
+      <div className="text-left font-medium">
+        {row.getValue("machine_code")}
+      </div>
     ),
   },
   {
-    accessorKey: "is_active",
+    accessorKey: "machine_type",
+    header: ({ column }) => (
+      <DataTableColumnHeader
+        column={column}
+        title="Makine Tipi"
+        className="text-left"
+      />
+    ),
+    cell: ({ row }) => (
+      <div className="text-left">{row.getValue("machine_type")}</div>
+    ),
+  },
+  {
+    accessorKey: "brand",
+    header: ({ column }) => (
+      <DataTableColumnHeader
+        column={column}
+        title="Marka"
+        className="text-left"
+      />
+    ),
+    cell: ({ row }) => (
+      <div className="text-left">{row.getValue("brand") || "-"}</div>
+    ),
+  },
+  {
+    accessorKey: "model",
+    header: ({ column }) => (
+      <DataTableColumnHeader
+        column={column}
+        title="Model"
+        className="text-left"
+      />
+    ),
+    cell: ({ row }) => (
+      <div className="text-left">{row.getValue("model") || "-"}</div>
+    ),
+  },
+  {
+    accessorKey: "status",
     header: ({ column }) => (
       <DataTableColumnHeader
         column={column}
@@ -102,15 +106,36 @@ export const columns: ColumnDef<BOM>[] = [
         className="text-left"
       />
     ),
-    cell: ({ row }) => (
-      <div
-        className={`text-left font-medium ${
-          row.original.is_active ? "text-green-600" : "text-red-600"
-        }`}
-      >
-        {row.original.is_active ? "Aktif" : "Pasif"}
-      </div>
+    cell: ({ row }) => {
+      const status = row.getValue("status") as MachineStatus;
+      return (
+        <div
+          className={`text-left font-medium ${
+            status === "AVAILABLE" ? "text-green-600" : "text-red-600"
+          }`}
+        >
+          {status === "AVAILABLE" ? "Kullanılabilir" : "Kullanılamaz"}
+        </div>
+      );
+    },
+  },
+  {
+    accessorKey: "next_maintenance_date",
+    header: ({ column }) => (
+      <DataTableColumnHeader
+        column={column}
+        title="Sonraki Bakım Tarihi"
+        className="text-left"
+      />
     ),
+    cell: ({ row }) => {
+      const date = row.getValue("next_maintenance_date") as string | undefined;
+      return (
+        <div className="text-left">
+          {date ? new Date(date).toLocaleDateString("tr-TR") : "-"}
+        </div>
+      );
+    },
   },
   {
     id: "actions",
@@ -122,21 +147,21 @@ export const columns: ColumnDef<BOM>[] = [
       />
     ),
     cell: ({ row }) => {
-      const { mutate: deleteBOM } = useDeleteBOM();
-      const bom = row.original;
+      const { mutate: deleteMachine } = useDeleteMachine();
+      const machine = row.original;
       const router = useRouter();
 
       const handleDelete = async () => {
         const confirm = window.confirm(
-          "Bu reçeteyi silmek istediğinize emin misiniz?"
+          "Bu makineyi silmek istediğinize emin misiniz?"
         );
         if (confirm) {
           try {
-            deleteBOM(bom.id);
-            toast.success("Reçete başarıyla silindi");
+            deleteMachine(machine.id);
+            toast.success("Makine başarıyla silindi");
             router.refresh();
           } catch (error) {
-            toast.error("Reçeteyi silmekte sorun çıktı");
+            toast.error("Makineyi silmekte sorun çıktı");
           }
         }
       };
@@ -153,20 +178,11 @@ export const columns: ColumnDef<BOM>[] = [
             <DropdownMenuContent align="end">
               <DropdownMenuItem asChild>
                 <Link
-                  href={`/boms/details/${bom.id}`}
+                  href={`/manufacturing/machines/details/${machine.id}`}
                   className="flex items-center"
                 >
                   <Pencil className="mr-2 h-4 w-4" />
                   Düzenle
-                </Link>
-              </DropdownMenuItem>
-              <DropdownMenuItem asChild>
-                <Link
-                  href={`/boms/components/${bom.id}`}
-                  className="flex items-center"
-                >
-                  <List className="mr-2 h-4 w-4" />
-                  Bileşenler
                 </Link>
               </DropdownMenuItem>
               <DropdownMenuSeparator />

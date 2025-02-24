@@ -1,21 +1,19 @@
 import { Metadata } from "next";
-import { CreateBOMForm } from "../components/create-bom-form";
 import { PageHeader } from "@/components/ui/page-header";
+import { BOMForm } from "../components/bom-form";
 
 export const metadata: Metadata = {
-  title: "Yeni Ürün Reçetesi | Kapsam ERP",
-  description: "Yeni bir ürün reçetesi oluşturun",
+  title: "Yeni Reçete | Kapsam ERP",
+  description: "Yeni bir reçete oluşturun",
 };
 
 export default function NewBOMPage() {
   return (
-    <div className="container mx-auto py-10">
-      <PageHeader
-        title="Yeni Ürün Reçetesi"
-        description="Yeni bir ürün reçetesi oluşturun"
-        showBackButton
-      />
-      <CreateBOMForm />
+    <div className="container mx-auto py-6">
+      <PageHeader title="Yeni Reçete" description="Yeni bir reçete oluşturun" />
+      <div className="mt-6">
+        <BOMForm />
+      </div>
     </div>
   );
 }

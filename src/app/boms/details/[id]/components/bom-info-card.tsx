@@ -31,7 +31,7 @@ import { Product } from "@/types/inventory";
 
 interface BOMInfoCardProps {
   bom: BOM;
-  product: Product | undefined;
+  product: Product;
   products: Product[] | undefined;
   isEditing: boolean;
   isProductLoading: boolean;
@@ -61,7 +61,7 @@ export function BOMInfoCard({
   const productName = isCurrentProductLoading ? (
     <Skeleton className="h-4 w-[200px]" />
   ) : (
-    product?.product_name || bom.product
+    product?.product_name
   );
 
   return (
@@ -158,9 +158,9 @@ export function BOMInfoCard({
             )}
           </div>
           <div>
-            <p className="text-sm font-medium">Oluşturulma Tarihi</p>
+            <p className="text-sm font-medium">Stok Miktarı</p>
             <p className="text-sm text-muted-foreground">
-              {new Date(bom.created_at).toLocaleDateString()}
+              {product?.current_stock || 0}
             </p>
           </div>
           <div>

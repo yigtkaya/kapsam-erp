@@ -1,32 +1,33 @@
 import { Metadata } from "next";
+import { PageHeader } from "@/components/ui/page-header";
 import { BOMsDataTable } from "./components/boms-data-table";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import { Plus } from "lucide-react";
-import { PageHeader } from "@/components/ui/page-header";
 
 export const metadata: Metadata = {
-  title: "BOMs | Kapsam ERP",
-  description: "Bill of Materials management",
+  title: "Reçeteler | Kapsam ERP",
+  description: "Ürün reçetelerini yönetin",
 };
 
-export default async function BOMsPage() {
+export default function BOMsPage() {
   return (
-    <div className="container py-4">
-      <div className="flex items-center justify-between">
-        <PageHeader
-          title="Ürün Reçeteleri"
-          description="Ürün reçetelerini yönetin ve onların bileşenlerini düzenleyin"
-          showBackButton
-        />
-        <Link href="/boms/new">
-          <Button>
-            <Plus className="w-4 h-4 mr-2" />
-            Yeni Ürün Reçetesi
-          </Button>
-        </Link>
+    <div className="container mx-auto py-6">
+      <PageHeader
+        title="Reçeteler"
+        description="Ürün reçetelerini görüntüleyin ve yönetin"
+        action={
+          <Link href="/boms/new">
+            <Button className="gap-1.5">
+              <Plus className="h-4 w-4" />
+              Yeni Reçete
+            </Button>
+          </Link>
+        }
+      />
+      <div className="mt-6">
+        <BOMsDataTable />
       </div>
-      <BOMsDataTable />
     </div>
   );
 }

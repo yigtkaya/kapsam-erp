@@ -1,29 +1,14 @@
-import { Product, ProductType, RawMaterial } from "./inventory";
-
-// MachineStatus enum
-export enum MachineStatus {
-  AVAILABLE = "AVAILABLE",
-  IN_USE = "IN_USE",
-  MAINTENANCE = "MAINTENANCE",
-  RETIRED = "RETIRED",
-}
-
-// WorkOrderStatus choices
-export type WorkOrderStatus =
-  | "PLANNED"
-  | "IN_PROGRESS"
-  | "COMPLETED"
-  | "DELAYED";
+import { Product } from "./inventory";
 
 // Enums
 export enum AxisCount {
-  NINE_AXIS = "9 EKSEN",
-  EIGHT_POINT_FIVE_AXIS = "8.5 EKSEN",
-  FIVE_AXIS = "5 EKSEN",
-  FOUR_AXIS = "4 EKSEN",
-  THREE_AXIS = "3 EKSEN",
-  TWO_AXIS = "2 EKSEN",
-  ONE_AXIS = "1 EKSEN",
+  NINE_AXIS = "9EKSEN",
+  EIGHT_POINT_FIVE_AXIS = "8.5EKSEN",
+  FIVE_AXIS = "5EKSEN",
+  FOUR_AXIS = "4EKSEN",
+  THREE_AXIS = "3EKSEN",
+  TWO_AXIS = "2EKSEN",
+  ONE_AXIS = "1EKSEN",
 }
 
 export enum MachineType {
@@ -32,148 +17,157 @@ export enum MachineType {
   CNC_KAYAR_OTOMAT = "CNC Kayar Otomat",
 }
 
-// Interfaces
-export interface Machine {
-  id?: string;
-  machine_code: string;
-  machine_type: MachineType;
-  brand: string | null;
-  model: string | null;
-  axis_count?: AxisCount;
-  internal_cooling: number | null;
-  motor_power_kva: number | null;
-  holder_type: string | null;
-  spindle_motor_power_10_percent_kw: number | null;
-  spindle_motor_power_30_percent_kw: number | null;
-  power_hp: number | null;
-  spindle_speed_rpm: number | null;
-  tool_count: number | null;
-  nc_control_unit: string | null;
-  manufacturing_year: Date | null;
-  machine_weight_kg: number | null;
-  max_part_size: string | null;
-  description: string | null;
-  status: MachineStatus;
-  maintenance_interval: number;
-  serial_number: string | null;
-  last_maintenance_date: Date | null;
-  next_maintenance_date: Date | null;
-  maintenance_notes: string | null;
+export enum ProductType {
+  STANDARD_PART = "STANDARD",
+  MONTAGED = "MONTAGED",
+  SEMI = "SEMI",
+  SINGLE = "SINGLE",
 }
 
-export interface ManufacturingProcess {
-  id: string;
+export enum MachineStatus {
+  AVAILABLE = "AVAILABLE",
+  // Add other statuses as needed
+}
+
+export enum WorkOrderStatus {
+  PLANNED = "PLANNED",
+  // Add other statuses as needed
+}
+
+// Base interface for common fields
+export interface BaseModel {
+  id: number;
+  created_at: string;
+  updated_at: string;
+}
+
+// Main interfaces
+export interface Machine extends BaseModel {
+  machine_code: string;
+  machine_type: MachineType;
+  brand?: string;
+  model?: string;
+  axis_count?: AxisCount;
+  internal_cooling?: number;
+  motor_power_kva?: number;
+  holder_type?: string;
+  spindle_motor_power_10_percent_kw?: number;
+  spindle_motor_power_30_percent_kw?: number;
+  power_hp?: number;
+  spindle_speed_rpm?: number;
+  tool_count?: number;
+  nc_control_unit?: string;
+  manufacturing_year?: string;
+  serial_number?: string;
+  machine_weight_kg?: number;
+  max_part_size?: string;
+  description?: string;
+  status: MachineStatus;
+  maintenance_interval: number;
+  last_maintenance_date?: string;
+  next_maintenance_date?: string;
+  maintenance_notes?: string;
+}
+
+export interface ManufacturingProcess extends BaseModel {
   process_code: string;
   process_name: string;
   standard_time_minutes: number;
   machine_type: MachineType;
-  approved_by?: string; // User ID
+  approved_by?: number; // User ID
 }
 
-export interface BOMProcessConfig {
-  id: string;
-  process: string;
+export interface BOMProcessConfig extends BaseModel {
+  process: number; // Process ID
   axis_count?: AxisCount;
-  estimated_duration_minutes: number;
-  tooling_requirements?: Record<string, unknown>;
-  quality_checks?: Record<string, unknown>;
+  estimated_duration_minutes?: number;
+  tooling_requirements?: Record<string, any>;
+  quality_checks?: Record<string, any>;
 }
 
-export interface BOM {
-  id: number;
+export interface BOMResponse extends BaseModel {
+  product: Product;
+  version: string;
+  is_active: boolean;
+  components?: BOMComponent[];
+  created_at: string;
+  modified_at: string;
+}
+
+export interface BOMRequest extends BaseModel {
   product: string;
   version: string;
   is_active: boolean;
-  created_at: Date;
-  modified_at: Date;
-  components: BOMComponent[];
-  product_type: ProductType;
+  components?: BOMComponent[];
 }
 
-export type BOMComponentType = "PRODUCT" | "PROCESS";
+export type BOM = BOMResponse;
 
-export interface BOMComponent {
-  id: string;
-  bom: string;
-  component_type: BOMComponentType;
+export interface BOMComponent extends BaseModel {
+  bom: number; // BOM ID
   sequence_order: number;
-  quantity: number;
+  quantity?: number;
   notes?: string;
-  // Product-specific fields
-  product?: string;
-  // Process-specific fields
-  process_config?: string;
-  raw_material?: string;
+  component_type: "PRODUCT" | "PROCESS";
+  details: ProductComponentDetails | ProcessComponentDetails;
 }
 
-export interface WorkOrder {
-  id: string;
-  order_number: string;
-  sales_order_item: string; // SalesOrderItem ID
-  bom: string; // BOM ID
-  quantity: number;
-  planned_start: Date;
-  planned_end: Date;
-  actual_start?: Date;
-  actual_end?: Date;
-  status: WorkOrderStatus;
-  priority: number;
-  notes?: string;
-  sub_orders: SubWorkOrder[];
-}
-
-export interface SubWorkOrder {
-  id: string;
-  parent_work_order: string;
-  bom_component: string;
-  quantity: number;
-  planned_start: Date;
-  planned_end: Date;
-  actual_start?: Date;
-  actual_end?: Date;
-  status: WorkOrderStatus;
-  output_quantity?: number;
-  scrap_quantity: number;
-  target_category?: string;
-  notes?: string;
-  processes: SubWorkOrderProcess[];
-}
-
-export interface SubWorkOrderProcess {
-  id: string;
-  sub_work_order: string;
-  process: string;
-  machine: string;
-  sequence_order: number;
-  planned_duration_minutes: number;
-  actual_duration_minutes?: number;
-}
-
-export type WorkOrderOutputStatus = "GOOD" | "REWORK" | "SCRAP";
-
-export interface WorkOrderOutput {
-  id: string;
-  sub_work_order: string; // SubWorkOrder ID
-  quantity: number;
-  status: WorkOrderOutputStatus;
-  target_category: string; // InventoryCategory ID
-  notes?: string;
-}
-
-// Validation Types
-export interface WorkOrderOutputValidation {
-  isValid: boolean;
-  errors: {
-    status?: string;
-    quantity?: string;
+export interface ProductComponentDetails {
+  type: "PRODUCT";
+  product: {
+    id: number;
+    product_code: string;
+    name: string;
+    product_type: ProductType;
   };
 }
 
-// Helper Types
-export interface BOMComponentRelations {
-  process?: ManufacturingProcess;
-  process_config?: BOMProcessConfig;
-  product?: Product;
-  standard_part?: Product;
-  raw_material?: RawMaterial;
+export interface ProcessComponentDetails {
+  type: "PROCESS";
+  process_config: {
+    id: number;
+    process_name: string;
+    process_code: string;
+    machine_type: MachineType;
+    axis_count?: AxisCount;
+    estimated_duration_minutes?: number;
+  };
+  raw_material?: {
+    id: number;
+    code: string;
+    name: string;
+  };
+}
+
+export interface ProductComponent extends BOMComponent {
+  product: string; // Product Code
+}
+
+export interface ProcessComponent extends BOMComponent {
+  process_config: number; // BOMProcessConfig ID
+  raw_material?: number; // RawMaterial ID
+}
+
+export interface WorkOrder extends BaseModel {
+  order_number: string;
+  sales_order_item: number;
+  bom: number;
+  quantity: number;
+  planned_start: string;
+  planned_end: string;
+  actual_start?: string;
+  actual_end?: string;
+  status: WorkOrderStatus;
+  priority: number;
+  notes?: string;
+}
+
+export interface WorkOrderOutput extends BaseModel {
+  sub_work_order: number;
+  quantity: number;
+  status: "GOOD" | "REWORK" | "SCRAP" | "QUARANTINE";
+  target_category: number;
+  notes?: string;
+  quarantine_reason?: string;
+  inspection_required: boolean;
 }

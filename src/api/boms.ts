@@ -1,76 +1,64 @@
 "use server";
 
-import { BOM } from "@/types/manufacture";
+import { BOM, BOMRequest } from "@/types/manufacture";
 import { revalidatePath } from "next/cache";
 import { cookies } from "next/headers";
 
 const API_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
 
-export async function fetchBOM(id: number): Promise<BOM> {
+// Helper function to get cookies and headers
+async function getAuthHeaders() {
   const cookieStore = await cookies();
   const csrftoken = cookieStore.get("csrftoken")?.value;
   const sessionid = cookieStore.get("sessionid")?.value;
 
+  return {
+    "Content-Type": "application/json",
+    "X-CSRFToken": csrftoken || "",
+    Cookie: `sessionid=${sessionid}${
+      csrftoken ? `; csrftoken=${csrftoken}` : ""
+    }`,
+  };
+}
+
+export async function fetchBOM(id: number): Promise<BOM> {
+  const headers = await getAuthHeaders();
+
   const response = await fetch(`${API_URL}/api/manufacturing/boms/${id}/`, {
-    headers: {
-      "Content-Type": "application/json",
-      "X-CSRFToken": csrftoken || "",
-      Cookie: `sessionid=${sessionid}${
-        csrftoken ? `; csrftoken=${csrftoken}` : ""
-      }`,
-    },
+    headers,
   });
 
   if (!response.ok) {
     throw new Error("Failed to fetch BOM");
   }
 
-  const data = await response.json();
-  return data;
+  return await response.json();
 }
 
 export async function fetchBOMs(): Promise<BOM[]> {
-  const cookieStore = await cookies();
-  const csrftoken = cookieStore.get("csrftoken")?.value;
-  const sessionid = cookieStore.get("sessionid")?.value;
+  const headers = await getAuthHeaders();
 
   const response = await fetch(`${API_URL}/api/manufacturing/boms/`, {
-    headers: {
-      "Content-Type": "application/json",
-      "X-CSRFToken": csrftoken || "",
-      Cookie: `sessionid=${sessionid}${
-        csrftoken ? `; csrftoken=${csrftoken}` : ""
-      }`,
-    },
+    headers,
   });
 
-  console.log("BOMs response:", response);
+  if (!response.ok) {
+    throw new Error("Failed to fetch BOMs");
+  }
 
-  const data = await response.json();
-  console.log("BOMs fetched successfully:", data);
-  return data;
+  return await response.json();
 }
 
-export async function createBOM(data: Omit<BOM, "id">) {
-  const cookieStore = await cookies();
-  const csrftoken = cookieStore.get("csrftoken")?.value;
-  const sessionid = cookieStore.get("sessionid")?.value;
+export async function createBOM(data: Omit<BOMRequest, "id">) {
+  const headers = await getAuthHeaders();
 
   try {
     const response = await fetch(`${API_URL}/api/manufacturing/boms/`, {
       method: "POST",
-      credentials: "include", // Added to include cookies automatically
-      headers: {
-        "Content-Type": "application/json",
-        "X-CSRFToken": csrftoken || "",
-        Cookie: `sessionid=${sessionid}${
-          csrftoken ? `; csrftoken=${csrftoken}` : ""
-        }`,
-      },
+      credentials: "include",
+      headers,
       body: JSON.stringify(data),
     });
-
-    console.log("BOM creation response:", response);
 
     if (!response.ok) {
       throw new Error("Failed to create BOM");
@@ -84,40 +72,29 @@ export async function createBOM(data: Omit<BOM, "id">) {
   }
 }
 
-export async function updateBOM(id: number, data: Partial<BOM>) {
-  const cookieStore = await cookies();
-  const rawCSRFCookie = cookieStore.get("csrftoken")?.value || "";
-  const sessionid = cookieStore.get("sessionid")?.value;
-  // Extract the token value from the raw cookie string.
-  // This regex looks for `csrftoken=` followed by a group of non-semicolon characters.
-  const tokenMatch = rawCSRFCookie.match(/csrftoken=([^;]+)/);
-  const csrftoken = tokenMatch ? tokenMatch[1] : rawCSRFCookie;
+export async function updateBOM(id: number, data: Partial<BOMRequest>) {
+  const headers = await getAuthHeaders();
 
-  console.log("Updating BOM:", id, data);
+  console.log(headers);
 
   try {
     const response = await fetch(`${API_URL}/api/manufacturing/boms/${id}/`, {
       method: "PATCH",
-      credentials: "include", // Added to include cookies automatically
-
-      headers: {
-        "Content-Type": "application/json",
-        "X-CSRFToken": csrftoken || "",
-        Cookie: `sessionid=${sessionid}${
-          csrftoken ? `; csrftoken=${csrftoken}` : ""
-        }`,
-      },
+      credentials: "include",
+      headers,
       body: JSON.stringify(data),
     });
 
-    console.log("BOM update response:", response);
+    // Store the response JSON to avoid reading the body twice
+    const responseData = await response.json();
+    console.log(responseData);
 
     if (!response.ok) {
       throw new Error("Failed to update BOM");
     }
 
     revalidatePath("/boms");
-    return await response.json();
+    return responseData;
   } catch (error) {
     console.error("Error updating BOM:", error);
     throw error;
@@ -125,33 +102,20 @@ export async function updateBOM(id: number, data: Partial<BOM>) {
 }
 
 export async function deleteBOM(id: number) {
-  const cookieStore = await cookies();
-  const rawCSRFCookie = cookieStore.get("csrftoken")?.value || "";
-  const sessionid = cookieStore.get("sessionid")?.value;
-  // Extract the token value from the raw cookie string.
-  // This regex looks for `csrftoken=` followed by a group of non-semicolon characters.
-  const tokenMatch = rawCSRFCookie.match(/csrftoken=([^;]+)/);
-  const csrftoken = tokenMatch ? tokenMatch[1] : rawCSRFCookie;
+  const headers = await getAuthHeaders();
 
   try {
     const response = await fetch(`${API_URL}/api/manufacturing/boms/${id}/`, {
       method: "DELETE",
-      credentials: "include", // Added to include cookies automatically
-
-      headers: {
-        "X-CSRFToken": csrftoken || "",
-        "Content-Type": "application/json",
-        Cookie: `sessionid=${sessionid}${
-          csrftoken ? `; csrftoken=${csrftoken}` : ""
-        }`,
-      },
+      credentials: "include",
+      headers,
     });
-
-    console.log("BOM deletion response:", response);
 
     if (!response.ok) {
       throw new Error("Failed to delete BOM");
     }
+
+    revalidatePath("/boms");
     return true;
   } catch (error) {
     console.error("Error deleting BOM:", error);

@@ -24,20 +24,19 @@ import {
 import { Input } from "@/components/ui/input";
 import { DataTablePagination } from "@/components/ui/data-table-pagination";
 import { columns } from "./columns";
-import { useBOMs } from "@/hooks/useBOMs";
+import { useMachines } from "@/hooks/useManufacturing";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useRouter } from "next/navigation";
 import { ColumnDef } from "@tanstack/react-table";
-import { Search } from "lucide-react";
 
-export function BOMsDataTable() {
+export function MachinesDataTable() {
   const router = useRouter();
   const [sorting, setSorting] = useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
   const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({});
   const [rowSelection, setRowSelection] = useState({});
 
-  const { data: boms, isLoading } = useBOMs();
+  const { data: machines, isLoading } = useMachines();
 
   const fuzzyFilter: FilterFn<any> = (row, columnId, filterValue) => {
     const value = row.getValue(columnId) as string;
@@ -45,7 +44,7 @@ export function BOMsDataTable() {
   };
 
   const table = useReactTable({
-    data: boms || [],
+    data: machines || [],
     columns,
     onSortingChange: setSorting,
     onColumnFiltersChange: setColumnFilters,
@@ -121,28 +120,25 @@ export function BOMsDataTable() {
   return (
     <div className="space-y-4">
       <div className="flex items-center py-4">
-        <div className="relative w-full max-w-sm">
-          <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-          <Input
-            placeholder="Ürün adına göre filtrele..."
-            value={
-              (table.getColumn("product")?.getFilterValue() as string) ?? ""
-            }
-            onChange={(event) =>
-              table.getColumn("product")?.setFilterValue(event.target.value)
-            }
-            className="pl-8"
-          />
-        </div>
+        <Input
+          placeholder="Makine koduna göre filtrele..."
+          value={
+            (table.getColumn("machine_code")?.getFilterValue() as string) ?? ""
+          }
+          onChange={(event) =>
+            table.getColumn("machine_code")?.setFilterValue(event.target.value)
+          }
+          className="max-w-sm"
+        />
       </div>
-      <div className="rounded-md border overflow-hidden">
+      <div className="rounded-md border">
         <Table>
-          <TableHeader className="bg-muted/50">
+          <TableHeader>
             {table.getHeaderGroups().map((headerGroup) => (
               <TableRow key={headerGroup.id}>
                 {headerGroup.headers.map((header) => {
                   return (
-                    <TableHead key={header.id} className="p-4 font-medium">
+                    <TableHead key={header.id} className="p-4">
                       {header.isPlaceholder
                         ? null
                         : flexRender(
@@ -161,9 +157,11 @@ export function BOMsDataTable() {
                 <TableRow
                   key={row.id}
                   data-state={row.getIsSelected() && "selected"}
-                  className="cursor-pointer hover:bg-muted/30"
+                  className="cursor-pointer hover:bg-muted/50"
                   onClick={() =>
-                    router.push(`/boms/details/${row.original.id}`)
+                    router.push(
+                      `/manufacturing/machines/details/${row.original.id}`
+                    )
                   }
                 >
                   {row.getVisibleCells().map((cell) => (
@@ -182,13 +180,7 @@ export function BOMsDataTable() {
                   colSpan={columns.length}
                   className="h-24 text-center"
                 >
-                  <div className="flex flex-col items-center gap-2 py-4">
-                    <p>Ürün Reçeteleri bulunamadı.</p>
-                    <p className="text-sm text-muted-foreground">
-                      Yeni bir reçete eklemek için "Yeni Reçete" butonunu
-                      kullanın.
-                    </p>
-                  </div>
+                  Makine bulunamadı.
                 </TableCell>
               </TableRow>
             )}

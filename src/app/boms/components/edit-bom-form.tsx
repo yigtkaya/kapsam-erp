@@ -70,17 +70,17 @@ function BOMFormSkeleton() {
   );
 }
 
-function EditBOMFormContent({ initialData }: EditBOMFormProps) {
+export function EditBOMFormContent({ initialData }: EditBOMFormProps) {
   const router = useRouter();
   const [open, setOpen] = useState(false);
-  const { data: products, isLoading } = useProducts({});
+  const { data: products, isLoading: isProductLoading } = useProducts({});
 
   const form = useForm<EditBomFormData>({
     resolver: zodResolver(editBomFormSchema),
     defaultValues: {
-      product: initialData.product || "",
-      version: initialData.version || "",
-      is_active: initialData.is_active ?? true,
+      product: initialData.product.product_code,
+      version: initialData.version,
+      is_active: initialData.is_active,
     },
   });
 
@@ -101,7 +101,7 @@ function EditBOMFormContent({ initialData }: EditBOMFormProps) {
     }
   }
 
-  if (isLoading) {
+  if (isProductLoading) {
     return <div>Loading...</div>;
   }
 
@@ -133,14 +133,14 @@ function EditBOMFormContent({ initialData }: EditBOMFormProps) {
                         "w-full justify-between",
                         !field.value && "text-muted-foreground"
                       )}
-                      disabled={isLoading}
+                      disabled={isProductLoading}
                     >
                       {field.value
                         ? products.find(
                             (product: Product) =>
                               product.product_code === field.value
                           )?.product_code
-                        : isLoading
+                        : isProductLoading
                         ? "Yükleniyor..."
                         : "Ürün kodu seçin"}
                       <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
@@ -152,7 +152,9 @@ function EditBOMFormContent({ initialData }: EditBOMFormProps) {
                     <CommandList className="max-h-[300px] overflow-auto">
                       <CommandInput placeholder="Ürün kodu ara..." />
                       <CommandEmpty>
-                        {isLoading ? "Yükleniyor..." : "Ürün kodu bulunamadı."}
+                        {isProductLoading
+                          ? "Yükleniyor..."
+                          : "Ürün kodu bulunamadı."}
                       </CommandEmpty>
                       <CommandGroup>
                         {products.map((product: Product) => (

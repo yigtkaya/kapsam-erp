@@ -1,9 +1,9 @@
 "use client";
 
 import { ColumnDef } from "@tanstack/react-table";
-import { BOM } from "@/types/manufacture";
+import { ManufacturingProcess, MachineType } from "@/types/manufacture";
 import { Button } from "@/components/ui/button";
-import { MoreHorizontal, Pencil, Trash, List } from "lucide-react";
+import { MoreHorizontal, Pencil, Trash } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -16,9 +16,9 @@ import { toast } from "sonner";
 import { DataTableColumnHeader } from "@/components/ui/column-header";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useRouter } from "next/navigation";
-import { useDeleteBOM } from "@/hooks/useBOMs";
+import { useDeleteProcess } from "@/hooks/useManufacturing";
 
-export const columns: ColumnDef<BOM>[] = [
+export const columns: ColumnDef<ManufacturingProcess>[] = [
   {
     id: "select",
     header: ({ table }) => (
@@ -44,72 +44,57 @@ export const columns: ColumnDef<BOM>[] = [
     ),
   },
   {
-    accessorKey: "id",
+    accessorKey: "process_code",
     header: ({ column }) => (
       <DataTableColumnHeader
         column={column}
-        title="Reçete Numarası"
-        className="text-left"
-      />
-    ),
-    cell: ({ row }) => <div className="text-left">{row.getValue("id")}</div>,
-  },
-  {
-    accessorKey: "product",
-    header: ({ column }) => (
-      <DataTableColumnHeader
-        column={column}
-        title="Ürün"
-        className="text-left"
-      />
-    ),
-    cell: ({ row }) => {
-      const product = row.getValue("product");
-      let displayText: string = "";
-
-      if (product && typeof product === "object") {
-        // If product has property 'product_name', use it; otherwise, stringify the object
-        displayText =
-          "product_name" in product
-            ? (product as { product_name?: string }).product_name ?? ""
-            : JSON.stringify(product);
-      } else {
-        displayText = String(product);
-      }
-
-      return <div className="text-left">{displayText}</div>;
-    },
-  },
-  {
-    accessorKey: "version",
-    header: ({ column }) => (
-      <DataTableColumnHeader
-        column={column}
-        title="Versiyon"
+        title="Süreç Kodu"
         className="text-left"
       />
     ),
     cell: ({ row }) => (
-      <div className="text-left">{row.getValue("version")}</div>
-    ),
-  },
-  {
-    accessorKey: "is_active",
-    header: ({ column }) => (
-      <DataTableColumnHeader
-        column={column}
-        title="Durum"
-        className="text-left"
-      />
-    ),
-    cell: ({ row }) => (
-      <div
-        className={`text-left font-medium ${
-          row.original.is_active ? "text-green-600" : "text-red-600"
-        }`}
-      >
-        {row.original.is_active ? "Aktif" : "Pasif"}
+      <div className="text-left font-medium">
+        {row.getValue("process_code")}
       </div>
+    ),
+  },
+  {
+    accessorKey: "process_name",
+    header: ({ column }) => (
+      <DataTableColumnHeader
+        column={column}
+        title="Süreç Adı"
+        className="text-left"
+      />
+    ),
+    cell: ({ row }) => (
+      <div className="text-left">{row.getValue("process_name")}</div>
+    ),
+  },
+  {
+    accessorKey: "standard_time_minutes",
+    header: ({ column }) => (
+      <DataTableColumnHeader
+        column={column}
+        title="Standart Süre (dk)"
+        className="text-left"
+      />
+    ),
+    cell: ({ row }) => (
+      <div className="text-left">{row.getValue("standard_time_minutes")}</div>
+    ),
+  },
+  {
+    accessorKey: "machine_type",
+    header: ({ column }) => (
+      <DataTableColumnHeader
+        column={column}
+        title="Makine Tipi"
+        className="text-left"
+      />
+    ),
+    cell: ({ row }) => (
+      <div className="text-left">{row.getValue("machine_type")}</div>
     ),
   },
   {
@@ -122,21 +107,21 @@ export const columns: ColumnDef<BOM>[] = [
       />
     ),
     cell: ({ row }) => {
-      const { mutate: deleteBOM } = useDeleteBOM();
-      const bom = row.original;
+      const { mutate: deleteProcess } = useDeleteProcess();
+      const process = row.original;
       const router = useRouter();
 
       const handleDelete = async () => {
         const confirm = window.confirm(
-          "Bu reçeteyi silmek istediğinize emin misiniz?"
+          "Bu süreci silmek istediğinize emin misiniz?"
         );
         if (confirm) {
           try {
-            deleteBOM(bom.id);
-            toast.success("Reçete başarıyla silindi");
+            deleteProcess(process.id);
+            toast.success("Süreç başarıyla silindi");
             router.refresh();
           } catch (error) {
-            toast.error("Reçeteyi silmekte sorun çıktı");
+            toast.error("Süreci silmekte sorun çıktı");
           }
         }
       };
@@ -153,20 +138,11 @@ export const columns: ColumnDef<BOM>[] = [
             <DropdownMenuContent align="end">
               <DropdownMenuItem asChild>
                 <Link
-                  href={`/boms/details/${bom.id}`}
+                  href={`/manufacturing/processes/details/${process.id}`}
                   className="flex items-center"
                 >
                   <Pencil className="mr-2 h-4 w-4" />
                   Düzenle
-                </Link>
-              </DropdownMenuItem>
-              <DropdownMenuItem asChild>
-                <Link
-                  href={`/boms/components/${bom.id}`}
-                  className="flex items-center"
-                >
-                  <List className="mr-2 h-4 w-4" />
-                  Bileşenler
                 </Link>
               </DropdownMenuItem>
               <DropdownMenuSeparator />

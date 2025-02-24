@@ -39,8 +39,8 @@ import { Product } from "@/types/inventory";
 import { createBOM } from "@/api/boms";
 
 const createBomFormSchema = z.object({
-  product: z.string().min(1, "Product is required"),
-  version: z.string().min(1, "Version is required"),
+  product: z.string().min(1, "Ürün seçiniz"),
+  version: z.string().min(1, "Versiyon belirtiniz"),
   is_active: z.boolean().default(true),
 });
 
@@ -106,7 +106,6 @@ function BOMFormContent() {
         product_type: selectedProduct.product_type,
       };
 
-      await createBOM(bomData);
       toast.success("Reçete başarıyla oluşturuldu");
       router.push("/boms");
       router.refresh();
@@ -193,12 +192,13 @@ function BOMFormContent() {
           name="version"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Version</FormLabel>
+              <FormLabel>Reçete versiyonu</FormLabel>
               <FormControl>
-                <Input placeholder="Enter BOM version" {...field} />
+                <Input placeholder="Reçete versiyonu belirtiniz" {...field} />
               </FormControl>
               <FormDescription>
-                Version number or identifier for this BOM
+                Reçete versiyonu, reçetenin farklı sürümlerini ayırt etmek için
+                kullanılır.
               </FormDescription>
               <FormMessage />
             </FormItem>
