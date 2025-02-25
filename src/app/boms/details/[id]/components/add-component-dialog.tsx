@@ -12,21 +12,23 @@ import {
 import { useState } from "react";
 import { ProcessForm } from "./process-form";
 import { ProductForm } from "./product-form";
-import { Plus, Cog, Package } from "lucide-react";
+import { Plus, Cog, Package, ArrowLeft } from "lucide-react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { CreateProcessForm } from "@/app/manufacturing/processes/components/create-process-form";
 
 interface AddComponentDialogProps {
   bomId: number;
   trigger?: React.ReactNode;
 }
 
-type ComponentType = "PROCESS" | "PRODUCT";
+type ComponentType = "PRODUCT" | "PROCESS";
 
 export function AddComponentDialog({
   bomId,
   trigger,
 }: AddComponentDialogProps) {
   const [open, setOpen] = useState(false);
-  const [step, setStep] = useState<"select" | "form">("select");
+  const [step, setStep] = useState<"select" | "form" | "create-process">("select");
   const [selectedType, setSelectedType] = useState<ComponentType | null>(null);
 
   const handleTypeSelect = (type: ComponentType) => {
@@ -40,6 +42,18 @@ export function AddComponentDialog({
     setSelectedType(null);
   };
 
+  const handleCreateProcess = () => {
+    setStep("create-process");
+  };
+
+  const handleBackToForm = () => {
+    setStep("form");
+  };
+
+  const handleProcessCreated = () => {
+    setStep("form");
+  };
+
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
@@ -50,21 +64,25 @@ export function AddComponentDialog({
           </Button>
         )}
       </DialogTrigger>
-      <DialogContent className="sm:max-w-[425px]">
+      <DialogContent className={step === "create-process" ? "sm:max-w-[600px]" : "sm:max-w-[425px]"}>
         <DialogHeader>
           <DialogTitle>
             {step === "select"
               ? "Komponent Ekle"
-              : selectedType === "PROCESS"
-              ? "Proses Ekle"
-              : "Mamül Ekle"}
+              : step === "create-process"
+                ? "Yeni Proses Oluştur"
+                : selectedType === "PROCESS"
+                  ? "Proses Ekle"
+                  : "Mamül Ekle"}
           </DialogTitle>
           <DialogDescription>
             {step === "select"
               ? "Eklemek istediğiniz komponentin tipini seçiniz"
-              : selectedType === "PROCESS"
-              ? "Proses detaylarını doldurunuz"
-              : "Mamül detaylarını doldurunuz"}
+              : step === "create-process"
+                ? "Yeni bir proses oluşturun ve reçeteye ekleyin"
+                : selectedType === "PROCESS"
+                  ? "Proses detaylarını doldurunuz"
+                  : "Mamül detaylarını doldurunuz"}
           </DialogDescription>
         </DialogHeader>
 
@@ -89,10 +107,32 @@ export function AddComponentDialog({
               <span>Mamül</span>
             </Button>
           </div>
+        ) : step === "create-process" ? (
+          <div className="space-y-4">
+            <Button
+              variant="outline"
+              size="sm"
+              className="mb-4"
+              onClick={handleBackToForm}
+            >
+              <ArrowLeft className="h-4 w-4 mr-2" />
+              Geri Dön
+            </Button>
+            <CreateProcessForm
+              onSuccess={handleProcessCreated}
+              isDialog={true}
+            />
+          </div>
         ) : (
           <>
             {selectedType === "PROCESS" && (
-              <ProcessForm bomId={bomId} onClose={handleClose} />
+              <div className="space-y-4">
+                <ProcessForm
+                  bomId={bomId}
+                  onClose={handleClose}
+                  onCreateProcess={handleCreateProcess}
+                />
+              </div>
             )}
             {selectedType === "PRODUCT" && (
               <ProductForm bomId={bomId} onClose={handleClose} />

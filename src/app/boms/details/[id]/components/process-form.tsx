@@ -14,21 +14,30 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { ProcessComponent } from "@/types/manufacture";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { useProcessConfigs } from "@/hooks/useProcessConfigs";
+import { ProcessComponent, ManufacturingProcess } from "@/types/manufacture";
 import { toast } from "sonner";
 import { useCreateProcessComponent } from "@/hooks/useProcesesComp";
+import { useProcesses } from "@/hooks/useManufacturing";
+import { Check, ChevronsUpDown, Plus } from "lucide-react";
+import { cn } from "@/lib/utils";
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+} from "@/components/ui/command";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import { useState } from "react";
 
 const processFormSchema = z.object({
   process_config: z.number(),
-  sequence_order: z.number().min(1),
+  sequence_order: z.number().min(1, "Sıra numarası gereklidir"),
   raw_material: z.number().nullable(),
   notes: z.string().optional(),
   bom: z.number(),
@@ -39,13 +48,14 @@ type ProcessFormValues = z.infer<typeof processFormSchema>;
 interface ProcessFormProps {
   bomId: number;
   onClose: () => void;
+  onCreateProcess?: () => void;
 }
 
-export function ProcessForm({ bomId, onClose }: ProcessFormProps) {
-  const { data: processConfigs, isLoading: isLoadingConfigs } =
-    useProcessConfigs();
-  const processConfig = useProcessConfigs();
-  const { mutateAsync: createComponent } = useCreateProcessComponent();
+export function ProcessForm({ bomId, onClose, onCreateProcess }: ProcessFormProps) {
+  const { data: processes = [], isLoading: isLoadingProcesses } =
+    useProcesses();
+  const { mutateAsync: createComponent, isPending: isCreating } = useCreateProcessComponent();
+  const [openProcessConfig, setOpenProcessConfig] = useState(false);
 
   const form = useForm<ProcessFormValues>({
     resolver: zodResolver(processFormSchema),
@@ -59,15 +69,27 @@ export function ProcessForm({ bomId, onClose }: ProcessFormProps) {
 
   const handleSubmit = async (values: ProcessFormValues) => {
     try {
+      const selectedProcess = processes.find(
+        (process) => process.id === values.process_config
+      );
+
+      if (!selectedProcess) {
+        toast.error("Seçilen proses bulunamadı");
+        return;
+      }
+
       const componentData = {
         ...values,
         raw_material: values.raw_material || undefined,
         component_type: "PROCESS" as const,
         details: {
           type: "PROCESS" as const,
-          process_config: processConfigs!.find(
-            (config) => config.id === values.process_config
-          )!,
+          process_config: {
+            id: selectedProcess.id,
+            process_name: selectedProcess.process_name,
+            process_code: selectedProcess.process_code,
+            machine_type: selectedProcess.machine_type,
+          },
         },
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString()
@@ -88,26 +110,81 @@ export function ProcessForm({ bomId, onClose }: ProcessFormProps) {
           control={form.control}
           name="process_config"
           render={({ field }) => (
-            <FormItem>
+            <FormItem className="flex flex-col">
               <FormLabel>Proses Yapılandırma</FormLabel>
-              <Select
-                onValueChange={(value) => field.onChange(Number(value))}
-                value={field.value?.toString()}
-                disabled={isLoadingConfigs}
-              >
-                <FormControl>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Proses Yapılandırma Seçiniz" />
-                  </SelectTrigger>
-                </FormControl>
-                <SelectContent>
-                  {processConfigs?.map((config) => (
-                    <SelectItem key={config.id} value={config.id.toString()}>
-                      {config.process} - {config.axis_count}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <div className="flex gap-2">
+                <Popover open={openProcessConfig} onOpenChange={setOpenProcessConfig}>
+                  <PopoverTrigger asChild>
+                    <FormControl>
+                      <Button
+                        variant="outline"
+                        role="combobox"
+                        aria-expanded={openProcessConfig}
+                        className={cn(
+                          "justify-between w-full",
+                          !field.value && "text-muted-foreground"
+                        )}
+                        disabled={isLoadingProcesses}
+                      >
+                        {field.value
+                          ? processes.find(
+                            (process) => process.id === field.value
+                          )?.process_name || "Proses Seçin"
+                          : "Proses Seçin"}
+                        <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                      </Button>
+                    </FormControl>
+                  </PopoverTrigger>
+                  <PopoverContent className="p-0 w-full" align="start">
+                    <Command>
+                      <CommandInput placeholder="Proses ara..." />
+                      <CommandEmpty>
+                        Proses bulunamadı. Yeni bir proses oluşturmak için aşağıdaki butona tıklayın.
+                      </CommandEmpty>
+                      <CommandList>
+                        <CommandGroup heading="Prosesler">
+                          {processes.map((process) => (
+                            <CommandItem
+                              key={process.id}
+                              value={process.process_name}
+                              onSelect={() => {
+                                form.setValue("process_config", process.id);
+                                setOpenProcessConfig(false);
+                              }}
+                            >
+                              <Check
+                                className={cn(
+                                  "mr-2 h-4 w-4",
+                                  process.id === field.value
+                                    ? "opacity-100"
+                                    : "opacity-0"
+                                )}
+                              />
+                              <div className="flex flex-col">
+                                <span>{process.process_name}</span>
+                                <span className="text-xs text-muted-foreground">
+                                  {process.process_code}
+                                </span>
+                              </div>
+                            </CommandItem>
+                          ))}
+                        </CommandGroup>
+                      </CommandList>
+                    </Command>
+                  </PopoverContent>
+                </Popover>
+                {onCreateProcess && (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="icon"
+                    onClick={onCreateProcess}
+                    title="Yeni Proses Oluştur"
+                  >
+                    <Plus className="h-4 w-4" />
+                  </Button>
+                )}
+              </div>
               <FormMessage />
             </FormItem>
           )}
@@ -118,42 +195,16 @@ export function ProcessForm({ bomId, onClose }: ProcessFormProps) {
           name="sequence_order"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Sıra</FormLabel>
+              <FormLabel>Sıra Numarası</FormLabel>
               <FormControl>
                 <Input
                   type="number"
+                  min={1}
+                  placeholder="Örn: 1"
                   {...field}
-                  onChange={(e) => field.onChange(Number(e.target.value))}
+                  onChange={(e) => field.onChange(parseInt(e.target.value))}
                 />
               </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-
-        <FormField
-          control={form.control}
-          name="raw_material"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Hammadde</FormLabel>
-              <Select
-                onValueChange={(value) =>
-                  field.onChange(value === "null" ? null : Number(value))
-                }
-                value={field.value?.toString() || "null"}
-              >
-                <FormControl>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Hammadde Seçiniz" />
-                  </SelectTrigger>
-                </FormControl>
-                <SelectContent>
-                  <SelectItem value="null">Yok</SelectItem>
-                  <SelectItem value="1">Hammadde 1</SelectItem>
-                  <SelectItem value="2">Hammadde 2</SelectItem>
-                </SelectContent>
-              </Select>
               <FormMessage />
             </FormItem>
           )}
@@ -166,18 +217,24 @@ export function ProcessForm({ bomId, onClose }: ProcessFormProps) {
             <FormItem>
               <FormLabel>Notlar</FormLabel>
               <FormControl>
-                <Textarea {...field} />
+                <Textarea
+                  placeholder="Proses hakkında notlar..."
+                  className="resize-none"
+                  {...field}
+                />
               </FormControl>
               <FormMessage />
             </FormItem>
           )}
         />
 
-        <div className="flex justify-end gap-2 pt-4">
-          <Button variant="outline" type="button" onClick={onClose}>
+        <div className="flex justify-end gap-2 pt-2">
+          <Button type="button" variant="outline" onClick={onClose}>
             İptal
           </Button>
-          <Button type="submit">Proses Ekle</Button>
+          <Button type="submit" disabled={isCreating}>
+            {isCreating ? "Ekleniyor..." : "Prosesi Ekle"}
+          </Button>
         </div>
       </form>
     </Form>

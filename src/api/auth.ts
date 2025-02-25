@@ -24,9 +24,8 @@ export async function checkSession(): Promise<{
       headers: {
         "Content-Type": "application/json",
         "X-CSRFToken": csrfToken?.value || "",
-        Cookie: `sessionid=${sessionid.value}${
-          csrfToken ? `; csrftoken=${csrfToken.value}` : ""
-        }`,
+        Cookie: `sessionid=${sessionid.value}${csrfToken ? `; csrftoken=${csrfToken.value}` : ""
+          }`,
       },
     });
 
@@ -80,7 +79,11 @@ export async function login(
       }),
     });
 
+    console.log("response", response);
+
     const data = await response.json();
+
+    console.log("data", data);
 
     if (!response.ok) {
       return {

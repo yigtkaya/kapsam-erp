@@ -14,21 +14,31 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { useProducts } from "@/hooks/useProducts";
+import { ProductComponent, ProductType } from "@/types/manufacture";
 import { toast } from "sonner";
 import { useCreateProductComponent } from "@/hooks/useProductComp";
+import { useProducts } from "@/hooks/useProducts";
+import { Check, ChevronsUpDown } from "lucide-react";
+import { cn } from "@/lib/utils";
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+} from "@/components/ui/command";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import { useState } from "react";
 
 const productFormSchema = z.object({
-  product: z.number(),
-  quantity: z.number().min(0),
-  sequence_order: z.number().min(1),
+  product: z.string().min(1, "Ürün seçimi gereklidir"),
+  sequence_order: z.number().min(1, "Sıra numarası gereklidir"),
+  quantity: z.number().min(1, "Miktar en az 1 olmalıdır"),
   notes: z.string().optional(),
   bom: z.number(),
 });
@@ -41,14 +51,15 @@ interface ProductFormProps {
 }
 
 export function ProductForm({ bomId, onClose }: ProductFormProps) {
-  const { data: products, isLoading: isLoadingProducts } = useProducts();
-  const { mutateAsync: createComponent } = useCreateProductComponent();
+  const { data: products = [], isLoading: isLoadingProducts } = useProducts({});
+  const { mutateAsync: createComponent, isPending: isCreating } = useCreateProductComponent();
+  const [openProductSelect, setOpenProductSelect] = useState(false);
 
   const form = useForm<ProductFormValues>({
     resolver: zodResolver(productFormSchema),
     defaultValues: {
-      quantity: 0,
       sequence_order: 1,
+      quantity: 1,
       notes: "",
       bom: bomId,
     },
@@ -56,10 +67,36 @@ export function ProductForm({ bomId, onClose }: ProductFormProps) {
 
   const handleSubmit = async (values: ProductFormValues) => {
     try {
-      toast.success("Mamül başarıyla eklendi");
+      const selectedProduct = products.find(
+        (product) => product.product_code === values.product
+      );
+
+      if (!selectedProduct) {
+        toast.error("Seçilen ürün bulunamadı");
+        return;
+      }
+
+      const componentData = {
+        ...values,
+        component_type: "PRODUCT" as const,
+        details: {
+          type: "PRODUCT" as const,
+          product: {
+            id: selectedProduct.id,
+            product_code: selectedProduct.product_code,
+            name: selectedProduct.product_name,
+            product_type: selectedProduct.product_type as ProductType,
+          },
+        },
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      };
+
+      await createComponent(componentData as unknown as Omit<ProductComponent, "id">);
+      toast.success("Ürün başarıyla eklendi");
       onClose();
     } catch (error) {
-      toast.error("Mamül eklenirken bir hata oluştu");
+      toast.error("Ürün eklenirken bir hata oluştu");
     }
   };
 
@@ -70,66 +107,112 @@ export function ProductForm({ bomId, onClose }: ProductFormProps) {
           control={form.control}
           name="product"
           render={({ field }) => (
-            <FormItem>
-              <FormLabel>Mamül</FormLabel>
-              <Select
-                onValueChange={(value) => field.onChange(Number(value))}
-                value={field.value?.toString()}
-                disabled={isLoadingProducts}
-              >
+            <FormItem className="flex flex-col">
+              <FormLabel>Ürün</FormLabel>
+              <Popover open={openProductSelect} onOpenChange={setOpenProductSelect}>
+                <PopoverTrigger asChild>
+                  <FormControl>
+                    <Button
+                      variant="outline"
+                      role="combobox"
+                      aria-expanded={openProductSelect}
+                      className={cn(
+                        "justify-between w-full",
+                        !field.value && "text-muted-foreground"
+                      )}
+                      disabled={isLoadingProducts}
+                    >
+                      {field.value
+                        ? products.find(
+                          (product) => product.product_code === field.value
+                        )?.product_name || "Ürün Seçin"
+                        : "Ürün Seçin"}
+                      <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                    </Button>
+                  </FormControl>
+                </PopoverTrigger>
+                <PopoverContent className="p-0 w-full" align="start">
+                  <Command>
+                    <CommandInput placeholder="Ürün ara..." />
+                    <CommandEmpty>Ürün bulunamadı.</CommandEmpty>
+                    <CommandList>
+                      <CommandGroup heading="Ürünler">
+                        {products.map((product) => (
+                          <CommandItem
+                            key={product.id}
+                            value={product.product_name}
+                            onSelect={() => {
+                              form.setValue("product", product.product_code);
+                              setOpenProductSelect(false);
+                            }}
+                          >
+                            <Check
+                              className={cn(
+                                "mr-2 h-4 w-4",
+                                product.product_code === field.value
+                                  ? "opacity-100"
+                                  : "opacity-0"
+                              )}
+                            />
+                            <div className="flex flex-col">
+                              <span>{product.product_name}</span>
+                              <span className="text-xs text-muted-foreground">
+                                {product.product_code} - {product.product_type}
+                              </span>
+                            </div>
+                          </CommandItem>
+                        ))}
+                      </CommandGroup>
+                    </CommandList>
+                  </Command>
+                </PopoverContent>
+              </Popover>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <FormField
+            control={form.control}
+            name="sequence_order"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Sıra Numarası</FormLabel>
                 <FormControl>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Mamül Seçiniz" />
-                  </SelectTrigger>
+                  <Input
+                    type="number"
+                    min={1}
+                    placeholder="Örn: 1"
+                    {...field}
+                    onChange={(e) => field.onChange(parseInt(e.target.value))}
+                  />
                 </FormControl>
-                <SelectContent>
-                  {products?.map((product) => (
-                    <SelectItem key={product.id} value={product.id.toString()}>
-                      {product.product_name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
+                <FormMessage />
+              </FormItem>
+            )}
+          />
 
-        <FormField
-          control={form.control}
-          name="quantity"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Miktar</FormLabel>
-              <FormControl>
-                <Input
-                  type="number"
-                  {...field}
-                  onChange={(e) => field.onChange(Number(e.target.value))}
-                />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-
-        <FormField
-          control={form.control}
-          name="sequence_order"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Sıra</FormLabel>
-              <FormControl>
-                <Input
-                  type="number"
-                  {...field}
-                  onChange={(e) => field.onChange(Number(e.target.value))}
-                />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
+          <FormField
+            control={form.control}
+            name="quantity"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Miktar</FormLabel>
+                <FormControl>
+                  <Input
+                    type="number"
+                    min={1}
+                    placeholder="Örn: 1"
+                    {...field}
+                    onChange={(e) => field.onChange(parseInt(e.target.value))}
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        </div>
 
         <FormField
           control={form.control}
@@ -138,18 +221,24 @@ export function ProductForm({ bomId, onClose }: ProductFormProps) {
             <FormItem>
               <FormLabel>Notlar</FormLabel>
               <FormControl>
-                <Textarea {...field} />
+                <Textarea
+                  placeholder="Ürün hakkında notlar..."
+                  className="resize-none"
+                  {...field}
+                />
               </FormControl>
               <FormMessage />
             </FormItem>
           )}
         />
 
-        <div className="flex justify-end gap-2 pt-4">
-          <Button variant="outline" type="button" onClick={onClose}>
+        <div className="flex justify-end gap-2 pt-2">
+          <Button type="button" variant="outline" onClick={onClose}>
             İptal
           </Button>
-          <Button type="submit">Mamül Ekle</Button>
+          <Button type="submit" disabled={isCreating}>
+            {isCreating ? "Ekleniyor..." : "Ürünü Ekle"}
+          </Button>
         </div>
       </form>
     </Form>
