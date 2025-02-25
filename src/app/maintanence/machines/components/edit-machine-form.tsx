@@ -103,7 +103,7 @@ export function EditMachineForm({ machine }: EditMachineFormProps) {
   const onSubmit = async (values: FormValues) => {
     try {
       const updatedMachine = await updateMachine({
-        id: machine.id || 0,
+        id: machine.id,
         machine_code: values.machine_code,
         machine_type: values.machine_type,
         brand: values.brand,
@@ -120,16 +120,18 @@ export function EditMachineForm({ machine }: EditMachineFormProps) {
         spindle_speed_rpm: values.spindle_speed_rpm || null,
         tool_count: values.tool_count || null,
         nc_control_unit: values.nc_control_unit || "",
-        manufacturing_year: values.manufacturing_year || null,
+        manufacturing_year: values.manufacturing_year ? values.manufacturing_year.toISOString().split('T')[0] : null,
         machine_weight_kg: values.machine_weight_kg || null,
         max_part_size: values.max_part_size || "",
         description: values.description || "",
         status: values.status,
         maintenance_interval: values.maintenance_interval,
         serial_number: machine.serial_number,
-        last_maintenance_date: null,
-        next_maintenance_date: null,
-        maintenance_notes: "",
+        last_maintenance_date: machine.last_maintenance_date,
+        next_maintenance_date: machine.next_maintenance_date,
+        maintenance_notes: machine.maintenance_notes || "",
+        created_at: machine.created_at,
+        updated_at: machine.updated_at
       });
 
       if (updatedMachine.success) {
@@ -268,10 +270,10 @@ export function EditMachineForm({ machine }: EditMachineFormProps) {
                           {status === MachineStatus.AVAILABLE
                             ? "Müsait"
                             : status === MachineStatus.IN_USE
-                            ? "Kullanımda"
-                            : status === MachineStatus.MAINTENANCE
-                            ? "Bakımda"
-                            : "Emekli"}
+                              ? "Kullanımda"
+                              : status === MachineStatus.MAINTENANCE
+                                ? "Bakımda"
+                                : "Emekli"}
                         </SelectItem>
                       ))}
                     </SelectContent>

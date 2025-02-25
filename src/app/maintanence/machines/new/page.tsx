@@ -99,7 +99,7 @@ export default function NewMachinePage() {
     try {
       console.log("Form values:", values); // Debug log
 
-      const newMachine: Omit<Machine, "id"> = {
+      const machineData = {
         machine_code: values.machine_code,
         machine_type: values.machine_type,
         brand: values.brand,
@@ -117,25 +117,29 @@ export default function NewMachinePage() {
         tool_count: values.tool_count || 0,
         nc_control_unit: values.nc_control_unit || "",
         manufacturing_year: values.manufacturing_year
-          ? new Date(values.manufacturing_year)
+          ? values.manufacturing_year.toISOString().split('T')[0]
           : null,
         machine_weight_kg: values.machine_weight_kg || 0,
         max_part_size: values.max_part_size || "",
         description: values.description || "",
         status: values.status,
         maintenance_interval: values.maintenance_interval,
-        serial_number: null,
+        serial_number: "",
         last_maintenance_date: null,
         next_maintenance_date: new Date(
           Date.now() + values.maintenance_interval * 24 * 60 * 60 * 1000
         ),
         maintenance_notes: "",
+        // These fields will be filled by the server
+        id: 0, // Temporary ID that will be replaced by the server
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
       };
 
       console.log("About to call createMachineAction"); // Debug log
-      console.log("Request payload:", newMachine); // Debug log
+      console.log("Request payload:", machineData); // Debug log
 
-      const response = await createMachineAction(newMachine);
+      const response = await createMachineAction(machineData as Machine);
       console.log("Response:", response); // Debug log
 
       if (response.success) {
@@ -276,10 +280,10 @@ export default function NewMachinePage() {
                             {status === MachineStatus.AVAILABLE
                               ? "Müsait"
                               : status === MachineStatus.IN_USE
-                              ? "Kullanımda"
-                              : status === MachineStatus.MAINTENANCE
-                              ? "Bakımda"
-                              : "Emekli"}
+                                ? "Kullanımda"
+                                : status === MachineStatus.MAINTENANCE
+                                  ? "Bakımda"
+                                  : "Emekli"}
                           </SelectItem>
                         ))}
                       </SelectContent>

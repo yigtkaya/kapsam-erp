@@ -59,17 +59,21 @@ export function ProcessForm({ bomId, onClose }: ProcessFormProps) {
 
   const handleSubmit = async (values: ProcessFormValues) => {
     try {
-      await createComponent({
+      const componentData = {
         ...values,
         raw_material: values.raw_material || undefined,
-        component_type: "PROCESS",
+        component_type: "PROCESS" as const,
         details: {
-          type: "PROCESS",
+          type: "PROCESS" as const,
           process_config: processConfigs!.find(
             (config) => config.id === values.process_config
           )!,
         },
-      } as Omit<ProcessComponent, "id">);
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      };
+
+      await createComponent(componentData as unknown as Omit<ProcessComponent, "id">);
       toast.success("Proses başarıyla eklendi");
       onClose();
     } catch (error) {

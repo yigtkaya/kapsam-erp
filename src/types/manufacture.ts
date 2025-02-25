@@ -26,6 +26,8 @@ export enum ProductType {
 
 export enum MachineStatus {
   AVAILABLE = "AVAILABLE",
+  IN_USE = "IN_USE",
+  MAINTENANCE = "MAINTENANCE",
   // Add other statuses as needed
 }
 

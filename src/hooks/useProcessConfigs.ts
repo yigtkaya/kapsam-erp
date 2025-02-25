@@ -1,17 +1,17 @@
 import { useQuery } from "@tanstack/react-query";
-import { ProcessConfig } from "@/types/manufacture";
+import { BOMProcessConfig } from "@/types/manufacture";
 import { fetchProcessConfig, fetchProcessConfigs } from "@/api/process-comp";
 
 export function useProcessConfigs() {
-  return useQuery<ProcessConfig[]>({
-    queryKey: ["process-configs"],
+  return useQuery<BOMProcessConfig[]>({
+    queryKey: ["processConfigs"],
     queryFn: () => fetchProcessConfigs(),
   });
 }
 
-export function useProcessConfig(id: number) {
-  return useQuery<ProcessConfig>({
-    queryKey: ["process-config", id],
-    queryFn: () => fetchProcessConfig(id),
+export function useProcessConfig(id: string) {
+  return useQuery<BOMProcessConfig>({
+    queryKey: ["processConfig", id],
+    queryFn: () => fetchProcessConfig(Number(id)),
   });
 }
