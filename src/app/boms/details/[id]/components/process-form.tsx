@@ -180,6 +180,7 @@ export function ProcessForm({ bomId, onClose, onCreateProcess }: ProcessFormProp
                     size="icon"
                     onClick={onCreateProcess}
                     title="Yeni Proses Oluştur"
+                    className="hover:bg-green-50 hover:border-green-200 transition-colors"
                   >
                     <Plus className="h-4 w-4" />
                   </Button>
@@ -232,7 +233,7 @@ export function ProcessForm({ bomId, onClose, onCreateProcess }: ProcessFormProp
           <Button type="button" variant="outline" onClick={onClose}>
             İptal
           </Button>
-          <Button type="submit" disabled={isCreating}>
+          <Button type="submit" disabled={isCreating} className="bg-green-600 hover:bg-green-700">
             {isCreating ? "Ekleniyor..." : "Prosesi Ekle"}
           </Button>
         </div>

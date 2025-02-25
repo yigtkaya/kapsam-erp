@@ -143,6 +143,10 @@ export default function BOMDetailsPage() {
             <TabsTrigger value="technical-drawings">Teknik Çizimler</TabsTrigger>
           </TabsList>
           <TabsContent value="components" className="mt-4">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-lg font-medium">Reçete Komponentleri</h3>
+              <AddComponentDialog bomId={bom.id} />
+            </div>
             <ComponentsTable components={bom.components || []} />
           </TabsContent>
           <TabsContent value="product-details" className="mt-4">

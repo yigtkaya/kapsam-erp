@@ -139,110 +139,122 @@ export function ComponentsTable({ components }: ComponentsTableProps) {
         </CardDescription>
       </CardHeader>
       <CardContent>
-        <div className="mb-6">
-          <div className="flex items-center gap-2 mb-2">
-            <Badge variant="outline" className="flex items-center gap-1">
-              <Package className="h-3 w-3" />
-              <span>Ürünler: {components.filter(c => c.component_type === "PRODUCT").length}</span>
-            </Badge>
-            <Badge variant="outline" className="flex items-center gap-1">
-              <Cog className="h-3 w-3" />
-              <span>İşlemler: {components.filter(c => c.component_type === "PROCESS").length}</span>
-            </Badge>
+        {components.length === 0 ? (
+          <div className="flex flex-col items-center justify-center py-8 text-center">
+            <Package className="h-12 w-12 text-muted-foreground mb-4" />
+            <h3 className="text-lg font-medium mb-2">Henüz Komponent Eklenmemiş</h3>
+            <p className="text-sm text-muted-foreground max-w-md">
+              Bu reçeteye henüz hiç komponent eklenmemiş. "Komponent Ekle" butonunu kullanarak proses veya ürün ekleyebilirsiniz.
+            </p>
           </div>
-
-          {/* Process Flow Visualization */}
-          {sortedComponents.length > 0 && (
-            <div className="py-4 px-2 border rounded-md bg-muted/20">
-              <div className="flex flex-wrap items-center gap-2">
-                {sortedComponents.map((component, index) => (
-                  <div key={component.id} className="flex items-center">
-                    <TooltipProvider>
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <div
-                            className={cn(
-                              "flex items-center justify-center w-10 h-10 rounded-full border-2",
-                              component.component_type === "PRODUCT"
-                                ? "bg-blue-100 border-blue-300 text-blue-700"
-                                : "bg-green-100 border-green-300 text-green-700"
-                            )}
-                          >
-                            {component.component_type === "PRODUCT" ? (
-                              <Package className="h-5 w-5" />
-                            ) : (
-                              <Cog className="h-5 w-5" />
-                            )}
-                          </div>
-                        </TooltipTrigger>
-                        <TooltipContent>
-                          <p className="font-medium">
-                            {getComponentName(component)}
-                          </p>
-                          <p className="text-xs text-muted-foreground">
-                            Sıra: {component.sequence_order}
-                          </p>
-                        </TooltipContent>
-                      </Tooltip>
-                    </TooltipProvider>
-
-                    {index < sortedComponents.length - 1 && (
-                      <ArrowRight className="h-4 w-4 mx-1 text-muted-foreground" />
-                    )}
-                  </div>
-                ))}
+        ) : (
+          <>
+            <div className="mb-6">
+              <div className="flex items-center gap-2 mb-2">
+                <Badge variant="outline" className="flex items-center gap-1">
+                  <Package className="h-3 w-3" />
+                  <span>Ürünler: {components.filter(c => c.component_type === "PRODUCT").length}</span>
+                </Badge>
+                <Badge variant="outline" className="flex items-center gap-1">
+                  <Cog className="h-3 w-3" />
+                  <span>İşlemler: {components.filter(c => c.component_type === "PROCESS").length}</span>
+                </Badge>
               </div>
-            </div>
-          )}
-        </div>
 
-        <Accordion type="single" collapsible className="mb-4">
-          <AccordionItem value="details">
-            <AccordionTrigger>Detaylı Görünüm</AccordionTrigger>
-            <AccordionContent>
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Sıra</TableHead>
-                    <TableHead>Tür</TableHead>
-                    <TableHead>Komponent</TableHead>
-                    <TableHead>Notlar</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {sortedComponents.map((component) => (
-                    <TableRow key={component.id}>
-                      <TableCell className="font-medium">
-                        {component.sequence_order}
-                      </TableCell>
-                      <TableCell>{renderComponentType(component)}</TableCell>
-                      <TableCell>{renderComponentDetails(component)}</TableCell>
-                      <TableCell>
-                        {component.notes ? (
-                          <TooltipProvider>
-                            <Tooltip>
-                              <TooltipTrigger asChild>
-                                <div className="flex items-center gap-1 cursor-help">
-                                  <Info className="h-4 w-4 text-muted-foreground" />
-                                  <span className="text-sm text-muted-foreground">Not</span>
-                                </div>
-                              </TooltipTrigger>
-                              <TooltipContent>
-                                <p>{component.notes}</p>
-                              </TooltipContent>
-                            </Tooltip>
-                          </TooltipProvider>
-                        ) : (
-                          <span className="text-sm text-muted-foreground">-</span>
+              {/* Process Flow Visualization */}
+              {sortedComponents.length > 0 && (
+                <div className="py-4 px-2 border rounded-md bg-muted/20">
+                  <div className="flex flex-wrap items-center gap-2">
+                    {sortedComponents.map((component, index) => (
+                      <div key={component.id} className="flex items-center">
+                        <TooltipProvider>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <div
+                                className={cn(
+                                  "flex items-center justify-center w-10 h-10 rounded-full border-2",
+                                  component.component_type === "PRODUCT"
+                                    ? "bg-blue-100 border-blue-300 text-blue-700"
+                                    : "bg-green-100 border-green-300 text-green-700"
+                                )}
+                              >
+                                {component.component_type === "PRODUCT" ? (
+                                  <Package className="h-5 w-5" />
+                                ) : (
+                                  <Cog className="h-5 w-5" />
+                                )}
+                              </div>
+                            </TooltipTrigger>
+                            <TooltipContent>
+                              <p className="font-medium">
+                                {getComponentName(component)}
+                              </p>
+                              <p className="text-xs text-muted-foreground">
+                                Sıra: {component.sequence_order}
+                              </p>
+                            </TooltipContent>
+                          </Tooltip>
+                        </TooltipProvider>
+
+                        {index < sortedComponents.length - 1 && (
+                          <ArrowRight className="h-4 w-4 mx-1 text-muted-foreground" />
                         )}
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </AccordionContent>
-          </AccordionItem>
-        </Accordion>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+
+            <Accordion type="single" collapsible className="mb-4" defaultValue="details">
+              <AccordionItem value="details">
+                <AccordionTrigger>Detaylı Görünüm</AccordionTrigger>
+                <AccordionContent>
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Sıra</TableHead>
+                        <TableHead>Tür</TableHead>
+                        <TableHead>Komponent</TableHead>
+                        <TableHead>Notlar</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {sortedComponents.map((component) => (
+                        <TableRow key={component.id}>
+                          <TableCell className="font-medium">
+                            {component.sequence_order}
+                          </TableCell>
+                          <TableCell>{renderComponentType(component)}</TableCell>
+                          <TableCell>{renderComponentDetails(component)}</TableCell>
+                          <TableCell>
+                            {component.notes ? (
+                              <TooltipProvider>
+                                <Tooltip>
+                                  <TooltipTrigger asChild>
+                                    <div className="flex items-center gap-1 cursor-help">
+                                      <Info className="h-4 w-4 text-muted-foreground" />
+                                      <span className="text-sm text-muted-foreground">Not</span>
+                                    </div>
+                                  </TooltipTrigger>
+                                  <TooltipContent>
+                                    <p>{component.notes}</p>
+                                  </TooltipContent>
+                                </Tooltip>
+                              </TooltipProvider>
+                            ) : (
+                              <span className="text-sm text-muted-foreground">-</span>
+                            )}
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </AccordionContent>
+              </AccordionItem>
+            </Accordion>
+          </>
+        )}
       </CardContent>
     </Card>
   );

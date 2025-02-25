@@ -236,7 +236,7 @@ export function ProductForm({ bomId, onClose }: ProductFormProps) {
           <Button type="button" variant="outline" onClick={onClose}>
             İptal
           </Button>
-          <Button type="submit" disabled={isCreating}>
+          <Button type="submit" disabled={isCreating} className="bg-blue-600 hover:bg-blue-700">
             {isCreating ? "Ekleniyor..." : "Ürünü Ekle"}
           </Button>
         </div>

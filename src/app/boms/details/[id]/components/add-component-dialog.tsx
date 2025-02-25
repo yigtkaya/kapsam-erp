@@ -12,8 +12,7 @@ import {
 import { useState } from "react";
 import { ProcessForm } from "./process-form";
 import { ProductForm } from "./product-form";
-import { Plus, Cog, Package, ArrowLeft } from "lucide-react";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Cog, Package, ArrowLeft, ListPlus } from "lucide-react";
 import { CreateProcessForm } from "@/app/manufacturing/processes/components/create-process-form";
 
 interface AddComponentDialogProps {
@@ -59,7 +58,7 @@ export function AddComponentDialog({
       <DialogTrigger asChild>
         {trigger || (
           <Button className="gap-2">
-            <Plus className="h-4 w-4" />
+            <ListPlus className="h-4 w-4" />
             Komponent Ekle
           </Button>
         )}
@@ -91,20 +90,26 @@ export function AddComponentDialog({
             <Button
               variant="outline"
               size="lg"
-              className="h-32 flex flex-col gap-4"
+              className="h-32 flex flex-col gap-4 hover:bg-green-50 hover:border-green-200 transition-colors"
               onClick={() => handleTypeSelect("PROCESS")}
             >
-              <Cog className="h-8 w-8" />
-              <span>Proses</span>
+              <Cog className="h-8 w-8 text-green-600" />
+              <div className="flex flex-col items-center">
+                <span className="font-medium">Proses</span>
+                <span className="text-xs text-muted-foreground mt-1">İşlem veya operasyon ekle</span>
+              </div>
             </Button>
             <Button
               variant="outline"
               size="lg"
-              className="h-32 flex flex-col gap-4"
+              className="h-32 flex flex-col gap-4 hover:bg-blue-50 hover:border-blue-200 transition-colors"
               onClick={() => handleTypeSelect("PRODUCT")}
             >
-              <Package className="h-8 w-8" />
-              <span>Mamül</span>
+              <Package className="h-8 w-8 text-blue-600" />
+              <div className="flex flex-col items-center">
+                <span className="font-medium">Mamül</span>
+                <span className="text-xs text-muted-foreground mt-1">Ürün veya malzeme ekle</span>
+              </div>
             </Button>
           </div>
         ) : step === "create-process" ? (
