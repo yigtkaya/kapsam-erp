@@ -147,9 +147,12 @@ export async function fetchProcess(id: number): Promise<ManufacturingProcess> {
 export async function fetchProcesses(): Promise<ManufacturingProcess[]> {
   const headers = await getAuthHeaders();
 
-  const response = await fetch(`${API_URL}/api/manufacturing/processes/`, {
-    headers,
-  });
+  const response = await fetch(
+    `${API_URL}/api/manufacturing/manufacturing-processes/`,
+    {
+      headers,
+    }
+  );
 
   if (!response.ok) {
     throw new Error("Failed to fetch manufacturing processes");
@@ -163,20 +166,30 @@ export async function createProcess(
 ) {
   const headers = await getAuthHeaders();
 
+  console.log(data);
+
   try {
-    const response = await fetch(`${API_URL}/api/manufacturing/processes/`, {
-      method: "POST",
-      credentials: "include",
-      headers,
-      body: JSON.stringify(data),
-    });
+    const response = await fetch(
+      `${API_URL}/api/manufacturing/manufacturing-processes/`,
+      {
+        method: "POST",
+        credentials: "include",
+        headers,
+        body: JSON.stringify(data),
+      }
+    );
+
+    console.log(response);
 
     if (!response.ok) {
       throw new Error("Failed to create manufacturing process");
     }
 
-    revalidatePath("/manufacturing/processes");
-    return await response.json();
+    const responsee = await response.json();
+
+    console.log(responsee);
+
+    return responsee;
   } catch (error) {
     console.error("Error creating manufacturing process:", error);
     throw error;
@@ -191,7 +204,7 @@ export async function updateProcess(
 
   try {
     const response = await fetch(
-      `${API_URL}/api/manufacturing/processes/${id}/`,
+      `${API_URL}/api/manufacturing/manufacturing-processes/${id}/`,
       {
         method: "PATCH",
         credentials: "include",
@@ -217,7 +230,7 @@ export async function deleteProcess(id: number) {
 
   try {
     const response = await fetch(
-      `${API_URL}/api/manufacturing/processes/${id}/`,
+      `${API_URL}/api/manufacturing/manufacturing-processes/${id}/`,
       {
         method: "DELETE",
         credentials: "include",

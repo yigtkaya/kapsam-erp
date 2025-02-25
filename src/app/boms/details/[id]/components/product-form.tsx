@@ -52,7 +52,8 @@ interface ProductFormProps {
 
 export function ProductForm({ bomId, onClose }: ProductFormProps) {
   const { data: products = [], isLoading: isLoadingProducts } = useProducts({});
-  const { mutateAsync: createComponent, isPending: isCreating } = useCreateProductComponent();
+  const { mutateAsync: createComponent, isPending: isCreating } =
+    useCreateProductComponent();
   const [openProductSelect, setOpenProductSelect] = useState(false);
 
   const form = useForm<ProductFormValues>({
@@ -76,23 +77,17 @@ export function ProductForm({ bomId, onClose }: ProductFormProps) {
         return;
       }
 
-      const componentData = {
-        ...values,
-        component_type: "PRODUCT" as const,
-        details: {
-          type: "PRODUCT" as const,
-          product: {
-            id: selectedProduct.id,
-            product_code: selectedProduct.product_code,
-            name: selectedProduct.product_name,
-            product_type: selectedProduct.product_type as ProductType,
-          },
-        },
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString()
+      const apiData = {
+        bom: values.bom,
+        sequence_order: values.sequence_order,
+        quantity: values.quantity,
+        notes: values.notes || "",
+        product: selectedProduct.id,
       };
 
-      await createComponent(componentData as unknown as Omit<ProductComponent, "id">);
+      console.log(apiData);
+
+      await createComponent(apiData as unknown as Omit<ProductComponent, "id">);
       toast.success("Ürün başarıyla eklendi");
       onClose();
     } catch (error) {
@@ -109,7 +104,10 @@ export function ProductForm({ bomId, onClose }: ProductFormProps) {
           render={({ field }) => (
             <FormItem className="flex flex-col">
               <FormLabel>Ürün</FormLabel>
-              <Popover open={openProductSelect} onOpenChange={setOpenProductSelect}>
+              <Popover
+                open={openProductSelect}
+                onOpenChange={setOpenProductSelect}
+              >
                 <PopoverTrigger asChild>
                   <FormControl>
                     <Button
@@ -124,14 +122,18 @@ export function ProductForm({ bomId, onClose }: ProductFormProps) {
                     >
                       {field.value
                         ? products.find(
-                          (product) => product.product_code === field.value
-                        )?.product_name || "Ürün Seçin"
+                            (product) => product.product_code === field.value
+                          )?.product_name || "Ürün Seçin"
                         : "Ürün Seçin"}
                       <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                     </Button>
                   </FormControl>
                 </PopoverTrigger>
-                <PopoverContent className="p-0 w-[--radix-popover-trigger-width] min-w-[240px]" align="start" sideOffset={4}>
+                <PopoverContent
+                  className="p-0 w-[--radix-popover-trigger-width] min-w-[240px]"
+                  align="start"
+                  sideOffset={4}
+                >
                   <Command className="max-h-[300px]">
                     <CommandInput placeholder="Ürün ara..." />
                     <CommandEmpty>Ürün bulunamadı.</CommandEmpty>
@@ -236,7 +238,11 @@ export function ProductForm({ bomId, onClose }: ProductFormProps) {
           <Button type="button" variant="outline" onClick={onClose}>
             İptal
           </Button>
-          <Button type="submit" disabled={isCreating} className="bg-blue-600 hover:bg-blue-700">
+          <Button
+            type="submit"
+            disabled={isCreating}
+            className="bg-blue-600 hover:bg-blue-700"
+          >
             {isCreating ? "Ekleniyor..." : "Ürünü Ekle"}
           </Button>
         </div>

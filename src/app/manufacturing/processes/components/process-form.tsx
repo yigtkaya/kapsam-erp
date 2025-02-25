@@ -32,9 +32,7 @@ const formSchema = z.object({
   standard_time_minutes: z.coerce
     .number()
     .min(0, "Standart süre 0'dan büyük olmalıdır"),
-  machine_type: z.nativeEnum(MachineType, {
-    errorMap: () => ({ message: "Geçerli bir makine tipi seçin" }),
-  }),
+  machine_type: z.nativeEnum(MachineType).nullable().optional(),
 });
 
 type ProcessFormValues = z.infer<typeof formSchema>;
@@ -80,15 +78,21 @@ export function ProcessForm({ process }: ProcessFormProps) {
         }
       );
     } else {
-      createProcess(values, {
-        onSuccess: () => {
-          toast.success("Süreç başarıyla oluşturuldu");
-          router.push("/manufacturing/processes");
-        },
-        onError: (error) => {
-          toast.error(`Süreç oluşturulurken hata oluştu: ${error.message}`);
-        },
-      });
+      createProcess(
+        values as Omit<
+          ManufacturingProcess,
+          "id" | "created_at" | "updated_at"
+        >,
+        {
+          onSuccess: () => {
+            toast.success("Süreç başarıyla oluşturuldu");
+            router.push("/manufacturing/processes");
+          },
+          onError: (error) => {
+            toast.error(`Süreç oluşturulurken hata oluştu: ${error.message}`);
+          },
+        }
+      );
     }
   }
 
@@ -147,17 +151,18 @@ export function ProcessForm({ process }: ProcessFormProps) {
             name="machine_type"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Makine Tipi*</FormLabel>
+                <FormLabel>Makine Tipi</FormLabel>
                 <Select
                   onValueChange={field.onChange}
-                  defaultValue={field.value}
+                  defaultValue={field.value || ""}
                 >
                   <FormControl>
                     <SelectTrigger>
-                      <SelectValue placeholder="Makine tipi seçin" />
+                      <SelectValue placeholder="Makine tipi seçin (opsiyonel)" />
                     </SelectTrigger>
                   </FormControl>
                   <SelectContent>
+                    x{" "}
                     {Object.values(MachineType).map((type) => (
                       <SelectItem key={type} value={type}>
                         {type}

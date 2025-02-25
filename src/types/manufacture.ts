@@ -15,6 +15,7 @@ export enum MachineType {
   PROCESSING_CENTER = "İşleme Merkezi",
   CNC_TORNA = "CNC Torna Merkezi",
   CNC_KAYAR_OTOMAT = "CNC Kayar Otomat",
+  NONE = "Yok",
 }
 
 export enum ProductType {
@@ -75,7 +76,7 @@ export interface ManufacturingProcess extends BaseModel {
   process_code: string;
   process_name: string;
   standard_time_minutes: number;
-  machine_type: MachineType;
+  machine_type: MachineType | null;
   approved_by?: number; // User ID
 }
 
