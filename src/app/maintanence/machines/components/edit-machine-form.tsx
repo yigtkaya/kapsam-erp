@@ -103,7 +103,7 @@ export function EditMachineForm({ machine }: EditMachineFormProps) {
   const onSubmit = async (values: FormValues) => {
     try {
       const updatedMachine = await updateMachine({
-        id: machine.id || "",
+        id: machine.id || 0,
         machine_code: values.machine_code,
         machine_type: values.machine_type,
         brand: values.brand,
@@ -129,7 +129,7 @@ export function EditMachineForm({ machine }: EditMachineFormProps) {
         serial_number: machine.serial_number,
         last_maintenance_date: null,
         next_maintenance_date: null,
-        maintenance_notes: null,
+        maintenance_notes: "",
       });
 
       if (updatedMachine.success) {

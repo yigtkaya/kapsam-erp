@@ -1,23 +1,11 @@
-import { Metadata } from "next";
+"use client";
+
 import { PageHeader } from "@/components/ui/page-header";
 import { MachineForm } from "../../components/machine-form";
 import { fetchMachine } from "@/api/manufacturing";
 import { notFound, useParams } from "next/navigation";
 
-export const metadata: Metadata = {
-  title: "Machine Details | Kapsam ERP",
-  description: "View and edit machine details",
-};
-
-interface MachineDetailsPageProps {
-  params: {
-    id: string;
-  };
-}
-
-export default async function MachineDetailsPage({
-  params: pageParams,
-}: MachineDetailsPageProps) {
+export default async function MachineDetailsPage() {
   const params = useParams();
   const id = parseInt(params.id as string);
 

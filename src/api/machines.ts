@@ -127,7 +127,7 @@ export const updateMachine = async (machine: Machine) => {
   };
 };
 
-export const deleteMachine = async (id: string) => {
+export const deleteMachine = async (id: number) => {
   const cookieStore = await cookies();
   const rawCSRFCookie = cookieStore.get("csrftoken")?.value || "";
   const sessionid = cookieStore.get("sessionid")?.value;

@@ -41,18 +41,18 @@ const formSchema = z.object({
   brand: z.string().optional(),
   model: z.string().optional(),
   axis_count: z.nativeEnum(AxisCount).optional(),
-  internal_cooling: z.coerce.number().optional(),
-  motor_power_kva: z.coerce.number().optional(),
+  internal_cooling: z.coerce.number().nullable().optional(),
+  motor_power_kva: z.coerce.number().nullable().optional(),
   holder_type: z.string().optional(),
-  spindle_motor_power_10_percent_kw: z.coerce.number().optional(),
-  spindle_motor_power_30_percent_kw: z.coerce.number().optional(),
-  power_hp: z.coerce.number().optional(),
-  spindle_speed_rpm: z.coerce.number().optional(),
-  tool_count: z.coerce.number().optional(),
+  spindle_motor_power_10_percent_kw: z.coerce.number().nullable().optional(),
+  spindle_motor_power_30_percent_kw: z.coerce.number().nullable().optional(),
+  power_hp: z.coerce.number().nullable().optional(),
+  spindle_speed_rpm: z.coerce.number().nullable().optional(),
+  tool_count: z.coerce.number().nullable().optional(),
   nc_control_unit: z.string().optional(),
-  manufacturing_year: z.string().optional(),
+  manufacturing_year: z.string().nullable(),
   serial_number: z.string().optional(),
-  machine_weight_kg: z.coerce.number().optional(),
+  machine_weight_kg: z.coerce.number().nullable().optional(),
   max_part_size: z.string().optional(),
   description: z.string().optional(),
   status: z.nativeEnum(MachineStatus, {
@@ -61,8 +61,8 @@ const formSchema = z.object({
   maintenance_interval: z.coerce
     .number()
     .min(1, "Bakım aralığı en az 1 gün olmalıdır"),
-  last_maintenance_date: z.date().optional(),
-  next_maintenance_date: z.date().optional(),
+  last_maintenance_date: z.date().nullable(),
+  next_maintenance_date: z.date().nullable(),
   maintenance_notes: z.string().optional(),
 });
 
@@ -77,40 +77,60 @@ export function MachineForm({ machine }: MachineFormProps) {
   const { mutate: createMachine, isPending: isCreating } = useCreateMachine();
   const { mutate: updateMachine, isPending: isUpdating } = useUpdateMachine();
 
+  const defaultValues: Partial<MachineFormValues> = machine
+    ? {
+        machine_code: machine.machine_code,
+        machine_type: machine.machine_type,
+        brand: machine.brand,
+        model: machine.model,
+        axis_count: machine.axis_count,
+        internal_cooling: machine.internal_cooling,
+        motor_power_kva: machine.motor_power_kva,
+        holder_type: machine.holder_type,
+        spindle_motor_power_10_percent_kw:
+          machine.spindle_motor_power_10_percent_kw,
+        spindle_motor_power_30_percent_kw:
+          machine.spindle_motor_power_30_percent_kw,
+        power_hp: machine.power_hp,
+        spindle_speed_rpm: machine.spindle_speed_rpm,
+        tool_count: machine.tool_count,
+        nc_control_unit: machine.nc_control_unit,
+        manufacturing_year: machine.manufacturing_year,
+        serial_number: machine.serial_number,
+        machine_weight_kg: machine.machine_weight_kg,
+        max_part_size: machine.max_part_size,
+        description: machine.description,
+        status: machine.status,
+        maintenance_interval: machine.maintenance_interval,
+        last_maintenance_date: machine.last_maintenance_date,
+        next_maintenance_date: machine.next_maintenance_date,
+        maintenance_notes: machine.maintenance_notes,
+      }
+    : {
+        machine_code: "",
+        machine_type: MachineType.PROCESSING_CENTER,
+        status: MachineStatus.AVAILABLE,
+        maintenance_interval: 30,
+      };
+
   const form = useForm<MachineFormValues>({
     resolver: zodResolver(formSchema),
-    defaultValues: machine
-      ? {
-          ...machine,
-          last_maintenance_date: machine.last_maintenance_date
-            ? new Date(machine.last_maintenance_date)
-            : undefined,
-          next_maintenance_date: machine.next_maintenance_date
-            ? new Date(machine.next_maintenance_date)
-            : undefined,
-        }
-      : {
-          machine_code: "",
-          machine_type: MachineType.PROCESSING_CENTER,
-          status: MachineStatus.AVAILABLE,
-          maintenance_interval: 30,
-        },
+    defaultValues,
   });
 
   function onSubmit(values: MachineFormValues) {
+    const submissionData = {
+      ...values,
+      manufacturing_year: values.manufacturing_year ?? null,
+      last_maintenance_date: values.last_maintenance_date ?? null,
+      next_maintenance_date: values.next_maintenance_date ?? null,
+    };
+
     if (machine) {
       updateMachine(
         {
           id: machine.id,
-          data: {
-            ...values,
-            last_maintenance_date: values.last_maintenance_date
-              ? values.last_maintenance_date.toISOString()
-              : undefined,
-            next_maintenance_date: values.next_maintenance_date
-              ? values.next_maintenance_date.toISOString()
-              : undefined,
-          },
+          data: submissionData,
         },
         {
           onSuccess: () => {
@@ -123,26 +143,15 @@ export function MachineForm({ machine }: MachineFormProps) {
         }
       );
     } else {
-      createMachine(
-        {
-          ...values,
-          last_maintenance_date: values.last_maintenance_date
-            ? values.last_maintenance_date.toISOString()
-            : undefined,
-          next_maintenance_date: values.next_maintenance_date
-            ? values.next_maintenance_date.toISOString()
-            : undefined,
+      createMachine(submissionData, {
+        onSuccess: () => {
+          toast.success("Makine başarıyla oluşturuldu");
+          router.push("/manufacturing/machines");
         },
-        {
-          onSuccess: () => {
-            toast.success("Makine başarıyla oluşturuldu");
-            router.push("/manufacturing/machines");
-          },
-          onError: (error) => {
-            toast.error(`Makine oluşturulurken hata oluştu: ${error.message}`);
-          },
-        }
-      );
+        onError: (error) => {
+          toast.error(`Makine oluşturulurken hata oluştu: ${error.message}`);
+        },
+      });
     }
   }
 
@@ -307,8 +316,8 @@ export function MachineForm({ machine }: MachineFormProps) {
               <FormItem className="flex flex-col">
                 <FormLabel>Son Bakım Tarihi</FormLabel>
                 <DatePicker
-                  date={field.value}
-                  setDate={field.onChange}
+                  date={field.value || undefined}
+                  setDate={(date) => field.onChange(date || null)}
                   placeholder="Son bakım tarihini seçin"
                 />
                 <FormMessage />
@@ -323,8 +332,8 @@ export function MachineForm({ machine }: MachineFormProps) {
               <FormItem className="flex flex-col">
                 <FormLabel>Sonraki Bakım Tarihi</FormLabel>
                 <DatePicker
-                  date={field.value}
-                  setDate={field.onChange}
+                  date={field.value || undefined}
+                  setDate={(date) => field.onChange(date || null)}
                   placeholder="Sonraki bakım tarihini seçin"
                 />
                 <FormMessage />

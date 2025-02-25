@@ -62,7 +62,14 @@ export function ProcessForm({ bomId, onClose }: ProcessFormProps) {
       await createComponent({
         ...values,
         raw_material: values.raw_material || undefined,
-      });
+        component_type: "PROCESS",
+        details: {
+          type: "PROCESS",
+          process_config: processConfigs!.find(
+            (config) => config.id === values.process_config
+          )!,
+        },
+      } as Omit<ProcessComponent, "id">);
       toast.success("Proses başarıyla eklendi");
       onClose();
     } catch (error) {

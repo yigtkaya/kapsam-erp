@@ -216,7 +216,7 @@ export const machinesColumns: ColumnDef<Machine>[] = [
                 className="text-red-600 flex items-center justify-center"
                 onClick={() => {
                   if (confirm("Makineyi silmek istediğinize emin misiniz?")) {
-                    deleteMachine.mutate(row.original.id || "");
+                    deleteMachine.mutate(row.original.id);
                   }
                 }}
               >

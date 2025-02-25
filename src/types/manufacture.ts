@@ -48,24 +48,24 @@ export interface Machine extends BaseModel {
   brand?: string;
   model?: string;
   axis_count?: AxisCount;
-  internal_cooling?: number;
-  motor_power_kva?: number;
+  internal_cooling?: number | null;
+  motor_power_kva?: number | null;
   holder_type?: string;
-  spindle_motor_power_10_percent_kw?: number;
-  spindle_motor_power_30_percent_kw?: number;
-  power_hp?: number;
-  spindle_speed_rpm?: number;
-  tool_count?: number;
+  spindle_motor_power_10_percent_kw?: number | null;
+  spindle_motor_power_30_percent_kw?: number | null;
+  power_hp?: number | null;
+  spindle_speed_rpm?: number | null;
+  tool_count?: number | null;
   nc_control_unit?: string;
-  manufacturing_year?: string;
+  manufacturing_year: string | null;
   serial_number?: string;
-  machine_weight_kg?: number;
+  machine_weight_kg?: number | null;
   max_part_size?: string;
   description?: string;
   status: MachineStatus;
   maintenance_interval: number;
-  last_maintenance_date?: string;
-  next_maintenance_date?: string;
+  last_maintenance_date: Date | null;
+  next_maintenance_date: Date | null;
   maintenance_notes?: string;
 }
 

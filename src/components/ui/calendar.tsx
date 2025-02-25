@@ -2,12 +2,11 @@
 
 import * as React from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
-import { DayPicker } from "react-day-picker";
 import { tr } from "date-fns/locale";
 
 import { cn } from "@/lib/utils";
 import { buttonVariants } from "@/components/ui/button";
-
+import { DayPicker } from "react-day-picker";
 export type CalendarProps = React.ComponentProps<typeof DayPicker>;
 
 function Calendar({
@@ -55,10 +54,16 @@ function Calendar({
         day_hidden: "invisible",
         ...classNames,
       }}
-      components={{
-        IconLeft: ({ ...props }) => <ChevronLeft className="h-4 w-4" />,
-        IconRight: ({ ...props }) => <ChevronRight className="h-4 w-4" />,
-      }}
+      components={
+        {
+          IconLeft: ({ ...props }: any) => (
+            <ChevronLeft className="h-4 w-4" {...props} />
+          ),
+          IconRight: ({ ...props }: any) => (
+            <ChevronRight className="h-4 w-4" {...props} />
+          ),
+        } as any
+      }
       {...props}
     />
   );

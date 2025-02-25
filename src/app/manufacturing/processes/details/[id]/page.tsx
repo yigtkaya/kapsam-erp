@@ -1,23 +1,13 @@
+"use client";
+
 import { Metadata } from "next";
 import { PageHeader } from "@/components/ui/page-header";
 import { ProcessForm } from "../../components/process-form";
 import { fetchProcess } from "@/api/manufacturing";
 import { notFound, useParams } from "next/navigation";
+import { useProcess } from "@/hooks/useManufacturing";
 
-export const metadata: Metadata = {
-  title: "Process Details | Kapsam ERP",
-  description: "View and edit process details",
-};
-
-interface ProcessDetailsPageProps {
-  params: {
-    id: string;
-  };
-}
-
-export default async function ProcessDetailsPage({
-  params: pageParams,
-}: ProcessDetailsPageProps) {
+export default function ProcessDetailsPage() {
   const params = useParams();
   const id = parseInt(params.id as string);
 
@@ -26,7 +16,15 @@ export default async function ProcessDetailsPage({
   }
 
   try {
-    const process = await fetchProcess(id);
+    const { data: process, isLoading, error } = useProcess(id);
+
+    if (isLoading) {
+      return <div>Loading...</div>;
+    }
+
+    if (error) {
+      return <div>Error: {error.message}</div>;
+    }
 
     return (
       <div className="container py-4">

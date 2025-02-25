@@ -1,11 +1,11 @@
 "use server";
-import { ProcessComponent, ProcessConfig } from "@/types/manufacture";
+import { ProcessComponent, BOMProcessConfig } from "@/types/manufacture";
 import { cookies } from "next/headers";
 
 const API_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
 
 // Process Configs
-export async function fetchProcessConfigs(): Promise<ProcessConfig[]> {
+export async function fetchProcessConfigs(): Promise<BOMProcessConfig[]> {
   const cookieStore = await cookies();
   const csrftoken = cookieStore.get("csrftoken")?.value;
   const sessionid = cookieStore.get("sessionid")?.value;
@@ -32,7 +32,9 @@ export async function fetchProcessConfigs(): Promise<ProcessConfig[]> {
   return response.json();
 }
 
-export async function fetchProcessConfig(id: number): Promise<ProcessConfig> {
+export async function fetchProcessConfig(
+  id: number
+): Promise<BOMProcessConfig> {
   const cookieStore = await cookies();
   const csrftoken = cookieStore.get("csrftoken")?.value;
   const sessionid = cookieStore.get("sessionid")?.value;
