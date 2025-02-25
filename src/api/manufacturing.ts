@@ -1,6 +1,6 @@
 "use server";
 
-import { Machine, ManufacturingProcess, WorkOrder } from "@/types/manufacture";
+import { BOMProcessConfig, Machine, ManufacturingProcess, WorkOrder } from "@/types/manufacture";
 import { revalidatePath } from "next/cache";
 import { cookies } from "next/headers";
 
@@ -15,9 +15,8 @@ async function getAuthHeaders() {
   return {
     "Content-Type": "application/json",
     "X-CSRFToken": csrftoken || "",
-    Cookie: `sessionid=${sessionid}${
-      csrftoken ? `; csrftoken=${csrftoken}` : ""
-    }`,
+    Cookie: `sessionid=${sessionid}${csrftoken ? `; csrftoken=${csrftoken}` : ""
+      }`,
   };
 }
 
@@ -147,12 +146,9 @@ export async function fetchProcess(id: number): Promise<ManufacturingProcess> {
 export async function fetchProcesses(): Promise<ManufacturingProcess[]> {
   const headers = await getAuthHeaders();
 
-  const response = await fetch(
-    `${API_URL}/api/manufacturing/manufacturing-processes/`,
-    {
-      headers,
-    }
-  );
+  const response = await fetch(`${API_URL}/api/manufacturing/processes/`, {
+    headers,
+  });
 
   if (!response.ok) {
     throw new Error("Failed to fetch manufacturing processes");
@@ -166,30 +162,20 @@ export async function createProcess(
 ) {
   const headers = await getAuthHeaders();
 
-  console.log(data);
-
   try {
-    const response = await fetch(
-      `${API_URL}/api/manufacturing/manufacturing-processes/`,
-      {
-        method: "POST",
-        credentials: "include",
-        headers,
-        body: JSON.stringify(data),
-      }
-    );
-
-    console.log(response);
+    const response = await fetch(`${API_URL}/api/manufacturing/processes/`, {
+      method: "POST",
+      credentials: "include",
+      headers,
+      body: JSON.stringify(data),
+    });
 
     if (!response.ok) {
       throw new Error("Failed to create manufacturing process");
     }
 
-    const responsee = await response.json();
-
-    console.log(responsee);
-
-    return responsee;
+    revalidatePath("/manufacturing/processes");
+    return await response.json();
   } catch (error) {
     console.error("Error creating manufacturing process:", error);
     throw error;
@@ -204,7 +190,7 @@ export async function updateProcess(
 
   try {
     const response = await fetch(
-      `${API_URL}/api/manufacturing/manufacturing-processes/${id}/`,
+      `${API_URL}/api/manufacturing/processes/${id}/`,
       {
         method: "PATCH",
         credentials: "include",
@@ -230,7 +216,7 @@ export async function deleteProcess(id: number) {
 
   try {
     const response = await fetch(
-      `${API_URL}/api/manufacturing/manufacturing-processes/${id}/`,
+      `${API_URL}/api/manufacturing/processes/${id}/`,
       {
         method: "DELETE",
         credentials: "include",
@@ -354,6 +340,108 @@ export async function deleteWorkOrder(id: number) {
     return true;
   } catch (error) {
     console.error("Error deleting work order:", error);
+    throw error;
+  }
+}
+
+export async function fetchProcessConfigs(): Promise<BOMProcessConfig[]> {
+  const headers = await getAuthHeaders();
+
+  const response = await fetch(`${API_URL}/api/manufacturing/process-configs/`, {
+    headers,
+  });
+
+  if (!response.ok) {
+    throw new Error("Failed to fetch process configs");
+  }
+
+  return await response.json();
+}
+
+export async function fetchProcessConfig(id: number): Promise<BOMProcessConfig> {
+  const headers = await getAuthHeaders();
+
+  const response = await fetch(`${API_URL}/api/manufacturing/process-configs/${id}/`, {
+    headers,
+  });
+
+  if (!response.ok) {
+    throw new Error("Failed to fetch process config");
+  }
+
+  return await response.json();
+}
+
+export async function createProcessConfig(data: BOMProcessConfig) {
+  const headers = await getAuthHeaders();
+
+  try {
+    const response = await fetch(`${API_URL}/api/manufacturing/process-configs/`, {
+      method: "POST",
+      credentials: "include",
+      headers,
+      body: JSON.stringify(data),
+    });
+
+    if (!response.ok) {
+      throw new Error("Failed to create process config");
+    }
+
+    revalidatePath("/manufacturing/process-configs");
+    return await response.json();
+  } catch (error) {
+    console.error("Error creating process config:", error);
+    throw error;
+  }
+}
+
+export async function updateProcessConfig(id: number, data: Partial<BOMProcessConfig>) {
+  const headers = await getAuthHeaders();
+
+  try {
+    const response = await fetch(
+      `${API_URL}/api/manufacturing/process-configs/${id}/`,
+      {
+        method: "PATCH",
+        credentials: "include",
+        headers,
+        body: JSON.stringify(data),
+      }
+    );
+
+    if (!response.ok) {
+      throw new Error("Failed to update process config");
+    }
+
+    revalidatePath("/manufacturing/process-configs");
+    return await response.json();
+  } catch (error) {
+    console.error("Error updating process config:", error);
+    throw error;
+  }
+}
+
+export async function deleteProcessConfig(id: number) {
+  const headers = await getAuthHeaders();
+
+  try {
+    const response = await fetch(
+      `${API_URL}/api/manufacturing/process-configs/${id}/`,
+      {
+        method: "DELETE",
+        credentials: "include",
+        headers,
+      }
+    );
+
+    if (!response.ok) {
+      throw new Error("Failed to delete process config");
+    }
+
+    revalidatePath("/manufacturing/process-configs");
+    return true;
+  } catch (error) {
+    console.error("Error deleting process config:", error);
     throw error;
   }
 }

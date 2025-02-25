@@ -68,18 +68,18 @@ export default function ManufacturingPage() {
           </Card>
         </Link>
 
-        <Link href="/manufacturing/work-orders" className="block">
+        <Link href="/manufacturing/process-configs" className="block">
           <Card className="h-full transition-all hover:shadow-md">
             <CardHeader>
               <CardTitle className="flex items-center">
                 <ClipboardList className="w-5 h-5 mr-2" />
-                İş Emirleri
+                İşlem Yapılandırmaları
               </CardTitle>
-              <CardDescription>İş emirlerini yönetin</CardDescription>
+              <CardDescription>İşlem yapılandırmalarını yönetin</CardDescription>
             </CardHeader>
             <CardContent className="flex justify-between items-center">
               <p className="text-sm text-muted-foreground">
-                İş emirlerini oluşturun, takip edin ve tamamlayın
+                İşlem yapılandırmalarını oluşturun, düzenleyin ve silin
               </p>
               <ArrowRight className="w-5 h-5 text-muted-foreground" />
             </CardContent>
