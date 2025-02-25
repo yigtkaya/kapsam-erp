@@ -135,13 +135,13 @@ export function ProcessForm({ bomId, onClose, onCreateProcess }: ProcessFormProp
                       </Button>
                     </FormControl>
                   </PopoverTrigger>
-                  <PopoverContent className="p-0 w-full" align="start">
-                    <Command>
+                  <PopoverContent className="p-0 w-[--radix-popover-trigger-width] min-w-[240px]" align="start" sideOffset={4}>
+                    <Command className="max-h-[300px]">
                       <CommandInput placeholder="Proses ara..." />
                       <CommandEmpty>
                         Proses bulunamadı. Yeni bir proses oluşturmak için aşağıdaki butona tıklayın.
                       </CommandEmpty>
-                      <CommandList>
+                      <CommandList className="max-h-[250px] overflow-y-auto">
                         <CommandGroup heading="Prosesler">
                           {processes.map((process) => (
                             <CommandItem
