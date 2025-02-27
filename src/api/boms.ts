@@ -1,6 +1,6 @@
 "use server";
 
-import { BOM, BOMRequest } from "@/types/manufacture";
+import { BOMResponse, BOMRequest } from "@/types/manufacture";
 import { revalidatePath } from "next/cache";
 import { cookies, headers } from "next/headers";
 
@@ -25,21 +25,26 @@ async function getAuthHeaders() {
   };
 }
 
-export async function fetchBOM(id: number): Promise<BOM> {
+export async function fetchBOM(id: number): Promise<BOMResponse> {
   const headers = await getAuthHeaders();
 
   const response = await fetch(`${API_URL}/api/manufacturing/boms/${id}/`, {
     headers,
   });
 
+  console.log(response);
+
   if (!response.ok) {
     throw new Error("Failed to fetch BOM");
   }
 
-  return await response.json();
+  const responseData = await response.json();
+  console.log(responseData);
+
+  return responseData;
 }
 
-export async function fetchBOMs(): Promise<BOM[]> {
+export async function fetchBOMs(): Promise<BOMResponse[]> {
   const headers = await getAuthHeaders();
 
   const response = await fetch(`${API_URL}/api/manufacturing/boms/`, {

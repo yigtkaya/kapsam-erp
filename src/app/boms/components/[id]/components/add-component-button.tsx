@@ -33,12 +33,13 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { useProducts } from "@/hooks/useProducts";
-import { useAddBOMComponent } from "@/hooks/useBOMs";
+import { useCreateProductComponent } from "@/hooks/useComponents";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 import { ProductType as ManufactureProductType } from "@/types/manufacture";
 import { Separator } from "@/components/ui/separator";
 import { useRouteParams } from "@/hooks/useRouteParams";
+import { ProductComponent } from "@/types/manufacture";
 
 const formSchema = z.object({
   component: z.string().min(1, "Bileşen seçimi gereklidir"),
@@ -57,7 +58,8 @@ export function AddComponentButton({
 }: AddComponentButtonProps = {}) {
   const [open, setOpen] = useState(false);
   const { data: products, isLoading: isLoadingProducts } = useProducts();
-  const { mutate: addComponent, isPending } = useAddBOMComponent();
+  const { mutate: createProductComponent, isPending } =
+    useCreateProductComponent();
   const router = useRouter();
   const params = useRouteParams<{ id: string }>();
 
@@ -74,7 +76,6 @@ export function AddComponentButton({
   });
 
   function onSubmit(values: FormValues) {
-    const now = new Date().toISOString();
     const selectedProduct = products?.find(
       (p) => p.id.toString() === values.component
     );
@@ -84,45 +85,15 @@ export function AddComponentButton({
       return;
     }
 
-    // Map inventory ProductType to manufacture ProductType
-    const mapProductType = (type: string): ManufactureProductType => {
-      switch (type) {
-        case "SINGLE":
-          return ManufactureProductType.SINGLE;
-        case "SEMI":
-          return ManufactureProductType.SEMI;
-        case "MONTAGED":
-          return ManufactureProductType.MONTAGED;
-        case "STANDARD_PART":
-          return ManufactureProductType.STANDARD_PART;
-        default:
-          return ManufactureProductType.SINGLE;
-      }
-    };
-
-    addComponent(
+    createProductComponent(
       {
-        bomId,
-        component: {
-          component: values.component,
-          quantity: values.quantity,
-          notes: values.notes,
-          sequence_order: 1, // Default sequence order
-          component_type: "PRODUCT", // Default component type
-          bom: bomId,
-          created_at: now,
-          updated_at: now,
-          details: {
-            type: "PRODUCT",
-            product: {
-              id: parseInt(values.component),
-              product_code: selectedProduct.product_code,
-              name: selectedProduct.product_name,
-              product_type: mapProductType(selectedProduct.product_type),
-            },
-          },
-        },
-      },
+        bom: bomId,
+        sequence_order: 1,
+        quantity: values.quantity,
+        notes: values.notes || "",
+        product: selectedProduct.id,
+        component_type: "Product Component",
+      } as unknown as Omit<ProductComponent, "id">,
       {
         onSuccess: () => {
           toast.success("Bileşen başarıyla eklendi");

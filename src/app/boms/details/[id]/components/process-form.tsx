@@ -16,7 +16,6 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { ProcessComponent, ManufacturingProcess } from "@/types/manufacture";
 import { toast } from "sonner";
-import { useCreateProcessComponent } from "@/hooks/useProcesesComp";
 import { useProcesses } from "@/hooks/useManufacturing";
 import { Check, ChevronsUpDown, Plus } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -34,6 +33,7 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { useState } from "react";
+import { useCreateProcessComponent } from "@/hooks/useComponents";
 
 const processFormSchema = z.object({
   process_config: z.number(),
@@ -51,10 +51,15 @@ interface ProcessFormProps {
   onCreateProcess?: () => void;
 }
 
-export function ProcessForm({ bomId, onClose, onCreateProcess }: ProcessFormProps) {
+export function ProcessForm({
+  bomId,
+  onClose,
+  onCreateProcess,
+}: ProcessFormProps) {
   const { data: processes = [], isLoading: isLoadingProcesses } =
     useProcesses();
-  const { mutateAsync: createComponent, isPending: isCreating } = useCreateProcessComponent();
+  const { mutateAsync: createComponent, isPending: isCreating } =
+    useCreateProcessComponent();
   const [openProcessConfig, setOpenProcessConfig] = useState(false);
 
   const form = useForm<ProcessFormValues>({
@@ -92,10 +97,12 @@ export function ProcessForm({ bomId, onClose, onCreateProcess }: ProcessFormProp
           },
         },
         created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString()
+        updated_at: new Date().toISOString(),
       };
 
-      await createComponent(componentData as unknown as Omit<ProcessComponent, "id">);
+      await createComponent(
+        componentData as unknown as Omit<ProcessComponent, "id">
+      );
       toast.success("Proses başarıyla eklendi");
       onClose();
     } catch (error) {
@@ -113,7 +120,10 @@ export function ProcessForm({ bomId, onClose, onCreateProcess }: ProcessFormProp
             <FormItem className="flex flex-col">
               <FormLabel>Proses Yapılandırma</FormLabel>
               <div className="flex gap-2">
-                <Popover open={openProcessConfig} onOpenChange={setOpenProcessConfig}>
+                <Popover
+                  open={openProcessConfig}
+                  onOpenChange={setOpenProcessConfig}
+                >
                   <PopoverTrigger asChild>
                     <FormControl>
                       <Button
@@ -128,18 +138,23 @@ export function ProcessForm({ bomId, onClose, onCreateProcess }: ProcessFormProp
                       >
                         {field.value
                           ? processes.find(
-                            (process) => process.id === field.value
-                          )?.process_name || "Proses Seçin"
+                              (process) => process.id === field.value
+                            )?.process_name || "Proses Seçin"
                           : "Proses Seçin"}
                         <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                       </Button>
                     </FormControl>
                   </PopoverTrigger>
-                  <PopoverContent className="p-0 w-[--radix-popover-trigger-width] min-w-[240px]" align="start" sideOffset={4}>
+                  <PopoverContent
+                    className="p-0 w-[--radix-popover-trigger-width] min-w-[240px]"
+                    align="start"
+                    sideOffset={4}
+                  >
                     <Command className="max-h-[300px]">
                       <CommandInput placeholder="Proses ara..." />
                       <CommandEmpty>
-                        Proses bulunamadı. Yeni bir proses oluşturmak için aşağıdaki butona tıklayın.
+                        Proses bulunamadı. Yeni bir proses oluşturmak için
+                        aşağıdaki butona tıklayın.
                       </CommandEmpty>
                       <CommandList className="max-h-[250px] overflow-y-auto">
                         <CommandGroup heading="Prosesler">
@@ -233,7 +248,11 @@ export function ProcessForm({ bomId, onClose, onCreateProcess }: ProcessFormProp
           <Button type="button" variant="outline" onClick={onClose}>
             İptal
           </Button>
-          <Button type="submit" disabled={isCreating} className="bg-green-600 hover:bg-green-700">
+          <Button
+            type="submit"
+            disabled={isCreating}
+            className="bg-green-600 hover:bg-green-700"
+          >
             {isCreating ? "Ekleniyor..." : "Prosesi Ekle"}
           </Button>
         </div>

@@ -112,39 +112,6 @@ export async function fetchProcessComponent(
   return response.json();
 }
 
-export async function createProcessComponent(
-  data: Omit<ProcessComponent, "id">
-): Promise<ProcessComponent> {
-  const cookieStore = await cookies();
-  const rawCSRFCookie = cookieStore.get("csrftoken")?.value || "";
-  const sessionid = cookieStore.get("sessionid")?.value;
-  // Extract the token value from the raw cookie string.
-  // This regex looks for `csrftoken=` followed by a group of non-semicolon characters.
-  const tokenMatch = rawCSRFCookie.match(/csrftoken=([^;]+)/);
-  const csrftoken = tokenMatch ? tokenMatch[1] : rawCSRFCookie;
-
-  const response = await fetch(
-    `${API_URL}/api/manufacturing/process-components/`,
-    {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "X-CSRFToken": csrftoken || "",
-        Cookie: `sessionid=${sessionid}${
-          csrftoken ? `; csrftoken=${csrftoken}` : ""
-        }`,
-      },
-      body: JSON.stringify(data),
-    }
-  );
-
-  if (!response.ok) {
-    throw new Error("Failed to create process component");
-  }
-
-  return response.json();
-}
-
 export async function updateProcessComponent(
   id: number,
   data: Partial<ProcessComponent>
@@ -177,28 +144,4 @@ export async function updateProcessComponent(
   }
 
   return response.json();
-}
-
-export async function deleteProcessComponent(id: number): Promise<void> {
-  const cookieStore = await cookies();
-  const csrftoken = cookieStore.get("csrftoken")?.value;
-  const sessionid = cookieStore.get("sessionid")?.value;
-
-  const response = await fetch(
-    `${API_URL}/api/manufacturing/process-components/${id}/`,
-    {
-      method: "DELETE",
-      headers: {
-        "Content-Type": "application/json",
-        "X-CSRFToken": csrftoken || "",
-        Cookie: `sessionid=${sessionid}${
-          csrftoken ? `; csrftoken=${csrftoken}` : ""
-        }`,
-      },
-    }
-  );
-
-  if (!response.ok) {
-    throw new Error("Failed to delete process component");
-  }
 }

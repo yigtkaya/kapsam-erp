@@ -8,7 +8,7 @@ import {
   fetchBOMs,
   updateBOM,
 } from "@/api/boms";
-import { BOM, BOMComponent, BOMRequest } from "@/types/manufacture";
+import { BOMResponse, BOMComponent, BOMRequest } from "@/types/manufacture";
 
 export function useBOMs() {
   return useQuery({

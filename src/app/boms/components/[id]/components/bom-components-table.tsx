@@ -55,7 +55,7 @@ export function BOMComponentsTable({
   const handleEdit = (component: BOMComponent) => {
     setEditingId(component.id);
     setEditValues({
-      quantity: component.quantity,
+      quantity: component.quantity ? Number(component.quantity) : undefined,
       notes: component.notes,
     });
   };
@@ -154,22 +154,23 @@ export function BOMComponentsTable({
                   <TableCell>
                     <div className="flex items-center gap-2">
                       <Badge variant="outline" className="font-mono">
-                        {component.component_type === "PRODUCT"
-                          ? (component.details as any).product.product_code
-                          : (component.details as any).process_config
+                        {component.component_type === "Product Component"
+                          ? component.product_component?.product.product_code
+                          : component.process_component?.process_config
                               .process_code}
                       </Badge>
                       <Badge variant="secondary" className="capitalize text-xs">
-                        {component.component_type === "PRODUCT"
+                        {component.component_type === "Product Component"
                           ? "Ürün"
                           : "Süreç"}
                       </Badge>
                     </div>
                   </TableCell>
                   <TableCell className="font-medium">
-                    {component.component_type === "PRODUCT"
-                      ? (component.details as any).product.name
-                      : (component.details as any).process_config.process_name}
+                    {component.component_type === "Product Component"
+                      ? component.product_component?.product.product_name
+                      : component.process_component?.process_config
+                          .process_name}
                   </TableCell>
                   <TableCell>
                     {editingId === component.id ? (

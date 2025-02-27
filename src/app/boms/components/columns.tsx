@@ -1,7 +1,7 @@
 "use client";
 
 import { ColumnDef } from "@tanstack/react-table";
-import { BOM } from "@/types/manufacture";
+import { BOMResponse } from "@/types/manufacture";
 import { Button } from "@/components/ui/button";
 import { MoreHorizontal, Pencil, Trash, List } from "lucide-react";
 import {
@@ -18,7 +18,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { useRouter } from "next/navigation";
 import { useDeleteBOM } from "@/hooks/useBOMs";
 
-export const columns: ColumnDef<BOM>[] = [
+export const columns: ColumnDef<BOMResponse>[] = [
   {
     id: "select",
     header: ({ table }) => (

@@ -1,4 +1,4 @@
-import { Product } from "./inventory";
+import { Product, RawMaterial } from "./inventory";
 
 // Enums
 export enum AxisCount {
@@ -80,18 +80,15 @@ export interface ManufacturingProcess extends BaseModel {
   approved_by?: number; // User ID
 }
 
-export interface BOMProcessConfig extends BaseModel {
-  process: number; // Process ID
-  axis_count?: AxisCount;
-  estimated_duration_minutes?: number;
-  tooling_requirements?: Record<string, any>;
-  quality_checks?: Record<string, any>;
-}
-
 export interface BOMResponse extends BaseModel {
   product: Product;
   version: string;
   is_active: boolean;
+  is_approved: boolean;
+  approved_by: number | null;
+  approved_at: string | null;
+  parent_bom: number | null;
+  notes: string | null;
   components?: BOMComponent[];
   created_at: string;
   modified_at: string;
@@ -104,51 +101,69 @@ export interface BOMRequest extends BaseModel {
   components?: BOMComponent[];
 }
 
-export type BOM = BOMResponse;
-
 export interface BOMComponent extends BaseModel {
   bom: number; // BOM ID
   sequence_order: number;
-  quantity?: number;
+  quantity?: number | string;
   notes?: string;
-  component_type: "PRODUCT" | "PROCESS";
-  details: ProductComponentDetails | ProcessComponentDetails;
-}
-
-export interface ProductComponentDetails {
-  type: "PRODUCT";
-  product: {
-    id: number;
-    product_code: string;
-    name: string;
-    product_type: ProductType;
-  };
-}
-
-export interface ProcessComponentDetails {
-  type: "PROCESS";
-  process_config: {
-    id: number;
-    process_name: string;
-    process_code: string;
-    machine_type: MachineType;
-    axis_count?: AxisCount;
-    estimated_duration_minutes?: number;
-  };
-  raw_material?: {
-    id: number;
-    code: string;
-    name: string;
-  };
+  component_type: "Product Component" | "Process Component";
+  process_component?: ProcessComponent;
+  product_component?: ProductComponent;
 }
 
 export interface ProductComponent extends BOMComponent {
-  product: string; // Product Code
+  id: number;
+  bom: number;
+  sequence_order: number;
+  quantity: number | string;
+  notes: string;
+  product: Product;
+  active_bom_id: number | null;
+}
+
+//             {
+//   "id": 12,
+//   "bom": 10,
+//   "sequence_order": 3,
+//   "quantity": null,
+//   "notes": "",
+//   "component_type": "Process Component",
+//   "process_component": {
+//       "id": 12,
+//       "bom": 10,
+//       "sequence_order": 3,
+//       "quantity": null,
+//       "notes": "",
+//       "process_config": {
+//           "id": 1,
+//           "process": 3,
+//           "process_name": "Malzeme Girişi",
+//           "process_code": "OP10",
+//           "machine_type": "İşleme Merkezi",
+//           "axis_count": "8.5EKSEN",
+//           "estimated_duration_minutes": 1,
+//           "tooling_requirements": null,
+//           "quality_checks": null
+//       },
+//       "raw_material": null
+//   },
+//   "product_component": null
+// }
+
+export interface BOMProcessConfig extends BaseModel {
+  process: number; // Process ID
+  axis_count?: AxisCount;
+  process_name: string;
+  process_code: string;
+  machine_type: MachineType;
+  estimated_duration_minutes?: number;
+  tooling_requirements?: Record<string, any>;
+  quality_checks?: Record<string, any>;
+  raw_material_details: RawMaterial;
 }
 
 export interface ProcessComponent extends BOMComponent {
-  process_config: number; // BOMProcessConfig ID
-  raw_material?: number; // RawMaterial ID
+  process_config: BOMProcessConfig; // BOMProcessConfig ID
 }
 
 export interface WorkOrder extends BaseModel {

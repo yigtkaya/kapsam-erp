@@ -3,7 +3,7 @@
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import { BOM } from "@/types/manufacture";
+import { BOMResponse } from "@/types/manufacture";
 import { Button } from "@/components/ui/button";
 import {
   Form,
@@ -49,7 +49,7 @@ const editBomFormSchema = z.object({
 type EditBomFormData = z.infer<typeof editBomFormSchema>;
 
 interface EditBOMFormProps {
-  initialData: BOM;
+  initialData: BOMResponse;
 }
 
 function BOMFormSkeleton() {

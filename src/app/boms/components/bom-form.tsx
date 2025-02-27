@@ -25,7 +25,7 @@ import { Switch } from "@/components/ui/switch";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { useCreateBOM, useUpdateBOM } from "@/hooks/useBOMs";
-import { BOM, BOMRequest } from "@/types/manufacture";
+import { BOMRequest, BOMResponse } from "@/types/manufacture";
 import { useProducts } from "@/hooks/useProducts";
 
 const formSchema = z.object({
@@ -37,7 +37,7 @@ const formSchema = z.object({
 type BOMFormValues = z.infer<typeof formSchema>;
 
 interface BOMFormProps {
-  bom?: BOM;
+  bom?: BOMResponse;
 }
 
 export function BOMForm({ bom }: BOMFormProps) {

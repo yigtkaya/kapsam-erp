@@ -1,9 +1,13 @@
 "use client";
-import { notFound, useParams } from "next/navigation";
+import {
+  notFound,
+  useParams,
+  useRouter,
+  useSearchParams,
+} from "next/navigation";
 import { useState } from "react";
 import { PageHeader } from "@/components/ui/page-header";
 import { useBOM, useUpdateBOM } from "@/hooks/useBOMs";
-import { useProduct, useProducts } from "@/hooks/useProducts";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Pencil, Save, X } from "lucide-react";
@@ -11,11 +15,12 @@ import { toast } from "sonner";
 import { BOMInfoCard } from "./components/bom-info-card";
 import { ComponentsTable } from "./components/components-table";
 import { TechnicalDrawings } from "./components/technical-drawings";
-import { AddComponentDialog } from "./components/add-component-dialog";
 import { ProductDetails } from "./components/product-details";
 
 export default function BOMDetailsPage() {
   const params = useParams();
+  const router = useRouter();
+  const searchParams = useSearchParams();
   const id = Number(params.id);
 
   if (isNaN(id)) {
@@ -23,25 +28,21 @@ export default function BOMDetailsPage() {
   }
 
   const { data: bom, isLoading: isBOMLoading, error } = useBOM(id);
-  const [isEditing, setIsEditing] = useState(false);
-  const [selectedProduct, setSelectedProduct] = useState("");
+  const isEditing = searchParams.get("edit") === "true";
   const [editedVersion, setEditedVersion] = useState("");
-  const [open, setOpen] = useState(false);
   const { mutate: updateBOM, isPending: isUpdating } = useUpdateBOM();
-  const { data: products = [] } = useProducts({});
-
-  const { data: product, isLoading: isProductLoading } = useProduct(
-    bom?.product.id.toString() || ""
-  );
 
   const handleEdit = () => {
-    setSelectedProduct(bom?.product.product_code || "");
     setEditedVersion(bom?.version || "");
-    setIsEditing(true);
+    const params = new URLSearchParams(searchParams);
+    params.set("edit", "true");
+    router.push(`?${params.toString()}`);
   };
 
   const handleCancel = () => {
-    setIsEditing(false);
+    const params = new URLSearchParams(searchParams);
+    params.delete("edit");
+    router.push(`?${params.toString()}`);
   };
 
   const handleSave = () => {
@@ -51,7 +52,7 @@ export default function BOMDetailsPage() {
       {
         id: bom.id,
         data: {
-          product: selectedProduct,
+          product: bom.product.product_code, // Keep existing product
           version: editedVersion,
           is_active: bom.is_active,
           created_at: bom.created_at,
@@ -61,7 +62,9 @@ export default function BOMDetailsPage() {
       {
         onSuccess: () => {
           toast.success("Reçete başarıyla güncellendi");
-          setIsEditing(false);
+          const params = new URLSearchParams(searchParams);
+          params.delete("edit");
+          router.push(`?${params.toString()}`);
         },
         onError: (error) => {
           toast.error(`Güncelleme sırasında hata oluştu: ${error.message}`);
@@ -97,26 +100,17 @@ export default function BOMDetailsPage() {
                 <X className="mr-2 h-4 w-4" />
                 İptal
               </Button>
-              <Button
-                size="sm"
-                onClick={handleSave}
-                disabled={isUpdating}
-              >
+              <Button size="sm" onClick={handleSave} disabled={isUpdating}>
                 <Save className="mr-2 h-4 w-4" />
                 Kaydet
               </Button>
             </>
           ) : (
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={handleEdit}
-            >
+            <Button variant="outline" size="sm" onClick={handleEdit}>
               <Pencil className="mr-2 h-4 w-4" />
               Düzenle
             </Button>
           )}
-          <AddComponentDialog bomId={bom.id} />
         </div>
       </div>
 
@@ -124,15 +118,8 @@ export default function BOMDetailsPage() {
         <BOMInfoCard
           bom={bom}
           product={bom.product}
-          products={products}
           isEditing={isEditing}
-          isProductLoading={false}
-          isCurrentProductLoading={false}
-          selectedProduct={selectedProduct}
           editedVersion={editedVersion}
-          open={open}
-          setOpen={setOpen}
-          setSelectedProduct={setSelectedProduct}
           setEditedVersion={setEditedVersion}
         />
 
@@ -140,20 +127,18 @@ export default function BOMDetailsPage() {
           <TabsList>
             <TabsTrigger value="components">Komponentler</TabsTrigger>
             <TabsTrigger value="product-details">Ürün Detayları</TabsTrigger>
-            <TabsTrigger value="technical-drawings">Teknik Çizimler</TabsTrigger>
+            <TabsTrigger value="technical-drawings">
+              Teknik Çizimler
+            </TabsTrigger>
           </TabsList>
           <TabsContent value="components" className="mt-4">
-            <div className="flex justify-between items-center mb-4">
-              <h3 className="text-lg font-medium">Reçete Komponentleri</h3>
-              <AddComponentDialog bomId={bom.id} />
-            </div>
-            <ComponentsTable components={bom.components || []} />
+            <ComponentsTable />
           </TabsContent>
           <TabsContent value="product-details" className="mt-4">
-            <ProductDetails product={product} isLoading={isProductLoading} />
+            <ProductDetails product={bom.product} isLoading={false} />
           </TabsContent>
           <TabsContent value="technical-drawings" className="mt-4">
-            <TechnicalDrawings product={product} />
+            <TechnicalDrawings product={bom.product} />
           </TabsContent>
         </Tabs>
       </div>

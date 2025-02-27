@@ -16,7 +16,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { ProductComponent, ProductType } from "@/types/manufacture";
 import { toast } from "sonner";
-import { useCreateProductComponent } from "@/hooks/useProductComp";
+import { useCreateProductComponent } from "@/hooks/useComponents";
 import { useProducts } from "@/hooks/useProducts";
 import { Check, ChevronsUpDown } from "lucide-react";
 import { cn } from "@/lib/utils";
