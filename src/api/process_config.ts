@@ -59,3 +59,8 @@ export async function fetchProcessConfig(
 
   return response.json();
 }
+
+// TODO: Create process config
+// TODO: Update process config
+// TODO: Delete process config
+// + tuşu ile process config eklenecek manufacturing process değil

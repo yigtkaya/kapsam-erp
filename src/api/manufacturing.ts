@@ -1,6 +1,11 @@
 "use server";
 
-import { BOMProcessConfig, Machine, ManufacturingProcess, WorkOrder } from "@/types/manufacture";
+import {
+  BOMProcessConfig,
+  Machine,
+  ManufacturingProcess,
+  WorkOrder,
+} from "@/types/manufacture";
 import { revalidatePath } from "next/cache";
 import { cookies } from "next/headers";
 
@@ -15,8 +20,9 @@ async function getAuthHeaders() {
   return {
     "Content-Type": "application/json",
     "X-CSRFToken": csrftoken || "",
-    Cookie: `sessionid=${sessionid}${csrftoken ? `; csrftoken=${csrftoken}` : ""
-      }`,
+    Cookie: `sessionid=${sessionid}${
+      csrftoken ? `; csrftoken=${csrftoken}` : ""
+    }`,
   };
 }
 
@@ -130,7 +136,7 @@ export async function fetchProcess(id: number): Promise<ManufacturingProcess> {
   const headers = await getAuthHeaders();
 
   const response = await fetch(
-    `${API_URL}/api/manufacturing/processes/${id}/`,
+    `${API_URL}/api/manufacturing/manufacturing-processes/${id}/`,
     {
       headers,
     }
@@ -146,9 +152,12 @@ export async function fetchProcess(id: number): Promise<ManufacturingProcess> {
 export async function fetchProcesses(): Promise<ManufacturingProcess[]> {
   const headers = await getAuthHeaders();
 
-  const response = await fetch(`${API_URL}/api/manufacturing/processes/`, {
-    headers,
-  });
+  const response = await fetch(
+    `${API_URL}/api/manufacturing/manufacturing-processes/`,
+    {
+      headers,
+    }
+  );
 
   if (!response.ok) {
     throw new Error("Failed to fetch manufacturing processes");
@@ -347,9 +356,12 @@ export async function deleteWorkOrder(id: number) {
 export async function fetchProcessConfigs(): Promise<BOMProcessConfig[]> {
   const headers = await getAuthHeaders();
 
-  const response = await fetch(`${API_URL}/api/manufacturing/process-configs/`, {
-    headers,
-  });
+  const response = await fetch(
+    `${API_URL}/api/manufacturing/process-configs/`,
+    {
+      headers,
+    }
+  );
 
   if (!response.ok) {
     throw new Error("Failed to fetch process configs");
@@ -358,12 +370,17 @@ export async function fetchProcessConfigs(): Promise<BOMProcessConfig[]> {
   return await response.json();
 }
 
-export async function fetchProcessConfig(id: number): Promise<BOMProcessConfig> {
+export async function fetchProcessConfig(
+  id: number
+): Promise<BOMProcessConfig> {
   const headers = await getAuthHeaders();
 
-  const response = await fetch(`${API_URL}/api/manufacturing/process-configs/${id}/`, {
-    headers,
-  });
+  const response = await fetch(
+    `${API_URL}/api/manufacturing/process-configs/${id}/`,
+    {
+      headers,
+    }
+  );
 
   if (!response.ok) {
     throw new Error("Failed to fetch process config");
@@ -376,12 +393,15 @@ export async function createProcessConfig(data: BOMProcessConfig) {
   const headers = await getAuthHeaders();
 
   try {
-    const response = await fetch(`${API_URL}/api/manufacturing/process-configs/`, {
-      method: "POST",
-      credentials: "include",
-      headers,
-      body: JSON.stringify(data),
-    });
+    const response = await fetch(
+      `${API_URL}/api/manufacturing/process-configs/`,
+      {
+        method: "POST",
+        credentials: "include",
+        headers,
+        body: JSON.stringify(data),
+      }
+    );
 
     if (!response.ok) {
       throw new Error("Failed to create process config");
@@ -395,7 +415,10 @@ export async function createProcessConfig(data: BOMProcessConfig) {
   }
 }
 
-export async function updateProcessConfig(id: number, data: Partial<BOMProcessConfig>) {
+export async function updateProcessConfig(
+  id: number,
+  data: Partial<BOMProcessConfig>
+) {
   const headers = await getAuthHeaders();
 
   try {

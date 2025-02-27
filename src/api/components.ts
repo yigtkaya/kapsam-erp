@@ -132,18 +132,16 @@ export async function createProcessComponent(
     }
   );
 
-  console.log(response);
-
   if (!response.ok) {
     const errorData = await response.json();
     console.log(errorData);
-    throw new Error(errorData.detail || "Failed to create process component");
+    throw new Error(errorData.detail || "Failed to create product component");
   }
-
   const responseData = await response.json();
+
   console.log(responseData);
 
-  return response.json();
+  return responseData;
 }
 
 export async function updateProductComponent(

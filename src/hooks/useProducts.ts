@@ -5,9 +5,17 @@ import {
   createTechnicalDrawing,
   updateProduct,
   deleteProduct,
+  fetchProcessProducts,
 } from "@/api/products";
-import { Product, TechnicalDrawing } from "@/types/inventory";
+import { ProcessProduct, Product, TechnicalDrawing } from "@/types/inventory";
 import { fetchProducts as clientFetchProducts } from "@/api/products";
+
+export function useProcessProducts() {
+  return useQuery<ProcessProduct[]>({
+    queryKey: ["process-products"],
+    queryFn: () => fetchProcessProducts(),
+  });
+}
 
 interface UseProductsParams {
   category?: string;

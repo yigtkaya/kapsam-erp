@@ -1,6 +1,7 @@
 // File: inventory_types.ts
 
 import { Customer, User } from "./core";
+import { BOMProcessConfig } from "./manufacture";
 
 export type TutucuType =
   | "pens"
@@ -58,6 +59,17 @@ export interface Product {
   inventory_category?: number;
   inventory_category_display?: string; // Added this field
   technical_drawings?: TechnicalDrawing[];
+}
+
+export interface ProcessProduct {
+  id: number;
+  product_code: string;
+  parent_product: number;
+  parent_product_details: Product;
+  description?: string;
+  current_stock: number;
+  bom_process_config: number;
+  bom_process_config_details: BOMProcessConfig;
 }
 
 export interface TechnicalDrawing {
