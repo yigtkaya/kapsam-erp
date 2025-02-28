@@ -6,6 +6,7 @@ import {
   updateProduct,
   deleteProduct,
   fetchProcessProducts,
+  createProcessProduct,
 } from "@/api/products";
 import { ProcessProduct, Product, TechnicalDrawing } from "@/types/inventory";
 import { fetchProducts as clientFetchProducts } from "@/api/products";
@@ -46,6 +47,17 @@ export function useProduct(id: string) {
   return useQuery<Product>({
     queryKey: ["product", id],
     queryFn: () => fetchProduct({ id }),
+  });
+}
+
+export function useCreateProcessProduct() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: createProcessProduct,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["products"] });
+    },
   });
 }
 

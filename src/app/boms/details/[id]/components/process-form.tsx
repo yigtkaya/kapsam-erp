@@ -51,7 +51,7 @@ import { useProcessProducts } from "@/hooks/useProducts";
 
 const processFormSchema = z.object({
   process_config: z.number(),
-  process_product: z.number(),
+  process_product: z.number().optional(),
   sequence_order: z.number().min(1, "Sıra numarası gereklidir"),
   raw_material: z.number().nullable(),
   axis_count: z.nativeEnum(AxisCount).optional(),
@@ -71,12 +71,14 @@ interface ProcessFormProps {
   bomId: number;
   onClose: () => void;
   onCreateProcess?: () => void;
+  onCreateProcessProduct?: () => void;
 }
 
 export function ProcessForm({
   bomId,
   onClose,
   onCreateProcess,
+  onCreateProcessProduct,
 }: ProcessFormProps) {
   const { data: processes = [], isLoading: isLoadingProcesses } =
     useProcesses();
@@ -333,6 +335,18 @@ export function ProcessForm({
                       </Command>
                     </PopoverContent>
                   </Popover>
+                  {onCreateProcessProduct && (
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="icon"
+                      onClick={onCreateProcessProduct}
+                      title="Yeni Proses Ürünü Oluştur"
+                      className="hover:bg-green-50 hover:border-green-200 transition-colors"
+                    >
+                      <Plus className="h-4 w-4" />
+                    </Button>
+                  )}
                 </div>
                 <FormMessage />
               </FormItem>

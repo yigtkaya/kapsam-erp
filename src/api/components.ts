@@ -133,6 +133,8 @@ export async function createProcessComponent(
   );
 
   if (!response.ok) {
+    console.log(data);
+    console.log(response);
     const errorData = await response.json();
     console.log(errorData);
     throw new Error(errorData.detail || "Failed to create product component");

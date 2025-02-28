@@ -53,6 +53,28 @@ export async function fetchProcessProducts(): Promise<ProcessProduct[]> {
   return data as ProcessProduct[];
 }
 
+export async function createProcessProduct(
+  processProduct: ProcessProduct
+): Promise<ProcessProduct> {
+  const headers = await getAuthHeaders();
+
+  console.log(processProduct);
+  const response = await fetch(`${API_URL}/api/inventory/process-products/`, {
+    method: "POST",
+    headers,
+    body: JSON.stringify(processProduct),
+  });
+
+  console.log(response);
+
+  if (!response.ok) {
+    console.log(await response.json());
+    throw new Error("Failed to create process product");
+  }
+
+  return response.json();
+}
+
 export async function fetchProducts({
   category,
   product_type,

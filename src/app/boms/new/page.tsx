@@ -10,7 +10,11 @@ export const metadata: Metadata = {
 export default function NewBOMPage() {
   return (
     <div className="container mx-auto py-6">
-      <PageHeader title="Yeni Reçete" description="Yeni bir reçete oluşturun" />
+      <PageHeader
+        title="Yeni Reçete"
+        description="Yeni bir reçete oluşturun"
+        showBackButton
+      />
       <div className="mt-6">
         <BOMForm />
       </div>

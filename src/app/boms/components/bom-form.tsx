@@ -80,7 +80,7 @@ export function BOMForm({ bom }: BOMFormProps) {
         {
           onSuccess: () => {
             toast.success("Reçete başarıyla güncellendi");
-            router.push("/boms");
+            router.back();
           },
           onError: (error: Error) => {
             toast.error(`Reçete güncellenirken hata oluştu: ${error.message}`);
