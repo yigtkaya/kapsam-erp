@@ -376,6 +376,15 @@ export function ComponentsTable() {
                                 {getComponentName(component)}
                               </p>
                               {renderComponentType(component)}
+                              {component.component_type ===
+                                "Process Component" && (
+                                <p className="text-sm text-muted-foreground ml-auto">
+                                  {component.process_component?.process_config
+                                    ?.process_product_details?.product_code ||
+                                    component.process_component?.process_config
+                                      ?.raw_material_details?.material_code}
+                                </p>
+                              )}
                             </div>
                             <p className="text-sm text-muted-foreground">
                               Sıra: {component.sequence_order}

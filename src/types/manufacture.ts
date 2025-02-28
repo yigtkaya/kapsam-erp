@@ -1,4 +1,4 @@
-import { Product, RawMaterial } from "./inventory";
+import { ProcessProduct, Product, RawMaterial } from "./inventory";
 
 // Enums
 export enum AxisCount {
@@ -157,9 +157,11 @@ export interface BOMProcessConfig extends BaseModel {
   process_code: string;
   machine_type: MachineType;
   estimated_duration_minutes?: number;
-  tooling_requirements?: Record<string, any>;
-  quality_checks?: Record<string, any>;
+  tooling_requirements?: string;
+  quality_checks?: string;
   raw_material_details: RawMaterial;
+  process_product_details: ProcessProduct | null;
+  process_product: number | null;
 }
 
 export interface ProcessComponent extends BOMComponent {

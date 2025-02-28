@@ -28,7 +28,6 @@ import {
   ManufacturingProcess,
   MachineType,
 } from "@/types/manufacture";
-
 import {
   useCreateProcessConfig,
   useUpdateProcessConfig,
@@ -36,13 +35,31 @@ import {
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { RawMaterial } from "@/types/inventory";
+import { Check, ChevronsUpDown, Plus } from "lucide-react";
+import { cn } from "@/lib/utils";
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+} from "@/components/ui/command";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import { useState } from "react";
+import { useProcessProducts } from "@/hooks/useProducts";
 
 const processConfigSchema = z.object({
   process: z.number(),
+  process_product: z.number().optional(),
   axis_count: z.nativeEnum(AxisCount).optional(),
   estimated_duration_minutes: z.number().min(0).optional(),
-  tooling_requirements: z.record(z.string(), z.any()).optional(),
-  quality_checks: z.record(z.string(), z.any()).optional(),
+  tooling_requirements: z.string().optional(),
+  quality_checks: z.string().optional(),
 });
 
 type ProcessConfigFormData = z.infer<typeof processConfigSchema>;
@@ -50,55 +67,85 @@ type ProcessConfigFormData = z.infer<typeof processConfigSchema>;
 interface ProcessConfigFormProps {
   initialData?: Partial<BOMProcessConfig>;
   processes?: ManufacturingProcess[];
+  onCreateProcess?: () => void;
+  isDialog?: boolean;
+  onSuccess?: (config: BOMProcessConfig) => void;
 }
 
 export function ProcessConfigForm({
   initialData,
   processes = [],
+  onCreateProcess,
+  isDialog = false,
+  onSuccess,
 }: ProcessConfigFormProps) {
   const router = useRouter();
   const createConfig = useCreateProcessConfig();
   const updateConfig = useUpdateProcessConfig();
+  const [openProcess, setOpenProcess] = useState(false);
+  const [openProcessProduct, setOpenProcessProduct] = useState(false);
+  const { data: processes_product = [], isLoading: isLoadingProcessesProduct } =
+    useProcessProducts();
+  const [selectedProcess, setSelectedProcess] =
+    useState<ManufacturingProcess | null>(
+      initialData?.process
+        ? processes.find((p) => p.id === initialData.process) || null
+        : null
+    );
 
   const form = useForm<ProcessConfigFormData>({
     resolver: zodResolver(processConfigSchema),
     defaultValues: {
       process: initialData?.process || undefined,
+      process_product: initialData?.process_product || undefined,
       axis_count: initialData?.axis_count,
       estimated_duration_minutes: initialData?.estimated_duration_minutes,
-      tooling_requirements: initialData?.tooling_requirements || {},
-      quality_checks: initialData?.quality_checks || {},
+      tooling_requirements: initialData?.tooling_requirements || "",
+      quality_checks: initialData?.quality_checks || "",
     },
   });
 
   const handleSubmit = async (data: ProcessConfigFormData) => {
     try {
+      if (!selectedProcess) {
+        toast.error("Lütfen bir süreç seçin");
+        return;
+      }
+
+      const formattedData = {
+        ...data,
+        tooling_requirements: data.tooling_requirements,
+        quality_checks: data.quality_checks,
+      };
+
       if (initialData?.id) {
-        await updateConfig.mutateAsync({
+        const updatedConfig = await updateConfig.mutateAsync({
           id: initialData.id,
           data: {
-            ...data,
+            ...formattedData,
             id: initialData.id,
           },
         });
         toast.success("İşlem yapılandırması başarıyla güncellendi");
+        onSuccess?.(updatedConfig);
       } else {
-        const selectedProcess = processes.find((p) => p.id === data.process);
-        if (!selectedProcess) {
-          throw new Error("Selected process not found");
-        }
-
-        await createConfig.mutateAsync({
-          ...data,
+        const newConfig = await createConfig.mutateAsync({
+          ...formattedData,
           process_name: selectedProcess.process_name,
           process_code: selectedProcess.process_code,
           machine_type: selectedProcess.machine_type ?? MachineType.NONE,
           raw_material_details: undefined as unknown as RawMaterial,
+          process_product: data.process_product || null,
+          process_product_details: null,
         });
         toast.success("İşlem yapılandırması başarıyla oluşturuldu");
+        onSuccess?.(newConfig);
       }
-      router.push("/manufacturing/process-configs");
-      router.refresh();
+
+      if (!isDialog) {
+        router.push("/manufacturing/process-configs");
+        router.refresh();
+      }
     } catch (error) {
       toast.error("İşlem yapılandırması kaydedilirken bir hata oluştu");
       console.error("Error submitting form:", error);
@@ -114,25 +161,170 @@ export function ProcessConfigForm({
           render={({ field }) => (
             <FormItem>
               <FormLabel>Süreç</FormLabel>
-              <Select
-                onValueChange={(value) => field.onChange(parseInt(value, 10))}
-                value={field.value?.toString()}
-              >
-                <FormControl>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Süreç seçin" />
-                  </SelectTrigger>
-                </FormControl>
-                <SelectContent>
-                  {processes.map((process) => (
-                    <SelectItem key={process.id} value={process.id.toString()}>
-                      {process.process_name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <div className="flex gap-2">
+                <Popover open={openProcess} onOpenChange={setOpenProcess}>
+                  <PopoverTrigger asChild>
+                    <FormControl>
+                      <Button
+                        variant="outline"
+                        role="combobox"
+                        aria-expanded={openProcess}
+                        className={cn(
+                          "justify-between w-full",
+                          !field.value && "text-muted-foreground"
+                        )}
+                      >
+                        {field.value
+                          ? processes.find(
+                              (process) => process.id === field.value
+                            )?.process_name || "Süreç Seçin"
+                          : "Süreç Seçin"}
+                        <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                      </Button>
+                    </FormControl>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-[400px] p-0">
+                    <Command>
+                      <CommandInput placeholder="Süreç ara..." />
+                      <CommandEmpty>
+                        Süreç bulunamadı. Yeni bir süreç oluşturmak için sağdaki
+                        butona tıklayın.
+                      </CommandEmpty>
+                      <CommandList>
+                        <CommandGroup heading="Süreçler">
+                          {processes.map((process) => (
+                            <CommandItem
+                              key={process.id}
+                              value={process.process_name}
+                              onSelect={() => {
+                                form.setValue("process", process.id);
+                                setSelectedProcess(process);
+                                setOpenProcess(false);
+                              }}
+                            >
+                              <Check
+                                className={cn(
+                                  "mr-2 h-4 w-4",
+                                  process.id === field.value
+                                    ? "opacity-100"
+                                    : "opacity-0"
+                                )}
+                              />
+                              <div className="flex flex-col">
+                                <span>{process.process_name}</span>
+                                <span className="text-xs text-muted-foreground">
+                                  {process.process_code}
+                                </span>
+                              </div>
+                            </CommandItem>
+                          ))}
+                        </CommandGroup>
+                      </CommandList>
+                    </Command>
+                  </PopoverContent>
+                </Popover>
+                {onCreateProcess && (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="icon"
+                    onClick={onCreateProcess}
+                    title="Yeni Süreç Oluştur"
+                    className="hover:bg-green-50 hover:border-green-200 transition-colors"
+                  >
+                    <Plus className="h-4 w-4" />
+                  </Button>
+                )}
+              </div>
               <FormDescription>
                 Yapılandırmanın uygulanacağı üretim sürecini seçin
+              </FormDescription>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        <FormField
+          control={form.control}
+          name="process_product"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Proses Ürünü</FormLabel>
+              <div className="flex gap-2">
+                <Popover
+                  open={openProcessProduct}
+                  onOpenChange={setOpenProcessProduct}
+                >
+                  <PopoverTrigger asChild>
+                    <FormControl>
+                      <Button
+                        variant="outline"
+                        role="combobox"
+                        aria-expanded={openProcessProduct}
+                        className={cn(
+                          "justify-between w-full",
+                          !field.value && "text-muted-foreground"
+                        )}
+                        disabled={isLoadingProcessesProduct}
+                      >
+                        {field.value
+                          ? processes_product.find(
+                              (product) => product.id === field.value
+                            )?.parent_product_details.product_name ||
+                            "Proses Ürünü Seçin"
+                          : "Proses Ürünü Seçin"}
+                        <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                      </Button>
+                    </FormControl>
+                  </PopoverTrigger>
+                  <PopoverContent
+                    className="min-w-[var(--radix-popover-trigger-width)] max-w-[var(--radix-popover-trigger-width)] p-0"
+                    align="start"
+                    sideOffset={4}
+                  >
+                    <Command className="w-full">
+                      <CommandInput
+                        placeholder="Proses ürünü ara..."
+                        className="h-9"
+                      />
+                      <CommandEmpty>Proses ürünü bulunamadı.</CommandEmpty>
+                      <CommandList className="max-h-[200px] overflow-y-auto">
+                        <CommandGroup heading="Proses Ürünleri">
+                          {processes_product.map((product) => (
+                            <CommandItem
+                              key={product.id}
+                              value={`${product.parent_product_details.product_name} ${product.parent_product_details.product_code}`}
+                              onSelect={() => {
+                                form.setValue("process_product", product.id);
+                                setOpenProcessProduct(false);
+                              }}
+                            >
+                              <Check
+                                className={cn(
+                                  "mr-2 h-4 w-4",
+                                  product.id === field.value
+                                    ? "opacity-100"
+                                    : "opacity-0"
+                                )}
+                              />
+                              <div className="flex flex-col">
+                                <span>
+                                  {product.parent_product_details.product_name}
+                                </span>
+                                <span className="text-xs text-muted-foreground">
+                                  {product.parent_product_details.product_code}
+                                </span>
+                              </div>
+                            </CommandItem>
+                          ))}
+                        </CommandGroup>
+                      </CommandList>
+                    </Command>
+                  </PopoverContent>
+                </Popover>
+              </div>
+              <FormDescription>
+                Bu proses yapılandırması için kullanılacak proses ürününü seçin
               </FormDescription>
               <FormMessage />
             </FormItem>
@@ -201,22 +393,13 @@ export function ProcessConfigForm({
               <FormLabel>Takım Gereksinimleri</FormLabel>
               <FormControl>
                 <Textarea
-                  placeholder="Takım gereksinimlerini JSON formatında girin"
+                  placeholder="Takım gereksinimlerini girin..."
+                  className="min-h-[100px]"
                   {...field}
-                  value={JSON.stringify(field.value, null, 2)}
-                  onChange={(e) => {
-                    try {
-                      const parsed = JSON.parse(e.target.value);
-                      field.onChange(parsed);
-                    } catch {
-                      // Invalid JSON, keep the text as is
-                      field.onChange(e.target.value);
-                    }
-                  }}
                 />
               </FormControl>
               <FormDescription>
-                Gerekli takımları ve özelliklerini JSON formatında belirtin
+                Gerekli takımları ve özelliklerini belirtin
               </FormDescription>
               <FormMessage />
             </FormItem>
@@ -231,37 +414,27 @@ export function ProcessConfigForm({
               <FormLabel>Kalite Kontrolleri</FormLabel>
               <FormControl>
                 <Textarea
-                  placeholder="Kalite kontrollerini JSON formatında girin"
+                  placeholder="Kalite kontrollerini girin..."
+                  className="min-h-[100px]"
                   {...field}
-                  value={JSON.stringify(field.value, null, 2)}
-                  onChange={(e) => {
-                    try {
-                      const parsed = JSON.parse(e.target.value);
-                      field.onChange(parsed);
-                    } catch {
-                      // Invalid JSON, keep the text as is
-                      field.onChange(e.target.value);
-                    }
-                  }}
                 />
               </FormControl>
               <FormDescription>
-                Kalite kontrol noktalarını ve kriterlerini JSON formatında
-                belirtin
+                Kalite kontrol noktalarını ve kriterlerini belirtin
               </FormDescription>
               <FormMessage />
             </FormItem>
           )}
         />
 
-        <Button
-          type="submit"
-          disabled={createConfig.isPending || updateConfig.isPending}
-        >
-          {createConfig.isPending || updateConfig.isPending
-            ? "Kaydediliyor..."
-            : "Kaydet"}
-        </Button>
+        <div className="flex justify-end gap-2">
+          <Button
+            type="submit"
+            disabled={createConfig.isPending || updateConfig.isPending}
+          >
+            {initialData?.id ? "Güncelle" : "Oluştur"}
+          </Button>
+        </div>
       </form>
     </Form>
   );

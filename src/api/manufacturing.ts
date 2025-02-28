@@ -373,11 +373,16 @@ export async function fetchProcessConfigs(): Promise<BOMProcessConfig[]> {
     }
   );
 
+  console.log(response);
+
   if (!response.ok) {
+    console.log(await response.json());
     throw new Error("Failed to fetch process configs");
   }
 
-  return await response.json();
+  const data = await response.json();
+  console.log(data);
+  return data;
 }
 
 export async function fetchProcessConfig(
@@ -399,8 +404,12 @@ export async function fetchProcessConfig(
   return await response.json();
 }
 
-export async function createProcessConfig(data: BOMProcessConfig) {
+export async function createProcessConfig(
+  data: Omit<BOMProcessConfig, "id" | "created_at" | "updated_at">
+) {
   const headers = await getAuthHeaders();
+
+  console.log(data);
 
   try {
     const response = await fetch(
@@ -413,12 +422,16 @@ export async function createProcessConfig(data: BOMProcessConfig) {
       }
     );
 
+    console.log(response);
+
     if (!response.ok) {
+      console.log(await response.json());
       throw new Error("Failed to create process config");
     }
+    const responseData = await response.json();
+    console.log(responseData);
 
-    revalidatePath("/manufacturing/process-configs");
-    return await response.json();
+    return responseData;
   } catch (error) {
     console.error("Error creating process config:", error);
     throw error;

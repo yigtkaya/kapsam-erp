@@ -32,13 +32,13 @@ export async function fetchProcessConfigs(): Promise<BOMProcessConfig[]> {
     }
   );
 
-  console.log(response);
-
   if (!response.ok) {
     throw new Error("Failed to fetch process configs");
   }
 
-  return response.json();
+  const data = await response.json();
+  console.log(data);
+  return data;
 }
 
 export async function fetchProcessConfig(

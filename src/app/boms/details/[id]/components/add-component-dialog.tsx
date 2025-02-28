@@ -16,6 +16,7 @@ import { Cog, Package, ArrowLeft, ListPlus } from "lucide-react";
 import { CreateProcessForm } from "@/app/manufacturing/processes/components/create-process-form";
 import { cn } from "@/lib/utils";
 import { ProcessProductForm } from "./process-product-form";
+import { ProcessConfigForm } from "@/app/manufacturing/process-configs/components/process-config-form";
 
 interface AddComponentDialogProps {
   bomId: number;
@@ -30,7 +31,7 @@ export function AddComponentDialog({
 }: AddComponentDialogProps) {
   const [open, setOpen] = useState(false);
   const [step, setStep] = useState<
-    "select" | "form" | "create-process" | "create-process-product"
+    "select" | "form" | "create-process-config" | "create-process-product"
   >("select");
   const [selectedType, setSelectedType] = useState<ComponentType | null>(null);
 
@@ -46,7 +47,7 @@ export function AddComponentDialog({
   };
 
   const handleCreateProcess = () => {
-    setStep("create-process");
+    setStep("create-process-config");
   };
 
   const handleCreateProcessProduct = () => {
@@ -74,15 +75,17 @@ export function AddComponentDialog({
       <DialogContent
         className={cn(
           "sm:max-w-[800px] max-h-[90vh] overflow-y-auto",
-          step === "create-process" ? "sm:max-w-[800px]" : "sm:max-w-[600px]"
+          step === "create-process-config"
+            ? "sm:max-w-[800px]"
+            : "sm:max-w-[600px]"
         )}
       >
         <DialogHeader>
           <DialogTitle>
             {step === "select"
               ? "Komponent Ekle"
-              : step === "create-process"
-              ? "Yeni Proses Oluştur"
+              : step === "create-process-config"
+              ? "Yeni Proses Yapılandırması Oluştur"
               : step === "create-process-product"
               ? "Yeni Proses Ürünü Oluştur"
               : selectedType === "PROCESS"
@@ -92,8 +95,8 @@ export function AddComponentDialog({
           <DialogDescription>
             {step === "select"
               ? "Eklemek istediğiniz komponentin tipini seçiniz"
-              : step === "create-process"
-              ? "Yeni bir proses oluşturun ve reçeteye ekleyin"
+              : step === "create-process-config"
+              ? "Yeni bir proses yapılandırması oluşturun ve reçeteye ekleyin"
               : step === "create-process-product"
               ? "Yeni bir proses ürünü oluşturun"
               : selectedType === "PROCESS"
@@ -133,7 +136,7 @@ export function AddComponentDialog({
               </div>
             </Button>
           </div>
-        ) : step === "create-process" ? (
+        ) : step === "create-process-config" ? (
           <div className="space-y-4">
             <Button
               variant="outline"
@@ -144,10 +147,7 @@ export function AddComponentDialog({
               <ArrowLeft className="h-4 w-4 mr-2" />
               Geri Dön
             </Button>
-            <CreateProcessForm
-              onSuccess={handleProcessCreated}
-              isDialog={true}
-            />
+            <ProcessConfigForm isDialog={true} />
           </div>
         ) : step === "create-process-product" ? (
           <div className="space-y-4">
@@ -170,7 +170,6 @@ export function AddComponentDialog({
                   bomId={bomId}
                   onClose={handleClose}
                   onCreateProcess={handleCreateProcess}
-                  onCreateProcessProduct={handleCreateProcessProduct}
                 />
               </div>
             )}
