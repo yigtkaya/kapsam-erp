@@ -1,8 +1,5 @@
 "use client";
 
-import { zodResolver } from "@hookform/resolvers/zod";
-import { useForm } from "react-hook-form";
-import * as z from "zod";
 import { Button } from "@/components/ui/button";
 import {
   Form,
@@ -15,7 +12,9 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { toast } from "sonner";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import * as z from "zod";
 import { useCreateProcessProduct } from "@/hooks/useProducts";
 import { useProducts } from "@/hooks/useProducts";
 import { Check, ChevronsUpDown, Plus, Pencil, X, Eye } from "lucide-react";
@@ -35,16 +34,16 @@ import {
 } from "@/components/ui/popover";
 import { useState } from "react";
 import { ProcessProduct } from "@/types/inventory";
-import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { toast } from "sonner";
 
-const processProductFormSchema = z.object({
-  product_code: z.string().min(1, "Ürün kodu gereklidir"),
+const processProductSchema = z.object({
   parent_product: z.number(),
   description: z.string().optional(),
   current_stock: z.number().default(0),
 });
 
-type ProcessProductFormValues = z.infer<typeof processProductFormSchema>;
+type ProcessProductFormValues = z.infer<typeof processProductSchema>;
 
 interface ProcessProductFormProps {
   onClose: () => void;
@@ -59,18 +58,22 @@ export function ProcessProductForm({ onClose }: ProcessProductFormProps) {
   const [openProduct, setOpenProduct] = useState(false);
 
   const form = useForm<ProcessProductFormValues>({
-    resolver: zodResolver(processProductFormSchema),
+    resolver: zodResolver(processProductSchema),
     defaultValues: {
-      product_code: "",
       parent_product: undefined,
       description: "",
       current_stock: 0,
     },
   });
 
+  const filteredProducts = products.filter(
+    (product) =>
+      product.product_type === "SEMI" || product.product_type === "SINGLE"
+  );
+
   const handleSubmit = async (values: ProcessProductFormValues) => {
     try {
-      const selectedProduct = products.find(
+      const selectedProduct = filteredProducts.find(
         (product) => product.id === values.parent_product
       );
 
@@ -80,7 +83,6 @@ export function ProcessProductForm({ onClose }: ProcessProductFormProps) {
       }
 
       const processProductData: Partial<ProcessProduct> = {
-        product_code: values.product_code,
         parent_product: values.parent_product,
         description: values.description,
         current_stock: values.current_stock,
@@ -98,136 +100,142 @@ export function ProcessProductForm({ onClose }: ProcessProductFormProps) {
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <FormField
-            control={form.control}
-            name="product_code"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Ürün kodu</FormLabel>
-                <FormControl>
-                  <Input {...field} placeholder="Örn: PRD-001" />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
+        <Card>
+          <CardHeader>
+            <CardTitle>Basic Information</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <FormField
+              control={form.control}
+              name="parent_product"
+              render={({ field }) => (
+                <FormItem className="flex flex-col">
+                  <FormLabel>Parent product:</FormLabel>
+                  <div className="flex gap-2">
+                    <Popover open={openProduct} onOpenChange={setOpenProduct}>
+                      <PopoverTrigger asChild>
+                        <FormControl>
+                          <Button
+                            variant="outline"
+                            role="combobox"
+                            aria-expanded={openProduct}
+                            className={cn(
+                              "justify-between w-full",
+                              !field.value && "text-muted-foreground"
+                            )}
+                            disabled={isLoadingProducts}
+                          >
+                            {field.value
+                              ? filteredProducts.find(
+                                  (product) => product.id === field.value
+                                )?.product_name || "---------"
+                              : "---------"}
+                            <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                          </Button>
+                        </FormControl>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-[400px] p-0">
+                        <Command>
+                          <CommandInput placeholder="Search product..." />
+                          <CommandEmpty>No product found.</CommandEmpty>
+                          <CommandList>
+                            <CommandGroup heading="Products">
+                              {filteredProducts.map((product) => (
+                                <CommandItem
+                                  key={product.id}
+                                  value={product.product_name}
+                                  onSelect={() => {
+                                    form.setValue("parent_product", product.id);
+                                    setOpenProduct(false);
+                                  }}
+                                >
+                                  <Check
+                                    className={cn(
+                                      "mr-2 h-4 w-4",
+                                      product.id === field.value
+                                        ? "opacity-100"
+                                        : "opacity-0"
+                                    )}
+                                  />
+                                  <div className="flex flex-col">
+                                    <span className="font-medium">
+                                      {product.product_name}
+                                    </span>
+                                    <span className="text-xs text-muted-foreground">
+                                      {product.product_code} (
+                                      {product.product_type})
+                                    </span>
+                                  </div>
+                                </CommandItem>
+                              ))}
+                            </CommandGroup>
+                          </CommandList>
+                        </Command>
+                      </PopoverContent>
+                    </Popover>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="icon"
+                      className="shrink-0"
+                    >
+                      <Eye className="h-4 w-4" />
+                    </Button>
+                  </div>
+                  <FormDescription>
+                    The parent product (SEMI or SINGLE) this process product
+                    belongs to
+                  </FormDescription>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
 
-          <FormField
-            control={form.control}
-            name="parent_product"
-            render={({ field }) => (
-              <FormItem className="flex flex-col">
-                <FormLabel>Ana ürün</FormLabel>
-                <FormDescription>
-                  Bu proses ürününün ait olduğu ana ürün
-                </FormDescription>
-                <div className="flex gap-2">
-                  <Popover open={openProduct} onOpenChange={setOpenProduct}>
-                    <PopoverTrigger asChild>
-                      <FormControl>
-                        <Button
-                          variant="outline"
-                          role="combobox"
-                          aria-expanded={openProduct}
-                          className={cn(
-                            "justify-between w-full",
-                            !field.value && "text-muted-foreground"
-                          )}
-                          disabled={isLoadingProducts}
-                        >
-                          {field.value
-                            ? products.find(
-                                (product) => product.id === field.value
-                              )?.product_name || "Ürün Seçin"
-                            : "Ürün Seçin"}
-                          <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                        </Button>
-                      </FormControl>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-[400px] p-0">
-                      <Command>
-                        <CommandInput placeholder="Ürün ara..." />
-                        <CommandEmpty>Ürün bulunamadı.</CommandEmpty>
-                        <CommandList>
-                          <CommandGroup heading="Ürünler">
-                            {products.map((product) => (
-                              <CommandItem
-                                key={product.id}
-                                value={product.product_name}
-                                onSelect={() => {
-                                  form.setValue("parent_product", product.id);
-                                  setOpenProduct(false);
-                                }}
-                              >
-                                <Check
-                                  className={cn(
-                                    "mr-2 h-4 w-4",
-                                    product.id === field.value
-                                      ? "opacity-100"
-                                      : "opacity-0"
-                                  )}
-                                />
-                                {product.product_name}
-                              </CommandItem>
-                            ))}
-                          </CommandGroup>
-                        </CommandList>
-                      </Command>
-                    </PopoverContent>
-                  </Popover>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="icon"
-                    className="shrink-0"
-                  >
-                    <Eye className="h-4 w-4" />
-                  </Button>
-                </div>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-        </div>
+            <FormField
+              control={form.control}
+              name="description"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Description:</FormLabel>
+                  <FormControl>
+                    <Textarea
+                      {...field}
+                      placeholder="Enter description..."
+                      className="min-h-[100px]"
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </CardContent>
+        </Card>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <FormField
-            control={form.control}
-            name="current_stock"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Mevcut stok</FormLabel>
-                <FormControl>
-                  <Input
-                    type="number"
-                    {...field}
-                    onChange={(e) => field.onChange(Number(e.target.value))}
-                    placeholder="Örn: 100"
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-          <FormField
-            control={form.control}
-            name="description"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Açıklama</FormLabel>
-                <FormControl>
-                  <Input
-                    {...field}
-                    placeholder="Proses ürünü hakkında açıklama..."
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-        </div>
+        <Card>
+          <CardHeader>
+            <CardTitle>Stock Information</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <FormField
+              control={form.control}
+              name="current_stock"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Current stock:</FormLabel>
+                  <FormControl>
+                    <Input
+                      type="number"
+                      {...field}
+                      onChange={(e) => field.onChange(Number(e.target.value))}
+                      placeholder="0"
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </CardContent>
+        </Card>
 
         <div className="flex justify-end gap-2">
           <Button type="button" variant="outline" onClick={onClose}>

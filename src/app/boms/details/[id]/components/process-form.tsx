@@ -153,9 +153,6 @@ export function ProcessForm({
               <ArrowLeft className="h-4 w-4" />
               Geri Dön
             </Button>
-            <h3 className="text-lg font-semibold">
-              Yeni Proses Yapılandırması
-            </h3>
           </div>
           <ProcessConfigForm
             processes={processes}
@@ -200,10 +197,17 @@ export function ProcessForm({
                               disabled={isLoadingProcessConfigs}
                             >
                               {field.value
-                                ? processConfigs.find(
-                                    (config) => config.id === field.value
-                                  )?.process_name ||
-                                  "Proses Yapılandırması Seçin"
+                                ? (() => {
+                                    const selectedConfig = processConfigs.find(
+                                      (config) => config.id === field.value
+                                    );
+                                    return selectedConfig
+                                      ? `${selectedConfig.process_name} - ${
+                                          selectedConfig.process_product_details
+                                            ?.product_code || "No Product"
+                                        }`
+                                      : "Proses Yapılandırması Seçin";
+                                  })()
                                 : "Proses Yapılandırması Seçin"}
                               <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                             </Button>
@@ -220,7 +224,12 @@ export function ProcessForm({
                                 {processConfigs.map((config) => (
                                   <CommandItem
                                     key={config.id}
-                                    value={`${config.process_name} ${config.process_code}`}
+                                    value={`${config.process_name} ${
+                                      config.process_code
+                                    } ${
+                                      config.process_product_details
+                                        ?.product_code || ""
+                                    }`}
                                     onSelect={() => {
                                       form.setValue(
                                         "process_config",
@@ -239,16 +248,22 @@ export function ProcessForm({
                                       )}
                                     />
                                     <div className="flex flex-col">
-                                      <span>
-                                        {config.process_name} -
+                                      <span className="font-medium">
+                                        {config.process_name} -{" "}
                                         {config.process_code}
-                                        {config.process_product_details
-                                          ?.product_code ||
-                                          config.raw_material_details
-                                            ?.material_code}
                                       </span>
                                       <span className="text-xs text-muted-foreground">
-                                        {config.machine_type}
+                                        {config.process_product_details
+                                          ? `Ürün: ${config.process_product_details?.product_code}`
+                                          : config.raw_material_details
+                                          ? `Hammadde: ${config.raw_material_details?.material_code}`
+                                          : "Malzeme Seçilmemiş"}
+                                      </span>
+                                      <span className="text-xs text-muted-foreground">
+                                        {config.machine_type}{" "}
+                                        {config.axis_count
+                                          ? `- ${config.axis_count}`
+                                          : ""}
                                       </span>
                                     </div>
                                   </CommandItem>
@@ -309,7 +324,7 @@ export function ProcessForm({
                           </FormControl>
                         </PopoverTrigger>
                         <PopoverContent
-                          className="min-w-[var(--radix-popover-trigger-width)] max-w-[var(--radix-popover-trigger-width)] p-0"
+                          className="w-[--radix-popover-trigger-width] p-0"
                           align="start"
                           sideOffset={4}
                         >

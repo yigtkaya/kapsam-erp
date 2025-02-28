@@ -11,6 +11,7 @@ export const processProductSchema = z.object({
     z.number().min(0, "Mevcut stok negatif olamaz")
   ),
   inventory_category: z.number().optional(),
+  parent_product: z.number().optional(),
   // Add additional fields here if necessary
 });
 

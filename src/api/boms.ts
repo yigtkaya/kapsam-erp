@@ -33,11 +33,13 @@ export async function fetchBOM(id: number): Promise<BOMResponse> {
   });
 
   if (!response.ok) {
+    console.log(response);
+    console.log(await response.json());
     throw new Error("Failed to fetch BOM");
   }
 
   const responseData = await response.json();
-
+  console.log(responseData);
   return responseData;
 }
 

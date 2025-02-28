@@ -56,7 +56,7 @@ export function useCreateProcessProduct() {
   return useMutation({
     mutationFn: createProcessProduct,
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["products"] });
+      queryClient.invalidateQueries({ queryKey: ["process-products"] });
     },
   });
 }

@@ -52,10 +52,11 @@ import {
 } from "@/components/ui/popover";
 import { useState } from "react";
 import { useProcessProducts } from "@/hooks/useProducts";
+import { ProcessProductDialog } from "@/app/boms/details/[id]/components/process-product-dialog";
 
 const processConfigSchema = z.object({
   process: z.number(),
-  process_product: z.number().optional(),
+  process_product: z.number(),
   axis_count: z.nativeEnum(AxisCount).optional(),
   estimated_duration_minutes: z.number().min(0).optional(),
   tooling_requirements: z.string().optional(),
@@ -84,6 +85,8 @@ export function ProcessConfigForm({
   const updateConfig = useUpdateProcessConfig();
   const [openProcess, setOpenProcess] = useState(false);
   const [openProcessProduct, setOpenProcessProduct] = useState(false);
+  const [openProcessProductDialog, setOpenProcessProductDialog] =
+    useState(false);
   const { data: processes_product = [], isLoading: isLoadingProcessesProduct } =
     useProcessProducts();
   const [selectedProcess, setSelectedProcess] =
@@ -267,11 +270,17 @@ export function ProcessConfigForm({
                         )}
                         disabled={isLoadingProcessesProduct}
                       >
-                        {field.value
-                          ? processes_product.find(
-                              (product) => product.id === field.value
-                            )?.parent_product_details.product_name ||
-                            "Proses Ürünü Seçin"
+                        {isLoadingProcessesProduct
+                          ? "Yükleniyor..."
+                          : field.value
+                          ? (() => {
+                              const product = processes_product.find(
+                                (product) => product.id === field.value
+                              );
+                              return product
+                                ? `${product.parent_product_details.product_name} (${product.parent_product_details.product_code}) - ${product.product_code}`
+                                : "Proses Ürünü Seçin";
+                            })()
                           : "Proses Ürünü Seçin"}
                         <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                       </Button>
@@ -287,13 +296,17 @@ export function ProcessConfigForm({
                         placeholder="Proses ürünü ara..."
                         className="h-9"
                       />
-                      <CommandEmpty>Proses ürünü bulunamadı.</CommandEmpty>
+                      <CommandEmpty>
+                        {isLoadingProcessesProduct
+                          ? "Yükleniyor..."
+                          : "Proses ürünü bulunamadı."}
+                      </CommandEmpty>
                       <CommandList className="max-h-[200px] overflow-y-auto">
                         <CommandGroup heading="Proses Ürünleri">
                           {processes_product.map((product) => (
                             <CommandItem
                               key={product.id}
-                              value={`${product.parent_product_details.product_name} ${product.parent_product_details.product_code}`}
+                              value={`${product.parent_product_details.product_name} ${product.parent_product_details.product_code} ${product.product_code}`}
                               onSelect={() => {
                                 form.setValue("process_product", product.id);
                                 setOpenProcessProduct(false);
@@ -308,10 +321,12 @@ export function ProcessConfigForm({
                                 )}
                               />
                               <div className="flex flex-col">
-                                <span>
-                                  {product.parent_product_details.product_name}
+                                <span className="font-medium">
+                                  {product.parent_product_details.product_name}{" "}
+                                  ({product.product_code})
                                 </span>
                                 <span className="text-xs text-muted-foreground">
+                                  Proses Stok Kodu:{" "}
                                   {product.parent_product_details.product_code}
                                 </span>
                               </div>
@@ -322,9 +337,21 @@ export function ProcessConfigForm({
                     </Command>
                   </PopoverContent>
                 </Popover>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="icon"
+                  onClick={() => setOpenProcessProductDialog(true)}
+                  title="Yeni Proses Ürünü Oluştur"
+                  className="hover:bg-green-50 hover:border-green-200 transition-colors"
+                >
+                  <Plus className="h-4 w-4" />
+                </Button>
               </div>
               <FormDescription>
-                Bu proses yapılandırması için kullanılacak proses ürününü seçin
+                Bu proses yapılandırması için kullanılacak proses ürününü seçin.
+                Proses ürünü, bu süreçte işlenecek veya üretilecek olan ürünü
+                temsil eder.
               </FormDescription>
               <FormMessage />
             </FormItem>
@@ -436,6 +463,11 @@ export function ProcessConfigForm({
           </Button>
         </div>
       </form>
+
+      <ProcessProductDialog
+        open={openProcessProductDialog}
+        onOpenChange={setOpenProcessProductDialog}
+      />
     </Form>
   );
 }

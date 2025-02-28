@@ -14,8 +14,8 @@ import {
   ProcessProductFormData,
   processProductSchema,
 } from "@/app/warehouse/process/new/form";
-import { useCreateProduct } from "@/hooks/useProducts";
-import { Product } from "@/types/inventory";
+import { useCreateProcessProduct, useProducts } from "@/hooks/useProducts";
+import { ProcessProduct, Product } from "@/types/inventory";
 import { toast } from "sonner";
 import {
   Form,
@@ -24,8 +24,24 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
+  FormDescription,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
+import { Check, ChevronsUpDown } from "lucide-react";
+import { cn } from "@/lib/utils";
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+} from "@/components/ui/command";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 
 interface ProcessProductDialogProps {
   open: boolean;
@@ -36,7 +52,11 @@ export function ProcessProductDialog({
   open,
   onOpenChange,
 }: ProcessProductDialogProps) {
-  const { mutateAsync: createProduct } = useCreateProduct();
+  const { mutateAsync: createProcessProduct } = useCreateProcessProduct();
+  const [openParentProduct, setOpenParentProduct] = useState(false);
+  const { data: products = [], isLoading: isLoadingProducts } = useProducts({
+    product_type: "SEMI",
+  });
 
   const form = useForm<ProcessProductFormData>({
     resolver: zodResolver(processProductSchema),
@@ -47,21 +67,32 @@ export function ProcessProductDialog({
       description: "",
       current_stock: 0,
       inventory_category: 2,
+      parent_product: undefined,
     },
   });
 
   const onSubmit = async (data: ProcessProductFormData) => {
     try {
-      const response = await createProduct(data as unknown as Product);
-      if (response.success) {
+      if (!data.parent_product) {
+        toast.error("Ana ürün seçilmesi zorunludur");
+        return;
+      }
+
+      const processProductData: Partial<ProcessProduct> = {
+        parent_product: data.parent_product,
+        product_code: data.product_code,
+        description: data.description,
+        current_stock: data.current_stock,
+      };
+
+      const response = await createProcessProduct(
+        processProductData as ProcessProduct
+      );
+
+      if (response) {
         toast.success("Yarı Mamül ürün başarıyla oluşturuldu");
         onOpenChange(false);
         form.reset();
-      } else {
-        const error = await response.data;
-        toast.error("Ürün oluşturulamadı", {
-          description: error,
-        });
       }
     } catch (error) {
       toast.error("Form gönderilirken hata oluştu", {
@@ -79,6 +110,98 @@ export function ProcessProductDialog({
         </DialogHeader>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+            <FormField
+              control={form.control}
+              name="parent_product"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Ana Ürün</FormLabel>
+                  <div className="flex gap-2">
+                    <Popover
+                      open={openParentProduct}
+                      onOpenChange={setOpenParentProduct}
+                    >
+                      <PopoverTrigger asChild>
+                        <FormControl>
+                          <Button
+                            variant="outline"
+                            role="combobox"
+                            aria-expanded={openParentProduct}
+                            className={cn(
+                              "justify-between w-full",
+                              !field.value && "text-muted-foreground"
+                            )}
+                            disabled={isLoadingProducts}
+                          >
+                            {isLoadingProducts
+                              ? "Yükleniyor..."
+                              : field.value
+                              ? products.find(
+                                  (product) => product.id === field.value
+                                )?.product_name || "Ana Ürün Seçin"
+                              : "Ana Ürün Seçin"}
+                            <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                          </Button>
+                        </FormControl>
+                      </PopoverTrigger>
+                      <PopoverContent
+                        className="w-[--radix-popover-trigger-width] p-0"
+                        align="start"
+                        sideOffset={4}
+                      >
+                        <Command className="w-full">
+                          <CommandInput
+                            placeholder="Ana ürün ara..."
+                            className="h-9"
+                          />
+                          <CommandEmpty>
+                            {isLoadingProducts
+                              ? "Yükleniyor..."
+                              : "Ana ürün bulunamadı."}
+                          </CommandEmpty>
+                          <CommandList className="max-h-[200px] overflow-y-auto">
+                            <CommandGroup heading="Ana Ürünler">
+                              {products.map((product) => (
+                                <CommandItem
+                                  key={product.id}
+                                  value={`${product.product_name} ${product.product_code}`}
+                                  onSelect={() => {
+                                    form.setValue("parent_product", product.id);
+                                    setOpenParentProduct(false);
+                                  }}
+                                >
+                                  <Check
+                                    className={cn(
+                                      "mr-2 h-4 w-4",
+                                      product.id === field.value
+                                        ? "opacity-100"
+                                        : "opacity-0"
+                                    )}
+                                  />
+                                  <div className="flex flex-col">
+                                    <span className="font-medium">
+                                      {product.product_name}
+                                    </span>
+                                    <span className="text-xs text-muted-foreground">
+                                      {product.product_code}
+                                    </span>
+                                  </div>
+                                </CommandItem>
+                              ))}
+                            </CommandGroup>
+                          </CommandList>
+                        </Command>
+                      </PopoverContent>
+                    </Popover>
+                  </div>
+                  <FormDescription>
+                    Bu proses ürününün bağlı olacağı ana ürünü seçin
+                  </FormDescription>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
             <FormField
               control={form.control}
               name="product_code"
