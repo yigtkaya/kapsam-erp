@@ -51,14 +51,14 @@ const modules = [
     color: "bg-green-500",
     roles: ["ADMIN"],
   },
-  {
-    title: "Manufacturing (CREATION)",
-    description: "Üretim süreçlerinin takibi ve yönetimi",
-    icon: FolderKanban,
-    href: "/manufacturing",
-    color: "bg-green-500",
-    roles: ["ADMIN"],
-  },
+  // {
+  //   title: "Manufacturing (CREATION)",
+  //   description: "Üretim süreçlerinin takibi ve yönetimi",
+  //   icon: FolderKanban,
+  //   href: "/manufacturing",
+  //   color: "bg-green-500",
+  //   roles: ["ADMIN"],
+  // },
   {
     title: "Ürün Reçeteleri",
     description: "Ürün reçetelerinin takibi ve yönetimi",
