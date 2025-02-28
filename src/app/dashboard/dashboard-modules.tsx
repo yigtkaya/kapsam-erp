@@ -174,7 +174,7 @@ const modules = [
   },
   {
     title: "FAI",
-    description: "Ölçüm cihazlarının kalibrasyon takibi",
+    description: "İlk parça üretimi",
     icon: Gauge,
     href: "/quality/documentation",
     color: "bg-yellow-500",
@@ -182,7 +182,7 @@ const modules = [
   },
   {
     title: "Kalibrasyon",
-    description: "Satın alma işlemlerinin takibi",
+    description: "Ölçüm cihazlarının kalibrasyon takibi",
     icon: Barcode,
     href: "/purchasing",
     color: "bg-yellow-500",
