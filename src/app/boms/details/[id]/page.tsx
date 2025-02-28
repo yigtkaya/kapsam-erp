@@ -87,6 +87,7 @@ export default function BOMDetailsPage() {
         <PageHeader
           title="Reçete Detayları"
           description="Reçete detaylarını görüntüleyin ve düzenleyin"
+          showBackButton
         />
         <div className="flex gap-2">
           {isEditing ? (

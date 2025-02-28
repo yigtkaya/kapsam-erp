@@ -14,6 +14,7 @@ import { ProcessForm } from "./process-form";
 import { ProductForm } from "./product-form";
 import { Cog, Package, ArrowLeft, ListPlus } from "lucide-react";
 import { CreateProcessForm } from "@/app/manufacturing/processes/components/create-process-form";
+import { cn } from "@/lib/utils";
 
 interface AddComponentDialogProps {
   bomId: number;
@@ -27,7 +28,9 @@ export function AddComponentDialog({
   trigger,
 }: AddComponentDialogProps) {
   const [open, setOpen] = useState(false);
-  const [step, setStep] = useState<"select" | "form" | "create-process">("select");
+  const [step, setStep] = useState<"select" | "form" | "create-process">(
+    "select"
+  );
   const [selectedType, setSelectedType] = useState<ComponentType | null>(null);
 
   const handleTypeSelect = (type: ComponentType) => {
@@ -63,25 +66,30 @@ export function AddComponentDialog({
           </Button>
         )}
       </DialogTrigger>
-      <DialogContent className={step === "create-process" ? "sm:max-w-[600px]" : "sm:max-w-[425px]"}>
+      <DialogContent
+        className={cn(
+          "sm:max-w-[800px] max-h-[90vh] overflow-y-auto",
+          step === "create-process" ? "sm:max-w-[800px]" : "sm:max-w-[600px]"
+        )}
+      >
         <DialogHeader>
           <DialogTitle>
             {step === "select"
               ? "Komponent Ekle"
               : step === "create-process"
-                ? "Yeni Proses Oluştur"
-                : selectedType === "PROCESS"
-                  ? "Proses Ekle"
-                  : "Mamül Ekle"}
+              ? "Yeni Proses Oluştur"
+              : selectedType === "PROCESS"
+              ? "Proses Ekle"
+              : "Mamül Ekle"}
           </DialogTitle>
           <DialogDescription>
             {step === "select"
               ? "Eklemek istediğiniz komponentin tipini seçiniz"
               : step === "create-process"
-                ? "Yeni bir proses oluşturun ve reçeteye ekleyin"
-                : selectedType === "PROCESS"
-                  ? "Proses detaylarını doldurunuz"
-                  : "Mamül detaylarını doldurunuz"}
+              ? "Yeni bir proses oluşturun ve reçeteye ekleyin"
+              : selectedType === "PROCESS"
+              ? "Proses detaylarını doldurunuz"
+              : "Mamül detaylarını doldurunuz"}
           </DialogDescription>
         </DialogHeader>
 
@@ -96,7 +104,9 @@ export function AddComponentDialog({
               <Cog className="h-8 w-8 text-green-600" />
               <div className="flex flex-col items-center">
                 <span className="font-medium">Proses</span>
-                <span className="text-xs text-muted-foreground mt-1">İşlem veya operasyon ekle</span>
+                <span className="text-xs text-muted-foreground mt-1">
+                  İşlem veya operasyon ekle
+                </span>
               </div>
             </Button>
             <Button
@@ -108,7 +118,9 @@ export function AddComponentDialog({
               <Package className="h-8 w-8 text-blue-600" />
               <div className="flex flex-col items-center">
                 <span className="font-medium">Mamül</span>
-                <span className="text-xs text-muted-foreground mt-1">Ürün veya malzeme ekle</span>
+                <span className="text-xs text-muted-foreground mt-1">
+                  Ürün veya malzeme ekle
+                </span>
               </div>
             </Button>
           </div>

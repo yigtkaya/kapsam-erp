@@ -51,6 +51,7 @@ import { useProcessProducts } from "@/hooks/useProducts";
 
 const processFormSchema = z.object({
   process_config: z.number(),
+  process_product: z.number(),
   sequence_order: z.number().min(1, "Sıra numarası gereklidir"),
   raw_material: z.number().nullable(),
   axis_count: z.nativeEnum(AxisCount).optional(),
@@ -86,12 +87,14 @@ export function ProcessForm({
   const { mutateAsync: createComponent, isPending: isCreating } =
     useCreateProcessComponent();
   const [openProcessConfig, setOpenProcessConfig] = useState(false);
+  const [openProcessProduct, setOpenProcessProduct] = useState(false);
   const [openRawMaterial, setOpenRawMaterial] = useState(false);
 
   const form = useForm<ProcessFormValues>({
     resolver: zodResolver(processFormSchema),
     defaultValues: {
       sequence_order: 1,
+      process_product: undefined,
       raw_material: null,
       axis_count: undefined,
       estimated_duration_minutes: undefined,
@@ -129,6 +132,7 @@ export function ProcessForm({
             tooling_requirements: values.tooling_requirements,
             quality_checks: values.quality_checks,
           },
+          process_product: values.process_product,
         },
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
@@ -182,22 +186,25 @@ export function ProcessForm({
                       </FormControl>
                     </PopoverTrigger>
                     <PopoverContent
-                      className="p-0 w-[--radix-popover-trigger-width] min-w-[240px]"
+                      className="min-w-[var(--radix-popover-trigger-width)] max-w-[var(--radix-popover-trigger-width)] p-0"
                       align="start"
                       sideOffset={4}
                     >
-                      <Command className="max-h-[300px] overflow-hidden">
-                        <CommandInput placeholder="Proses ara..." />
+                      <Command className="w-full">
+                        <CommandInput
+                          placeholder="Proses ara..."
+                          className="h-9"
+                        />
                         <CommandEmpty>
                           Proses bulunamadı. Yeni bir proses oluşturmak için
-                          aşağıdaki butona tıklayın.
+                          sağdaki butona tıklayın.
                         </CommandEmpty>
                         <CommandList className="max-h-[200px] overflow-y-auto">
                           <CommandGroup heading="Prosesler">
                             {processes.map((process) => (
                               <CommandItem
                                 key={process.id}
-                                value={process.process_name}
+                                value={`${process.process_name} ${process.process_code}`}
                                 onSelect={() => {
                                   form.setValue("process_config", process.id);
                                   setOpenProcessConfig(false);
@@ -244,6 +251,96 @@ export function ProcessForm({
 
           <FormField
             control={form.control}
+            name="process_product"
+            render={({ field }) => (
+              <FormItem className="flex flex-col col-span-2">
+                <FormLabel>Proses Ürünü</FormLabel>
+                <div className="flex gap-2">
+                  <Popover
+                    open={openProcessProduct}
+                    onOpenChange={setOpenProcessProduct}
+                  >
+                    <PopoverTrigger asChild>
+                      <FormControl>
+                        <Button
+                          variant="outline"
+                          role="combobox"
+                          aria-expanded={openProcessProduct}
+                          className={cn(
+                            "justify-between w-full",
+                            !field.value && "text-muted-foreground"
+                          )}
+                          disabled={isLoadingProcessesProduct}
+                        >
+                          {field.value
+                            ? processes_product.find(
+                                (product) => product.id === field.value
+                              )?.parent_product_details.product_name ||
+                              "Proses Ürünü Seçin"
+                            : "Proses Ürünü Seçin"}
+                          <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                        </Button>
+                      </FormControl>
+                    </PopoverTrigger>
+                    <PopoverContent
+                      className="min-w-[var(--radix-popover-trigger-width)] max-w-[var(--radix-popover-trigger-width)] p-0"
+                      align="start"
+                      sideOffset={4}
+                    >
+                      <Command className="w-full">
+                        <CommandInput
+                          placeholder="Proses ürünü ara..."
+                          className="h-9"
+                        />
+                        <CommandEmpty>Proses ürünü bulunamadı.</CommandEmpty>
+                        <CommandList className="max-h-[200px] overflow-y-auto">
+                          <CommandGroup heading="Proses Ürünleri">
+                            {processes_product.map((product) => (
+                              <CommandItem
+                                key={product.id}
+                                value={`${product.parent_product_details.product_name} ${product.parent_product_details.product_code}`}
+                                onSelect={() => {
+                                  form.setValue("process_product", product.id);
+                                  setOpenProcessProduct(false);
+                                }}
+                              >
+                                <Check
+                                  className={cn(
+                                    "mr-2 h-4 w-4",
+                                    product.id === field.value
+                                      ? "opacity-100"
+                                      : "opacity-0"
+                                  )}
+                                />
+                                <div className="flex flex-col">
+                                  <span>
+                                    {
+                                      product.parent_product_details
+                                        .product_name
+                                    }
+                                  </span>
+                                  <span className="text-xs text-muted-foreground">
+                                    {
+                                      product.parent_product_details
+                                        .product_code
+                                    }
+                                  </span>
+                                </div>
+                              </CommandItem>
+                            ))}
+                          </CommandGroup>
+                        </CommandList>
+                      </Command>
+                    </PopoverContent>
+                  </Popover>
+                </div>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={form.control}
             name="raw_material"
             render={({ field }) => (
               <FormItem className="flex flex-col col-span-2">
@@ -275,19 +372,22 @@ export function ProcessForm({
                       </FormControl>
                     </PopoverTrigger>
                     <PopoverContent
-                      className="p-0 w-[--radix-popover-trigger-width] min-w-[240px]"
+                      className="min-w-[var(--radix-popover-trigger-width)] max-w-[var(--radix-popover-trigger-width)] p-0"
                       align="start"
                       sideOffset={4}
                     >
-                      <Command className="max-h-[300px] overflow-hidden">
-                        <CommandInput placeholder="Hammadde ara..." />
+                      <Command className="w-full">
+                        <CommandInput
+                          placeholder="Hammadde ara..."
+                          className="h-9"
+                        />
                         <CommandEmpty>Hammadde bulunamadı.</CommandEmpty>
                         <CommandList className="max-h-[200px] overflow-y-auto">
                           <CommandGroup heading="Hammaddeler">
                             {rawMaterials.map((material) => (
                               <CommandItem
                                 key={material.id}
-                                value={material.material_name}
+                                value={`${material.material_name} ${material.material_code}`}
                                 onSelect={() => {
                                   form.setValue("raw_material", material.id);
                                   setOpenRawMaterial(false);

@@ -16,6 +16,7 @@ export default function BOMsPage() {
       <PageHeader
         title="Reçeteler"
         description="Ürün reçetelerini görüntüleyin ve yönetin"
+        showBackButton
         action={
           <Link href="/boms/new">
             <Button className="gap-1.5">
