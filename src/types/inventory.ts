@@ -53,6 +53,8 @@ export interface Product {
   product_name: string;
   product_type: ProductType;
   description?: string;
+  multicode?: number;
+  project_name?: string;
   current_stock: number;
   created_at: string;
   modified_at: string;

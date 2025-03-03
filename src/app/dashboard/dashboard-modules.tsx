@@ -60,6 +60,14 @@ const modules = [
   //   roles: ["ADMIN"],
   // },
   {
+    title: "Stok Tanıtım Kartları",
+    description: "Stok tanıtım kartlarının takibi ve yönetimi",
+    icon: Workflow,
+    href: "/stock-cards",
+    color: "bg-blue-100",
+    roles: ["ADMIN"],
+  },
+  {
     title: "Ürün Reçeteleri",
     description: "Ürün reçetelerinin takibi ve yönetimi",
     icon: Workflow,

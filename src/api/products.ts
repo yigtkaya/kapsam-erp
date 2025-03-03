@@ -155,6 +155,8 @@ export const createProduct = async (product: Product) => {
     product_name: product.product_name,
     product_type: product.product_type,
     description: product.description,
+    project_name: product.project_name,
+    multicode: product.multicode,
     current_stock: product.current_stock,
     inventory_category: product.inventory_category,
   };
