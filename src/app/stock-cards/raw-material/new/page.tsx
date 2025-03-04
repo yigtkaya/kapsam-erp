@@ -91,7 +91,7 @@ export default function NewRawMaterialPage() {
       };
       await createMaterial.mutateAsync(payload as unknown as RawMaterial);
       toast.success("Hammadde başarıyla oluşturuldu");
-      router.push("/stock-cards/raw-material");
+      router.back();
     } catch (error) {
       toast.error("Hammadde oluşturulurken bir hata oluştu");
     }

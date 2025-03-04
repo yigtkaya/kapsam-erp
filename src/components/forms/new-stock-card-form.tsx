@@ -104,7 +104,6 @@ export function NewStockCardForm() {
       onSuccess: () => {
         toast.success("Stok kartı başarıyla oluşturuldu");
         router.back();
-        router.refresh();
       },
       onError: (error) => {
         toast.error("Stok kartı oluşturulurken bir hata oluştu");

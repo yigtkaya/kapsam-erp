@@ -23,14 +23,15 @@ import {
   AxisCount,
 } from "@/types/manufacture";
 import { z } from "zod";
-import { createMachineAction } from "@/app/maintanence/machines/actions";
 import {
-  SelectTrigger,
-  SelectValue,
+  Select,
   SelectContent,
   SelectItem,
-} from "@radix-ui/react-select";
-import { Select } from "react-day-picker";
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { useCreateMachine } from "@/hooks/useMachines";
+import { PageHeader } from "@/components/ui/page-header";
 
 const machineSchema = z.object({
   machine_code: z.string().nonempty("Makine kodu zorunludur"),
@@ -66,7 +67,7 @@ type FormValues = z.infer<typeof machineSchema>;
 
 export default function NewMachinePage() {
   const router = useRouter();
-
+  const { mutate: createMachine } = useCreateMachine();
   const form = useForm<FormValues>({
     resolver: zodResolver(machineSchema),
     defaultValues: {
@@ -99,6 +100,12 @@ export default function NewMachinePage() {
     try {
       console.log("Form values:", values); // Debug log
 
+      // Calculate next maintenance date
+      const nextMaintenanceDate = new Date();
+      nextMaintenanceDate.setDate(
+        nextMaintenanceDate.getDate() + values.maintenance_interval
+      );
+
       const machineData = {
         machine_code: values.machine_code,
         machine_type: values.machine_type,
@@ -117,7 +124,7 @@ export default function NewMachinePage() {
         tool_count: values.tool_count || 0,
         nc_control_unit: values.nc_control_unit || "",
         manufacturing_year: values.manufacturing_year
-          ? values.manufacturing_year.toISOString().split("T")[0]
+          ? values.manufacturing_year.toISOString().split("T")[0] // Format as YYYY-MM-DD
           : null,
         machine_weight_kg: values.machine_weight_kg || 0,
         max_part_size: values.max_part_size || "",
@@ -126,38 +133,43 @@ export default function NewMachinePage() {
         maintenance_interval: values.maintenance_interval,
         serial_number: "",
         last_maintenance_date: null,
-        next_maintenance_date: new Date(
-          Date.now() + values.maintenance_interval * 24 * 60 * 60 * 1000
-        ),
+        next_maintenance_date: nextMaintenanceDate.toISOString().split("T")[0], // Format as YYYY-MM-DD
         maintenance_notes: "",
         // These fields will be filled by the server
         id: 0, // Temporary ID that will be replaced by the server
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
+        created_at: new Date().toISOString().split("T")[0], // Format as YYYY-MM-DD
+        updated_at: new Date().toISOString().split("T")[0], // Format as YYYY-MM-DD
       };
 
-      console.log("About to call createMachineAction"); // Debug log
-      console.log("Request payload:", machineData); // Debug log
-
-      const response = await createMachineAction(machineData as Machine);
-      console.log("Response:", response); // Debug log
-
-      if (response.success) {
-        toast.success("Makine başarıyla oluşturuldu");
-        router.push("/maintanence/machines");
-      } else {
-        console.error("API Error:", response); // Debug log
-        toast.error(response.message || "Makine oluşturulamadı");
-      }
+      createMachine(machineData as Machine, {
+        onSuccess: () => {
+          toast.success("Makine başarıyla oluşturuldu");
+          // Force a router refresh before navigation
+          router.refresh();
+          // Use push instead of back to ensure proper navigation
+        },
+        onError: (error) => {
+          toast.error(
+            error instanceof Error
+              ? error.message
+              : "Makine oluşturulurken bir hata oluştu"
+          );
+          console.error("API Error:", error);
+        },
+      });
     } catch (error) {
-      console.error("Form submission error:", error); // Debug log
-      toast.error("Form gönderilirken hata oluştu");
+      console.error("Form submission error:", error);
+      toast.error("Form gönderilirken beklenmeyen bir hata oluştu");
     }
   };
 
   return (
     <div className="container py-8">
-      <h1 className="text-2xl font-bold mb-4">Yeni Makine Ekle</h1>
+      <PageHeader
+        title="Yeni Makine Ekle"
+        description="Makine bilgilerini giriniz"
+        showBackButton
+      />
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
           <div>
@@ -185,7 +197,7 @@ export default function NewMachinePage() {
                   <FormItem>
                     <FormLabel>Makine Tipi</FormLabel>
                     <Select
-                      onVolumeChange={field.onChange}
+                      onValueChange={field.onChange}
                       defaultValue={field.value}
                     >
                       <FormControl>
@@ -240,7 +252,7 @@ export default function NewMachinePage() {
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Eksen Sayısı</FormLabel>
-                    <Select onVolumeChange={field.onChange} value={field.value}>
+                    <Select onValueChange={field.onChange} value={field.value}>
                       <FormControl>
                         <SelectTrigger>
                           <SelectValue placeholder="Eksen sayısı seçin" />
@@ -266,7 +278,7 @@ export default function NewMachinePage() {
                   <FormItem>
                     <FormLabel>Durum</FormLabel>
                     <Select
-                      onVolumeChange={field.onChange}
+                      onValueChange={field.onChange}
                       defaultValue={field.value}
                     >
                       <FormControl>

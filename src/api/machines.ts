@@ -59,6 +59,8 @@ export const createMachine = async (machine: Machine) => {
   const tokenMatch = rawCSRFCookie.match(/csrftoken=([^;]+)/);
   const csrftoken = tokenMatch ? tokenMatch[1] : rawCSRFCookie;
 
+  console.log(machine);
+
   const response = await fetch(`${API_URL}/api/manufacturing/machines/`, {
     method: "POST",
     body: JSON.stringify(machine),
@@ -72,14 +74,20 @@ export const createMachine = async (machine: Machine) => {
     },
   });
 
-  if (!response.ok) {
-    return {
-      success: false,
-      message: "Failed to create machine",
-    };
-  }
-
   const data = await response.json();
+  console.log("API Response:", response.status, data);
+
+  if (!response.ok) {
+    // Convert the error object to a readable message
+    const errorMessage =
+      typeof data === "object"
+        ? Object.entries(data)
+            .map(([key, value]) => `${key}: ${value}`)
+            .join(", ")
+        : "Makine oluşturulurken bir hata oluştu";
+
+    throw new Error(errorMessage);
+  }
 
   return {
     success: true,

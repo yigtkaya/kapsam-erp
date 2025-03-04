@@ -27,17 +27,22 @@ import {
 
 import { DataTableToolbar } from "./data-table-toolbar";
 import { DataTablePagination } from "@/components/ui/data-table-pagination";
+import { PaginationControl } from "@/components/ui/pagination-control";
 
 interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[];
   data: TData[];
-  isLoading?: boolean;
+  currentPage: number;
+  pageCount: number;
+  onPageChange: (page: number) => void;
 }
 
 export function DataTable<TData, TValue>({
   columns,
   data,
-  isLoading,
+  currentPage,
+  pageCount,
+  onPageChange,
 }: DataTableProps<TData, TValue>) {
   const [rowSelection, setRowSelection] = React.useState({});
   const [columnVisibility, setColumnVisibility] =
@@ -93,16 +98,7 @@ export function DataTable<TData, TValue>({
             ))}
           </TableHeader>
           <TableBody>
-            {isLoading ? (
-              <TableRow>
-                <TableCell
-                  colSpan={columns.length}
-                  className="h-24 text-center"
-                >
-                  Yükleniyor...
-                </TableCell>
-              </TableRow>
-            ) : table.getRowModel().rows?.length ? (
+            {table.getRowModel().rows?.length ? (
               table.getRowModel().rows.map((row) => (
                 <TableRow
                   key={row.id}
@@ -131,7 +127,12 @@ export function DataTable<TData, TValue>({
           </TableBody>
         </Table>
       </div>
-      <DataTablePagination table={table} />
+      <PaginationControl
+        currentPage={currentPage}
+        totalItems={data.length}
+        pageSize={Math.ceil(data.length / pageCount)}
+        onPageChange={onPageChange}
+      />
     </div>
   );
 }

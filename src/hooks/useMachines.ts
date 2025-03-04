@@ -29,6 +29,7 @@ export function useCreateMachine() {
     mutationFn: createMachine,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["machines"] });
+      queryClient.invalidateQueries({ queryKey: ["machine"] });
     },
   });
 }

@@ -47,31 +47,29 @@ export interface BaseModel {
 // Main interfaces
 export interface Machine extends BaseModel {
   machine_code: string;
-  machine_name: string;
   machine_type: MachineType;
-  brand?: string;
-  model?: string;
-  axis_count?: AxisCount;
+  brand?: string | null;
+  model?: string | null;
+  axis_count?: AxisCount | null;
   internal_cooling?: number | null;
   motor_power_kva?: number | null;
-  holder_type?: string;
+  holder_type?: string | null;
   spindle_motor_power_10_percent_kw?: number | null;
   spindle_motor_power_30_percent_kw?: number | null;
   power_hp?: number | null;
   spindle_speed_rpm?: number | null;
   tool_count?: number | null;
-  nc_control_unit?: string;
+  nc_control_unit?: string | null;
   manufacturing_year: string | null;
-  serial_number?: string;
+  serial_number?: string | null;
   machine_weight_kg?: number | null;
-  max_part_size?: string;
-  description?: string;
+  max_part_size?: string | null;
+  description?: string | null;
   status: MachineStatus;
   maintenance_interval: number;
-  last_maintenance_date: Date | null;
-  next_maintenance_date: Date | null;
-  maintenance_notes?: string;
-  category_display?: string;
+  last_maintenance_date: string | null;
+  next_maintenance_date: string | null;
+  maintenance_notes?: string | null;
 }
 
 export interface ManufacturingProcess extends BaseModel {
@@ -192,4 +190,26 @@ export interface WorkOrderOutput extends BaseModel {
   notes?: string;
   quarantine_reason?: string;
   inspection_required: boolean;
+}
+
+// Helper function to calculate next maintenance date
+export function calculateNextMaintenanceDate(machine: Machine): Date | null {
+  if (machine.last_maintenance_date) {
+    const lastDate = new Date(machine.last_maintenance_date);
+    return new Date(
+      lastDate.setDate(lastDate.getDate() + machine.maintenance_interval)
+    );
+  }
+  return null;
+}
+
+// String representation helper
+export function getMachineDisplayString(machine: Machine): string {
+  return `${machine.machine_code} - ${machine.machine_type}`;
+}
+
+// Type guard to check if a machine needs maintenance
+export function needsMaintenance(machine: Machine): boolean {
+  if (!machine.next_maintenance_date) return false;
+  return new Date() >= new Date(machine.next_maintenance_date);
 }

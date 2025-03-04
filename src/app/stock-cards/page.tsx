@@ -11,6 +11,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ProductView } from "./components/product-view";
 import { RawMaterialView } from "./components/raw-material-view";
 import { useSearchParams, useRouter, usePathname } from "next/navigation";
+import { CreateStockCardDialog } from "./components/create-stock-card-dialog";
 
 // Product type order mapping for consistent sorting
 const productTypeOrder = {
@@ -216,14 +217,8 @@ export default function StockCardsPage() {
         title="Stok Tanıtım Kartları"
         description="Stok tanıtım kartlarının takibi ve yönetimi"
         showBackButton
-        action={
-          <Link href="/stock-cards/new">
-            <Button className="gap-1.5">
-              <Plus className="h-4 w-4" />
-              Yeni Stok Tanıtım Kartı
-            </Button>
-          </Link>
-        }
+        onBack={() => router.replace("/dashboard")}
+        action={<CreateStockCardDialog />}
       />
 
       <Tabs value={tab} onValueChange={handleTabChange}>

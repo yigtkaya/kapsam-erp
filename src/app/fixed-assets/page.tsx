@@ -85,7 +85,6 @@ export default function FixedAssetsPage() {
     let filtered = machines.filter((machine) => {
       const searchLower = query.toLowerCase();
       return (
-        machine.machine_name.toLowerCase().includes(searchLower) ||
         machine.machine_code.toLowerCase().includes(searchLower) ||
         machine.description?.toLowerCase().includes(searchLower) ||
         false
@@ -95,10 +94,6 @@ export default function FixedAssetsPage() {
     // Then, sort the filtered results
     return filtered.sort((a, b) => {
       switch (sort) {
-        case "name_asc":
-          return a.machine_name.localeCompare(b.machine_name);
-        case "name_desc":
-          return b.machine_name.localeCompare(a.machine_name);
         case "code_asc":
           return a.machine_code.localeCompare(b.machine_code);
         case "code_desc":
@@ -119,6 +114,7 @@ export default function FixedAssetsPage() {
         title="Demirbaş Tanıtım Kartları"
         description="Demirbaş tanıtım kartlarının takibi ve yönetimi"
         showBackButton
+        onBack={() => router.replace("/dashboard")}
         action={
           <Link href="/fixed-assets/new">
             <Button className="gap-1.5">
