@@ -24,14 +24,14 @@ export default function FinishedProductsPage() {
           description="Montajlı ürünleri ve tekil parçaları görüntüleyin ve yönetin"
           showBackButton
         />
-        <Link href={`/warehouse/${activeTab}/new/`}>
+        {/* <Link href={`/warehouse/${activeTab}/new/`}>
           <Button>
             <Plus className="mr-2 h-4 w-4" />
             {activeTab === "finished-products"
               ? "Montajlı Ürün Ekle"
               : "Tekil Parça Ekle"}
           </Button>
-        </Link>
+        </Link> */}
       </div>
 
       <Tabs

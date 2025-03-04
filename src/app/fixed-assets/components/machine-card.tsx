@@ -1,6 +1,6 @@
 "use client";
 
-import { Product } from "@/types/inventory";
+import { Machine } from "@/types/manufacture";
 import {
   Card,
   CardContent,
@@ -9,46 +9,46 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Package, Tag, BarChart4 } from "lucide-react";
+import { Tag, Settings2, BarChart4 } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import Link from "next/link";
 
-interface ProductCardProps {
-  product: Product;
+interface MachineCardProps {
+  machine: Machine;
 }
 
-export function ProductCard({ product }: ProductCardProps) {
+export function MachineCard({ machine }: MachineCardProps) {
   return (
     <Link
-      href={`/stock-cards/product/${product.id}`}
+      href={`/fixed-assets/${machine.id}`}
       className="block transition-all hover:opacity-75"
     >
       <Card className="overflow-hidden h-full">
         <CardHeader>
           <CardTitle className="line-clamp-1 text-lg font-semibold">
-            {product.product_name}
+            {machine.machine_name}
           </CardTitle>
           <CardDescription className="line-clamp-1">
-            {product.product_code}
+            {machine.machine_code}
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <p className="text-sm text-muted-foreground line-clamp-2">
-            {product.description || "Açıklama bulunmuyor"}
+            {machine.description || "Açıklama bulunmuyor"}
           </p>
           <div className="flex flex-wrap gap-2">
             <Badge variant="secondary" className="flex items-center gap-1">
-              <Package className="h-3 w-3" />
-              {product.current_stock}
+              <Settings2 className="h-3 w-3" />
+              {machine.status || "Durum Belirtilmemiş"}
             </Badge>
             <Badge variant="outline" className="flex items-center gap-1">
               <Tag className="h-3 w-3" />
-              {product.product_type}
+              {machine.machine_type || "Tip Belirtilmemiş"}
             </Badge>
-            {product.inventory_category_display && (
+            {machine.category_display && (
               <Badge variant="outline" className="flex items-center gap-1">
                 <BarChart4 className="h-3 w-3" />
-                {product.inventory_category_display}
+                {machine.category_display}
               </Badge>
             )}
           </div>
@@ -58,7 +58,7 @@ export function ProductCard({ product }: ProductCardProps) {
   );
 }
 
-export function ProductCardSkeleton() {
+export function MachineCardSkeleton() {
   return (
     <Card className="overflow-hidden">
       <CardHeader className="space-y-2">

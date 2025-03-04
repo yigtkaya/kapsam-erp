@@ -10,6 +10,7 @@ interface PageHeaderProps {
   description?: string;
   action?: ReactNode;
   showBackButton?: boolean;
+  onBack?: () => void;
 }
 
 export function PageHeader({
@@ -17,6 +18,7 @@ export function PageHeader({
   description,
   action,
   showBackButton,
+  onBack,
 }: PageHeaderProps) {
   const router = useRouter();
 
@@ -27,7 +29,7 @@ export function PageHeader({
           <Button
             variant="outline"
             size="icon"
-            onClick={() => window.history.back()}
+            onClick={onBack || (() => window.history.back())}
             className="flex-shrink-0"
           >
             <ArrowLeft className="h-4 w-4" />

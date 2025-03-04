@@ -1,6 +1,6 @@
 "use client";
 
-import { Product } from "@/types/inventory";
+import { RawMaterial } from "@/types/inventory";
 import {
   Card,
   CardContent,
@@ -9,46 +9,62 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Package, Tag, BarChart4 } from "lucide-react";
+import { Package, Tag, Ruler, BarChart4 } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import Link from "next/link";
 
-interface ProductCardProps {
-  product: Product;
+interface RawMaterialCardProps {
+  material: RawMaterial;
 }
 
-export function ProductCard({ product }: ProductCardProps) {
+export function RawMaterialCard({ material }: RawMaterialCardProps) {
+  // Function to format dimensions into a readable string
+  const formatDimensions = () => {
+    const dimensions = [];
+    if (material.width) dimensions.push(`W:${material.width}mm`);
+    if (material.height) dimensions.push(`H:${material.height}mm`);
+    if (material.thickness) dimensions.push(`T:${material.thickness}mm`);
+    if (material.diameter_mm) dimensions.push(`D:${material.diameter_mm}mm`);
+    return dimensions.join(" ");
+  };
+
   return (
     <Link
-      href={`/stock-cards/product/${product.id}`}
+      href={`/stock-cards/raw-material/${material.id}`}
       className="block transition-all hover:opacity-75"
     >
       <Card className="overflow-hidden h-full">
         <CardHeader>
           <CardTitle className="line-clamp-1 text-lg font-semibold">
-            {product.product_name}
+            {material.material_name}
           </CardTitle>
           <CardDescription className="line-clamp-1">
-            {product.product_code}
+            {material.material_code}
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <p className="text-sm text-muted-foreground line-clamp-2">
-            {product.description || "Açıklama bulunmuyor"}
+            {formatDimensions() || "Boyut bilgisi bulunmuyor"}
           </p>
           <div className="flex flex-wrap gap-2">
             <Badge variant="secondary" className="flex items-center gap-1">
               <Package className="h-3 w-3" />
-              {product.current_stock}
+              {material.current_stock} {material.unit.unit_code}
             </Badge>
             <Badge variant="outline" className="flex items-center gap-1">
               <Tag className="h-3 w-3" />
-              {product.product_type}
+              {material.material_type}
             </Badge>
-            {product.inventory_category_display && (
+            {material.inventory_category && (
               <Badge variant="outline" className="flex items-center gap-1">
                 <BarChart4 className="h-3 w-3" />
-                {product.inventory_category_display}
+                {material.inventory_category.name}
+              </Badge>
+            )}
+            {formatDimensions() && (
+              <Badge variant="outline" className="flex items-center gap-1">
+                <Ruler className="h-3 w-3" />
+                {formatDimensions()}
               </Badge>
             )}
           </div>
@@ -58,7 +74,7 @@ export function ProductCard({ product }: ProductCardProps) {
   );
 }
 
-export function ProductCardSkeleton() {
+export function RawMaterialCardSkeleton() {
   return (
     <Card className="overflow-hidden">
       <CardHeader className="space-y-2">
@@ -68,6 +84,7 @@ export function ProductCardSkeleton() {
       <CardContent className="space-y-4">
         <Skeleton className="h-4 w-full" />
         <div className="flex gap-2">
+          <Skeleton className="h-5 w-16" />
           <Skeleton className="h-5 w-16" />
           <Skeleton className="h-5 w-16" />
         </div>

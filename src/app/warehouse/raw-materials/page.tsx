@@ -28,7 +28,7 @@ export default function RawMaterialsPage() {
             showBackButton
           />
         </div>
-        <Link
+        {/* <Link
           href={
             activeTab === "standard-parts"
               ? "/warehouse/standard-parts/new"
@@ -41,7 +41,7 @@ export default function RawMaterialsPage() {
               ? "Hammadde Ekle"
               : "Standart Parça Ekle"}
           </Button>
-        </Link>
+        </Link> */}
       </div>
 
       <Tabs

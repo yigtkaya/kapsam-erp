@@ -16,12 +16,12 @@ export default function ProcessPage() {
           description="Process ürünlerini görüntüleyin ve yönetin"
           showBackButton
         />
-        <Link href="/warehouse/process/new">
+        {/* <Link href="/warehouse/process/new">
           <Button>
             <Plus className="mr-2 h-4 w-4" />
             Process Ürün Ekle
           </Button>
-        </Link>
+        </Link> */}
       </div>
       <Suspense
         fallback={

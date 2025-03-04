@@ -47,6 +47,7 @@ export interface BaseModel {
 // Main interfaces
 export interface Machine extends BaseModel {
   machine_code: string;
+  machine_name: string;
   machine_type: MachineType;
   brand?: string;
   model?: string;
@@ -70,6 +71,7 @@ export interface Machine extends BaseModel {
   last_maintenance_date: Date | null;
   next_maintenance_date: Date | null;
   maintenance_notes?: string;
+  category_display?: string;
 }
 
 export interface ManufacturingProcess extends BaseModel {

@@ -5,13 +5,12 @@ import { PageHeader } from "@/components/ui/page-header";
 import { Plus } from "lucide-react";
 import Link from "next/link";
 import { useProducts } from "@/hooks/useProducts";
-import { ProductCard, ProductCardSkeleton } from "./components/product-card";
-import { ProductFilters } from "./components/product-filters";
-import { ProductTable } from "./components/product-table";
-import { ViewToggle } from "./components/view-toggle";
-import { PaginationControl } from "./components/pagination-control";
-import { useState, useMemo } from "react";
-import { Product } from "@/types/inventory";
+import { useRawMaterials } from "@/hooks/useRawMaterials";
+import { useState, useMemo, useCallback } from "react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { ProductView } from "./components/product-view";
+import { RawMaterialView } from "./components/raw-material-view";
+import { useSearchParams, useRouter, usePathname } from "next/navigation";
 
 // Product type order mapping for consistent sorting
 const productTypeOrder = {
@@ -24,11 +23,91 @@ const productTypeOrder = {
 const PAGE_SIZE = 50;
 
 export default function StockCardsPage() {
-  const { data: products, isLoading, error } = useProducts();
-  const [searchQuery, setSearchQuery] = useState("");
-  const [sortBy, setSortBy] = useState("name_asc");
-  const [view, setView] = useState<"grid" | "table">("grid");
-  const [currentPage, setCurrentPage] = useState(0);
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+
+  // Get values from URL or use defaults
+  const query = searchParams.get("q") || "";
+  const sort = searchParams.get("sort") || "name_asc";
+  const viewMode = (searchParams.get("view") || "grid") as "grid" | "table";
+  const page = parseInt(searchParams.get("page") || "0");
+  const tab = (searchParams.get("tab") || "products") as
+    | "products"
+    | "raw-materials";
+
+  // Create URL update function
+  const createQueryString = useCallback(
+    (params: Record<string, string>) => {
+      const newSearchParams = new URLSearchParams(searchParams.toString());
+
+      Object.entries(params).forEach(([key, value]) => {
+        if (value === null || value === "") {
+          newSearchParams.delete(key);
+        } else {
+          newSearchParams.set(key, value);
+        }
+      });
+
+      return newSearchParams.toString();
+    },
+    [searchParams]
+  );
+
+  // Update URL handlers
+  const handleSearchChange = (value: string) => {
+    router.push(
+      `${pathname}?${createQueryString({
+        q: value,
+        page: "0", // Reset page when search changes
+      })}`
+    );
+  };
+
+  const handleSortChange = (value: string) => {
+    router.push(
+      `${pathname}?${createQueryString({
+        sort: value,
+        page: "0", // Reset page when sort changes
+      })}`
+    );
+  };
+
+  const handleViewChange = (value: "grid" | "table") => {
+    router.push(
+      `${pathname}?${createQueryString({
+        view: value,
+      })}`
+    );
+  };
+
+  const handlePageChange = (value: number) => {
+    router.push(
+      `${pathname}?${createQueryString({
+        page: value.toString(),
+      })}`
+    );
+  };
+
+  const handleTabChange = (value: string) => {
+    router.push(
+      `${pathname}?${createQueryString({
+        tab: value,
+        page: "0", // Reset page when tab changes
+      })}`
+    );
+  };
+
+  const {
+    data: products,
+    isLoading: productsLoading,
+    error: productsError,
+  } = useProducts();
+  const {
+    data: rawMaterials,
+    isLoading: rawMaterialsLoading,
+    error: rawMaterialsError,
+  } = useRawMaterials({});
 
   // Filter and sort products
   const filteredAndSortedProducts = useMemo(() => {
@@ -36,7 +115,7 @@ export default function StockCardsPage() {
 
     // First, filter the products
     let filtered = products.filter((product) => {
-      const searchLower = searchQuery.toLowerCase();
+      const searchLower = query.toLowerCase();
       return (
         product.product_name.toLowerCase().includes(searchLower) ||
         product.product_code.toLowerCase().includes(searchLower) ||
@@ -48,14 +127,14 @@ export default function StockCardsPage() {
     // Then, sort the filtered results
     return filtered.sort((a, b) => {
       // Handle type-based sorting first
-      if (sortBy.startsWith("type_")) {
+      if (sort.startsWith("type_")) {
         const typeMapping = {
           type_single: "SINGLE",
           type_semi: "SEMI",
           type_montaged: "MONTAGED",
           type_standard: "STANDARD_PART",
         };
-        const targetType = typeMapping[sortBy as keyof typeof typeMapping];
+        const targetType = typeMapping[sort as keyof typeof typeMapping];
 
         // If a's type matches the target type and b's doesn't, a should come first
         if (a.product_type === targetType && b.product_type !== targetType)
@@ -78,7 +157,7 @@ export default function StockCardsPage() {
       }
 
       // Handle other sorting options
-      switch (sortBy) {
+      switch (sort) {
         case "name_asc":
           return a.product_name.localeCompare(b.product_name);
         case "name_desc":
@@ -95,18 +174,41 @@ export default function StockCardsPage() {
           return 0;
       }
     });
-  }, [products, searchQuery, sortBy]);
+  }, [products, query, sort]);
 
-  // Reset page when filter/search changes
-  useMemo(() => {
-    setCurrentPage(0);
-  }, [searchQuery, sortBy]);
+  // Filter and sort raw materials
+  const filteredAndSortedRawMaterials = useMemo(() => {
+    if (!rawMaterials) return [];
 
-  // Get current page items
-  const currentItems = useMemo(() => {
-    const start = currentPage * PAGE_SIZE;
-    return filteredAndSortedProducts.slice(start, start + PAGE_SIZE);
-  }, [filteredAndSortedProducts, currentPage]);
+    // First, filter the raw materials
+    let filtered = rawMaterials.filter((material) => {
+      const searchLower = query.toLowerCase();
+      return (
+        material.material_name.toLowerCase().includes(searchLower) ||
+        material.material_code.toLowerCase().includes(searchLower)
+      );
+    });
+
+    // Then, sort the filtered results
+    return filtered.sort((a, b) => {
+      switch (sort) {
+        case "name_asc":
+          return a.material_name.localeCompare(b.material_name);
+        case "name_desc":
+          return b.material_name.localeCompare(a.material_name);
+        case "stock_asc":
+          return a.current_stock - b.current_stock;
+        case "stock_desc":
+          return b.current_stock - a.current_stock;
+        case "code_asc":
+          return a.material_code.localeCompare(b.material_code);
+        case "code_desc":
+          return b.material_code.localeCompare(a.material_code);
+        default:
+          return 0;
+      }
+    });
+  }, [rawMaterials, query, sort]);
 
   return (
     <div className="container mx-auto py-4 space-y-6">
@@ -124,60 +226,46 @@ export default function StockCardsPage() {
         }
       />
 
-      {!isLoading && !error && (
-        <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-          <ProductFilters
-            searchQuery={searchQuery}
-            onSearchChange={setSearchQuery}
-            sortBy={sortBy}
-            onSortChange={setSortBy}
+      <Tabs value={tab} onValueChange={handleTabChange}>
+        <TabsList className="grid w-full grid-cols-2">
+          <TabsTrigger value="products">Ürünler</TabsTrigger>
+          <TabsTrigger value="raw-materials">Hammaddeler</TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="products" className="space-y-6">
+          <ProductView
+            isLoading={productsLoading}
+            error={productsError}
+            items={filteredAndSortedProducts}
+            searchQuery={query}
+            onSearchChange={handleSearchChange}
+            sortBy={sort}
+            onSortChange={handleSortChange}
+            view={viewMode}
+            onViewChange={handleViewChange}
+            currentPage={page}
+            onPageChange={handlePageChange}
+            pageSize={PAGE_SIZE}
           />
-          <ViewToggle view={view} onViewChange={setView} />
-        </div>
-      )}
+        </TabsContent>
 
-      {error ? (
-        <div className="text-center text-destructive">
-          Ürünler yüklenirken bir hata oluştu.
-        </div>
-      ) : (
-        <div className="space-y-4">
-          {isLoading ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-              {Array(8)
-                .fill(null)
-                .map((_, index) => (
-                  <ProductCardSkeleton key={index} />
-                ))}
-            </div>
-          ) : view === "grid" ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-              {currentItems.map((product) => (
-                <ProductCard key={product.id} product={product} />
-              ))}
-            </div>
-          ) : (
-            <ProductTable products={currentItems} />
-          )}
-
-          {!isLoading && filteredAndSortedProducts.length > 0 && (
-            <PaginationControl
-              currentPage={currentPage}
-              totalItems={filteredAndSortedProducts.length}
-              pageSize={PAGE_SIZE}
-              onPageChange={setCurrentPage}
-            />
-          )}
-        </div>
-      )}
-
-      {!isLoading && !error && filteredAndSortedProducts.length === 0 && (
-        <div className="text-center text-muted-foreground">
-          {searchQuery
-            ? "Aramanızla eşleşen ürün bulunamadı."
-            : "Henüz ürün bulunmuyor."}
-        </div>
-      )}
+        <TabsContent value="raw-materials" className="space-y-6">
+          <RawMaterialView
+            isLoading={rawMaterialsLoading}
+            error={rawMaterialsError}
+            items={filteredAndSortedRawMaterials}
+            searchQuery={query}
+            onSearchChange={handleSearchChange}
+            sortBy={sort}
+            onSortChange={handleSortChange}
+            view={viewMode}
+            onViewChange={handleViewChange}
+            currentPage={page}
+            onPageChange={handlePageChange}
+            pageSize={PAGE_SIZE}
+          />
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }
