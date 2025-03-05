@@ -43,6 +43,8 @@ interface DataTableProps<TData, TValue> {
       icon?: React.ComponentType<{ className?: string }>;
     }[];
   }[];
+  onRowClick?: (row: TData) => void;
+  rowClassName?: string;
 }
 
 export function DataTable<TData, TValue>({
@@ -51,6 +53,8 @@ export function DataTable<TData, TValue>({
   isLoading,
   searchKey,
   filterableColumns,
+  onRowClick,
+  rowClassName,
 }: DataTableProps<TData, TValue>) {
   const [rowSelection, setRowSelection] = React.useState({});
   const [columnVisibility, setColumnVisibility] =
@@ -121,6 +125,8 @@ export function DataTable<TData, TValue>({
                 <TableRow
                   key={row.id}
                   data-state={row.getIsSelected() && "selected"}
+                  className={rowClassName}
+                  onClick={() => onRowClick?.(row.original as TData)}
                 >
                   {row.getVisibleCells().map((cell) => (
                     <TableCell key={cell.id}>

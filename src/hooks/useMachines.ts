@@ -39,8 +39,11 @@ export function useUpdateMachine() {
 
   return useMutation({
     mutationFn: updateMachine,
-    onSuccess: () => {
+    onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ["machines"] });
+      queryClient.invalidateQueries({
+        queryKey: ["machine", data.data.id.toString()],
+      });
     },
   });
 }

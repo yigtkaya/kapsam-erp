@@ -1,10 +1,6 @@
 "use server";
 
-import {
-  BOMProcessConfig,
-  ProcessComponent,
-  ProductComponent,
-} from "@/types/manufacture";
+import { BOMComponent } from "@/types/manufacture";
 import { cookies } from "next/headers";
 
 const API_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
@@ -28,215 +24,68 @@ async function getAuthHeaders() {
   };
 }
 
-export async function fetchBOMComponents(id: number) {
+export async function getAllComponentsForBom(bomId: number) {
   const headers = await getAuthHeaders();
-
   const response = await fetch(
-    `${API_URL}/api/manufacturing/boms/${id}/components/`,
+    `${API_URL}/inventory/bom-components/?bom=${bomId}`,
     {
       headers,
     }
   );
-
-  console.log(response);
-
-  if (!response.ok) {
-    throw new Error("Failed to fetch BOM components");
-  }
-
-  const responseData = await response.json();
-  console.log(responseData);
-
-  return responseData;
-}
-
-export async function deleteBOMComponent(bomId: number, id: number) {
-  const headers = await getAuthHeaders();
-
-  const response = await fetch(
-    `${API_URL}/api/manufacturing/boms/${bomId}/components/${id}/`,
-    {
-      method: "DELETE",
-      headers,
-    }
-  );
-
-  if (!response.ok) {
-    throw new Error("Failed to delete BOM component");
-  }
-
-  return true;
-}
-
-export async function deleteProcessComponent(id: number): Promise<boolean> {
-  const headers = await getAuthHeaders();
-
-  const response = await fetch(
-    `${API_URL}/api/manufacturing/process-components/${id}/`,
-    {
-      method: "DELETE",
-      headers,
-    }
-  );
-
-  console.log(response);
-
-  if (!response.ok) {
-    const errorData = await response.json();
-    console.log(errorData);
-    throw new Error(errorData.detail || "Failed to delete process component");
-  }
-
-  return true;
-}
-
-export async function createProductComponent(
-  data: Omit<ProductComponent, "id">
-): Promise<ProductComponent> {
-  const headers = await getAuthHeaders();
-
-  console.log(data);
-
-  const response = await fetch(
-    `${API_URL}/api/manufacturing/product-components/`,
-    {
-      method: "POST",
-      headers,
-      body: JSON.stringify(data),
-    }
-  );
-
-  if (!response.ok) {
-    const errorData = await response.json();
-    console.log(errorData);
-    throw new Error(errorData.detail || "Failed to create product component");
-  }
-  const responseData = await response.json();
-
-  console.log(responseData);
-
-  return responseData;
-}
-
-export async function createProcessComponent(
-  data: Omit<ProcessComponent, "id">
-): Promise<ProcessComponent> {
-  const headers = await getAuthHeaders();
-
-  const response = await fetch(
-    `${API_URL}/api/manufacturing/process-components/`,
-    {
-      method: "POST",
-      headers,
-      body: JSON.stringify(data),
-    }
-  );
-
-  if (!response.ok) {
-    console.log(data);
-    console.log(response);
-    const errorData = await response.json();
-    console.log(errorData);
-    throw new Error(errorData.detail || "Failed to create product component");
-  }
-  const responseData = await response.json();
-
-  console.log(responseData);
-
-  return responseData;
-}
-
-export async function updateProductComponent(
-  id: number,
-  data: Partial<ProductComponent>
-): Promise<ProductComponent> {
-  const headers = await getAuthHeaders();
-
-  const response = await fetch(
-    `${API_URL}/api/manufacturing/product-components/${id}/`,
-    {
-      method: "PUT",
-      headers,
-      body: JSON.stringify(data),
-    }
-  );
-
-  if (!response.ok) {
-    throw new Error("Failed to update product component");
-  }
-
   return response.json();
 }
 
-export async function updateProcessComponent(
-  id: number,
-  data: Partial<ProcessComponent>
-): Promise<ProcessComponent> {
+export async function getComponent(id: number) {
   const headers = await getAuthHeaders();
+  const response = await fetch(`${API_URL}/inventory/bom-components/${id}/`, {
+    headers,
+  });
+  return response.json();
+}
 
-  const response = await fetch(
-    `${API_URL}/api/manufacturing/process-components/${id}/`,
-    {
-      method: "PUT",
-      headers,
-      body: JSON.stringify(data),
-    }
-  );
+export async function createComponent(data: Partial<BOMComponent>) {
+  const headers = await getAuthHeaders();
+  const response = await fetch(`${API_URL}/inventory/bom-components/`, {
+    method: "POST",
+    headers,
+    body: JSON.stringify(data),
+  });
 
   if (!response.ok) {
-    const errorData = await response.json();
-    console.log(errorData);
-    throw new Error(errorData.detail || "Failed to update process component");
+    throw new Error(response.statusText);
   }
 
   const responseData = await response.json();
   console.log(responseData);
-
   return responseData;
 }
 
-export async function fetchProcessConfigs(): Promise<BOMProcessConfig[]> {
+export async function updateComponent(id: number, data: Partial<BOMComponent>) {
   const headers = await getAuthHeaders();
-
-  const response = await fetch(
-    `${API_URL}/api/manufacturing/process-configs/`,
-    {
-      headers,
-    }
-  );
+  const response = await fetch(`${API_URL}/inventory/bom-components/${id}/`, {
+    method: "PATCH",
+    headers,
+    body: JSON.stringify(data),
+  });
 
   if (!response.ok) {
-    const errorData = await response.json();
-    console.log(errorData);
-    throw new Error(errorData.detail || "Failed to fetch process configs");
+    throw new Error(response.statusText);
   }
 
   const responseData = await response.json();
-  console.log(responseData);
-
   return responseData;
 }
 
-export async function fetchProcessConfig(
-  id: number
-): Promise<BOMProcessConfig> {
+export async function deleteComponent(id: number) {
   const headers = await getAuthHeaders();
-
-  const response = await fetch(
-    `${API_URL}/api/manufacturing/p rocess-configs/${id}/`,
-    {
-      headers,
-    }
-  );
+  const response = await fetch(`${API_URL}/inventory/bom-components/${id}/`, {
+    method: "DELETE",
+    headers,
+  });
 
   if (!response.ok) {
-    const errorData = await response.json();
-    console.log(errorData);
-    throw new Error(errorData.detail || "Failed to fetch process config");
+    throw new Error(response.statusText);
   }
 
-  const responseData = await response.json();
-  console.log(responseData);
-
-  return responseData;
+  return response.json();
 }

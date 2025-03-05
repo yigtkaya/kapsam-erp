@@ -1,16 +1,68 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
-  createProcessComponent,
-  createProductComponent,
-  deleteBOMComponent,
-  fetchBOMComponents,
+  createComponent,
+  updateComponent,
+  deleteComponent,
+  getAllComponentsForBom,
 } from "@/api/components";
+import { BOMComponent } from "@/types/manufacture";
 import { toast } from "sonner";
 
-export function useComponents(id: number) {
+export function useComponents(bomId: number) {
   return useQuery({
-    queryKey: ["components", id],
-    queryFn: () => fetchBOMComponents(id),
+    queryKey: ["components", bomId],
+    queryFn: () => getAllComponentsForBom(bomId),
+    enabled: !!bomId,
+  });
+}
+
+export function useCreateComponent() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({
+      bomId,
+      data,
+    }: {
+      bomId: number;
+      data: Omit<BOMComponent, "id" | "created_at" | "updated_at" | "bom">;
+    }) => {
+      return createComponent(data);
+    },
+    onSuccess: (_, { bomId }) => {
+      queryClient.invalidateQueries({ queryKey: ["components", bomId] });
+      toast.success("Komponent başarıyla oluşturuldu.");
+    },
+    onError: (error: Error) => {
+      toast.error(error.message);
+    },
+  });
+}
+
+export function useUpdateComponent() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({
+      bomId,
+      componentId,
+      data,
+    }: {
+      bomId: number;
+      componentId: number;
+      data: Partial<
+        Omit<BOMComponent, "id" | "created_at" | "updated_at" | "bom">
+      >;
+    }) => {
+      return updateComponent(componentId, data);
+    },
+    onSuccess: (_, { bomId }) => {
+      queryClient.invalidateQueries({ queryKey: ["components", bomId] });
+      toast.success("Komponent başarıyla güncellendi.");
+    },
+    onError: (error: Error) => {
+      toast.error(error.message);
+    },
   });
 }
 
@@ -19,41 +71,20 @@ export function useDeleteComponent() {
 
   return useMutation({
     mutationFn: async ({
-      componentId,
       bomId,
+      componentId,
     }: {
-      componentId: number;
       bomId: number;
+      componentId: number;
     }) => {
-      await deleteBOMComponent(bomId, componentId);
+      return deleteComponent(componentId);
     },
-    onSuccess: (_, { bomId, componentId }) => {
-      queryClient.invalidateQueries({ queryKey: ["components", componentId] });
-      queryClient.removeQueries({ queryKey: ["components", componentId] });
+    onSuccess: (_, { bomId }) => {
+      queryClient.invalidateQueries({ queryKey: ["components", bomId] });
       toast.success("Komponent başarıyla silindi.");
     },
     onError: (error: Error) => {
       toast.error(error.message);
-    },
-  });
-}
-
-export function useCreateProductComponent() {
-  const queryClient = useQueryClient();
-  return useMutation({
-    mutationFn: createProductComponent,
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["components"] });
-    },
-  });
-}
-
-export function useCreateProcessComponent() {
-  const queryClient = useQueryClient();
-  return useMutation({
-    mutationFn: createProcessComponent,
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["components"] });
     },
   });
 }

@@ -1,6 +1,6 @@
 "use server";
 
-import { BOMResponse, BOMRequest } from "@/types/manufacture";
+import { BOM, BomRequest, CreateBOMRequest } from "@/types/manufacture";
 import { revalidatePath } from "next/cache";
 import { cookies, headers } from "next/headers";
 
@@ -25,7 +25,7 @@ async function getAuthHeaders() {
   };
 }
 
-export async function fetchBOM(id: number): Promise<BOMResponse> {
+export async function fetchBOM(id: number): Promise<BOM> {
   const headers = await getAuthHeaders();
 
   const response = await fetch(`${API_URL}/api/manufacturing/boms/${id}/`, {
@@ -43,7 +43,7 @@ export async function fetchBOM(id: number): Promise<BOMResponse> {
   return responseData;
 }
 
-export async function fetchBOMs(): Promise<BOMResponse[]> {
+export async function fetchBOMs(): Promise<BOM[]> {
   const headers = await getAuthHeaders();
 
   const response = await fetch(`${API_URL}/api/manufacturing/boms/`, {
@@ -57,8 +57,10 @@ export async function fetchBOMs(): Promise<BOMResponse[]> {
   return await response.json();
 }
 
-export async function createBOM(data: Omit<BOMRequest, "id">) {
+export async function createBOM(data: CreateBOMRequest) {
   const headers = await getAuthHeaders();
+
+  console.log(data);
 
   try {
     const response = await fetch(`${API_URL}/api/manufacturing/boms/`, {
@@ -69,21 +71,24 @@ export async function createBOM(data: Omit<BOMRequest, "id">) {
     });
 
     if (!response.ok) {
-      throw new Error("Failed to create BOM");
+      console.log(response);
+      console.log(await response.json());
+      throw new Error(response.statusText);
     }
 
-    revalidatePath("/boms");
-    return await response.json();
+    const responseData = await response.json();
+    console.log(responseData);
+    return responseData;
   } catch (error) {
     console.error("Error creating BOM:", error);
     throw error;
   }
 }
 
-export async function updateBOM(id: number, data: Partial<BOMRequest>) {
+export async function updateBOM(id: number, data: BomRequest) {
   const headers = await getAuthHeaders();
 
-  console.log(headers);
+  console.log(data);
 
   try {
     const response = await fetch(`${API_URL}/api/manufacturing/boms/${id}/`, {
@@ -101,7 +106,6 @@ export async function updateBOM(id: number, data: Partial<BOMRequest>) {
       throw new Error("Failed to update BOM");
     }
 
-    revalidatePath("/boms");
     return responseData;
   } catch (error) {
     console.error("Error updating BOM:", error);

@@ -60,6 +60,22 @@ const modules = [
   //   roles: ["ADMIN"],
   // },
   {
+    title: "İş Akış Kartları",
+    description: "İş akış kartlarının takibi ve yönetimi",
+    icon: FolderKanban,
+    href: "/workflow-cards",
+    color: "bg-green-500",
+    roles: ["ADMIN"],
+  },
+  {
+    title: "Bom Listeleri",
+    description: "Bom listelerinin takibi ve yönetimi",
+    icon: Workflow,
+    href: "/bom-lists",
+    color: "bg-blue-100",
+    roles: ["ADMIN"],
+  },
+  {
     title: "Stok Tanıtım Kartları",
     description: "Stok tanıtım kartlarının takibi ve yönetimi",
     icon: Workflow,

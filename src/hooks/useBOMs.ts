@@ -8,7 +8,18 @@ import {
   fetchBOMs,
   updateBOM,
 } from "@/api/boms";
-import { BOMResponse, BOMComponent, BOMRequest } from "@/types/manufacture";
+import {
+  BOM,
+  BOMComponent,
+  BomRequest,
+  CreateBOMComponentRequest,
+  CreateBOMRequest,
+} from "@/types/manufacture";
+import {
+  createComponent,
+  deleteComponent,
+  updateComponent,
+} from "@/api/components";
 
 export function useBOMs() {
   return useQuery({
@@ -28,7 +39,7 @@ export function useBOM(id: number) {
 export function useCreateBOM() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (data: Omit<BOMRequest, "id">) => createBOM(data),
+    mutationFn: (data: CreateBOMRequest) => createBOM(data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["boms"] });
     },
@@ -38,7 +49,7 @@ export function useCreateBOM() {
 export function useUpdateBOM() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: ({ id, data }: { id: number; data: Omit<BOMRequest, "id"> }) =>
+    mutationFn: ({ id, data }: { id: number; data: BomRequest }) =>
       updateBOM(id, data),
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: ["boms"] });
@@ -61,17 +72,13 @@ export function useDeleteBOM() {
 
 export function useUpdateBOMComponents() {
   const queryClient = useQueryClient();
-  return useMutation({
-    mutationFn: ({
-      id,
-      components,
-    }: {
-      id: number;
-      components: BOMComponent[];
-    }) =>
-      updateBOM(id, {
-        components,
-      } as Omit<BOMRequest, "id">),
+  return useMutation<BOM, Error, { id: number; components: BOMComponent[] }>({
+    mutationFn: async ({ id, components }) => {
+      await Promise.all(
+        components.map((component) => updateComponent(component.id, component))
+      );
+      return fetchBOM(id);
+    },
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: ["boms"] });
       queryClient.invalidateQueries({ queryKey: ["bom", variables.id] });
@@ -81,31 +88,13 @@ export function useUpdateBOMComponents() {
 
 export function useAddBOMComponent() {
   const queryClient = useQueryClient();
-  return useMutation({
-    mutationFn: async ({
-      bomId,
-      component,
-    }: {
-      bomId: number;
-      component: Omit<BOMComponent, "id" | "component"> & { component: string };
-    }) => {
-      // First, get the current BOM
-      const bom = await fetchBOM(bomId);
-
-      // Add the new component to the existing components
-      const updatedComponents = [
-        ...(bom.components || []),
-        {
-          ...component,
-          id: Date.now(), // Temporary ID that will be replaced by the server
-          component: { id: parseInt(component.component) } as any, // Convert string ID to number
-        },
-      ];
-
-      // Update the BOM with the new components
-      return updateBOM(bomId, {
-        components: updatedComponents,
-      } as Omit<BOMRequest, "id">);
+  return useMutation<
+    BOMComponent,
+    Error,
+    { bomId: number; component: CreateBOMComponentRequest }
+  >({
+    mutationFn: async ({ bomId, component }) => {
+      return createComponent({ ...component, bom: bomId });
     },
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: ["boms"] });

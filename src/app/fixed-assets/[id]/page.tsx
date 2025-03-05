@@ -108,7 +108,6 @@ export default function MachineDetailsPage() {
     try {
       await updateMachine.mutateAsync(editedMachine);
       setIsEditing(false);
-      router.refresh();
       toast.success("Demirbaş başarıyla güncellendi");
     } catch (error) {
       toast.error("Demirbaş güncellenirken bir hata oluştu");
