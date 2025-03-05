@@ -25,9 +25,10 @@ export function ProductTable({ products }: ProductTableProps) {
           <TableRow>
             <TableHead>Ürün Adı</TableHead>
             <TableHead>Ürün Kodu</TableHead>
-            <TableHead>Stok</TableHead>
+            <TableHead>Miktar</TableHead>
             <TableHead>Tür</TableHead>
             <TableHead>Kategori</TableHead>
+            <TableHead>Proje</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -52,6 +53,7 @@ export function ProductTable({ products }: ProductTableProps) {
                 >
                   <Package className="h-3 w-3" />
                   {product.current_stock}
+                  {/* {product.unit_display && ` ${product.unit_display}`} */}
                 </Badge>
               </TableCell>
               <TableCell>
@@ -71,6 +73,16 @@ export function ProductTable({ products }: ProductTableProps) {
                   >
                     <BarChart4 className="h-3 w-3" />
                     {product.inventory_category_display}
+                  </Badge>
+                )}
+              </TableCell>
+              <TableCell>
+                {product.project_name && (
+                  <Badge
+                    variant="outline"
+                    className="flex items-center gap-1 w-fit"
+                  >
+                    {product.project_name}
                   </Badge>
                 )}
               </TableCell>

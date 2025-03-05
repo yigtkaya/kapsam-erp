@@ -19,6 +19,9 @@ export function BOMCard({ bom }: BOMCardProps) {
               {bom.product?.product_name || "İsimsiz Ürün"}
             </h3>
             <p className="text-sm text-muted-foreground">
+              {bom.product?.product_code}
+            </p>
+            <p className="text-sm text-muted-foreground">
               Versiyon: {bom.version}
             </p>
           </div>
@@ -28,7 +31,7 @@ export function BOMCard({ bom }: BOMCardProps) {
         </div>
         <p className="text-muted-foreground line-clamp-2">Not: {bom.notes}</p>
 
-        {bom.approved_by && bom.approved_at && (
+        {/* {bom.approved_by && bom.approved_at && (
           <div className="text-sm space-y-1">
             <p className="text-muted-foreground">
               Onaylayan: {bom.approved_by.first_name}{" "}
@@ -41,7 +44,7 @@ export function BOMCard({ bom }: BOMCardProps) {
               })}
             </p>
           </div>
-        )}
+        )} */}
       </Card>
     </Link>
   );

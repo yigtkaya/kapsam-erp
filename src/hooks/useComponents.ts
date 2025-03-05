@@ -30,10 +30,6 @@ export function useCreateComponent() {
       queryClient.invalidateQueries({
         queryKey: ["components", variables.bom],
       });
-      toast.success("Komponent başarıyla eklendi.");
-    },
-    onError: (error: Error) => {
-      toast.error(error.message);
     },
   });
 }
@@ -80,7 +76,6 @@ export function useDeleteComponent() {
       return { result, componentId };
     },
     onSuccess: (_, { bomId }) => {
-      toast.success("Komponent başarıyla silindi.");
       // Invalidate both the components and BOM queries
       queryClient.invalidateQueries({ queryKey: ["components", bomId] });
       queryClient.invalidateQueries({ queryKey: ["bom", bomId] });
@@ -112,7 +107,6 @@ export function useDeleteComponent() {
         ["components", bomId],
         context?.previousComponents
       );
-      toast.error(error.message);
     },
     onSettled: (_, __, { bomId }) => {
       // Always refetch after error or success to ensure consistency
