@@ -1,6 +1,6 @@
 // File: inventory_types.ts
 
-import { Customer, User } from "./core";
+import { Customer, User, BaseModel } from "./core";
 import { BOMProcessConfig } from "./manufacture";
 
 export type TutucuType =
@@ -132,4 +132,73 @@ export interface InventoryTransaction {
   from_category?: InventoryCategory;
   to_category?: InventoryCategory;
   reference_id?: string;
+}
+
+export enum ToolType {
+  CARBIDE_MILL = "KARBUR FREZE", // KARBUR FREZE
+  THREE_FLUTE_MILL = "TAKMA UÇLU FREZE", // TAKMA UÇLU FREZE
+  DRILL_COUNTERSINK = "UDRILL-ÇAMDRILL", // UDRILL-ÇAMDRILL
+  CENTER_DRILL = "MATKAP", // MATKAP
+  REAMER = "RAYBA", // RAYBA
+  BORING_BAR = "BARA", // BARA
+  COUNTERSINK = "KLAVUZ", // KLAVUZ
+  THREAD_MILL = "DİŞ FREZESİ", // DİŞ FREZESİ
+  LATHE_TOOL = "TORNA", // TORNA
+  CHANNEL_OPENER = "KANAL AÇMA", // KANAL AÇMA
+}
+
+export enum HolderType {
+  PENS_HOLDER = "PENS TUTUCU", // PENS TUTUCU
+  HYDRAULIC = "HİDROLİK", // HİDROLİK
+  WELDON = "WELDON", // WELDON
+  COLLET = "RULMANLI", // RULMANLI
+  LATHE_HOLDER = "TARAMA KAFASI", // TARAMA KAFASI
+  SHRINK = "SHRINK", // SHRINK
+}
+
+export interface Tool extends BaseModel {
+  stock_code: string; // Primary key
+  supplier_name: string;
+  product_code: string;
+  unit_price_tl: number;
+  unit_price_euro: number;
+  unit_price_usd: number;
+  tool_insert_code: string;
+  tool_material: string;
+  tool_diameter: number;
+  tool_length: number;
+  tool_width: number;
+  tool_height: number;
+  tool_angle: number;
+  tool_radius: number;
+  tool_connection_diameter: number;
+  tool_type: ToolType;
+  status: string;
+  row: number;
+  column: number;
+  table_id: string; // UUID
+  updated_at: string; // ISO date string
+  description?: string;
+  quantity: number;
+}
+
+export interface Holder extends BaseModel {
+  stock_code: string; // Primary key
+  supplier_name: string;
+  product_code: string;
+  unit_price_tl: number;
+  unit_price_euro: number;
+  unit_price_usd: number;
+  holder_type: HolderType;
+  pulley_type: string;
+  water_cooling: boolean;
+  distance_cooling: boolean;
+  tool_connection_diameter: number;
+  holder_type_enum: HolderType;
+  status: string;
+  row: number;
+  column: number;
+  table_id: string; // UUID
+  updated_at: string; // ISO date string
+  description?: string;
 }

@@ -222,9 +222,11 @@ export default function StockCardsPage() {
       />
 
       <Tabs value={tab} onValueChange={handleTabChange}>
-        <TabsList className="grid w-full grid-cols-2">
+        <TabsList className="grid w-full grid-cols-4">
           <TabsTrigger value="products">Ürünler</TabsTrigger>
           <TabsTrigger value="raw-materials">Hammaddeler</TabsTrigger>
+          <TabsTrigger value="tools">Takımlar</TabsTrigger>
+          <TabsTrigger value="holders">Tutucular</TabsTrigger>
         </TabsList>
 
         <TabsContent value="products" className="space-y-6">
