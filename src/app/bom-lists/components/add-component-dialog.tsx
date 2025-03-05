@@ -1,4 +1,3 @@
-import { useAddBOMComponent } from "@/hooks/useBOMs";
 import { useProducts } from "@/hooks/useProducts";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
@@ -46,6 +45,7 @@ import {
 import { Check, ChevronsUpDown } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { CommandList } from "cmdk";
+import { useCreateComponent } from "@/hooks/useComponents";
 
 const formSchema = z.object({
   component: z.string().min(1, "Ürün seçilmesi zorunludur"),
@@ -80,7 +80,7 @@ export function AddComponentDialog({
   onOpenChange,
 }: AddComponentDialogProps) {
   const { data: products, isLoading: isLoadingProducts } = useProducts();
-  const { mutate: addComponent, isPending } = useAddBOMComponent();
+  const { mutate: addComponent, isPending } = useCreateComponent();
   const [comboboxOpen, setComboboxOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
 
@@ -118,22 +118,21 @@ export function AddComponentDialog({
       notes: values.notes || null,
     };
 
-    addComponent(
-      {
-        bomId,
-        component,
+    addComponent(component, {
+      onSuccess: () => {
+        toast.success("Bileşe n başarıyla eklendi.");
+        form.reset();
+        onOpenChange(false);
       },
-      {
-        onSuccess: () => {
-          toast.success("Bileşen başarıyla eklendi.");
-          form.reset();
-          onOpenChange(false);
-        },
-        onError: () => {
-          toast.error("Bileşen eklenirken bir hata oluştu.");
-        },
-      }
-    );
+      onError: (error) => {
+        toast.error(
+          error instanceof Error
+            ? error.message
+            : "Makine oluşturulurken bir hata oluştu"
+        );
+        console.error("API Error:", error);
+      },
+    });
   }
 
   return (
@@ -166,7 +165,7 @@ export function AddComponentDialog({
                           {field.value
                             ? products?.find(
                                 (product) =>
-                                  product.id.toString() === field.value
+                                  product.product_code === field.value
                               )?.product_name
                             : "Ürün seçin"}
                           <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />

@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { format } from "date-fns";
 import { tr } from "date-fns/locale";
-import { Loader2, Plus } from "lucide-react";
+import { Loader2, Plus, Trash2 } from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { AlertCircle } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -15,7 +15,17 @@ import { Separator } from "@/components/ui/separator";
 import { useState } from "react";
 import { toast } from "sonner";
 import { AddComponentDialog } from "../components/add-component-dialog";
-import { BOMComponentList } from "../components/bom-component-list";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { Skeleton } from "@/components/ui/skeleton";
+import { useComponents, useDeleteComponent } from "@/hooks/useComponents";
+import { BOMComponent } from "@/types/manufacture";
 
 export default function BOMDetailPage() {
   const router = useRouter();
@@ -23,6 +33,11 @@ export default function BOMDetailPage() {
   const [isAddComponentOpen, setIsAddComponentOpen] = useState(false);
   const { data: bom, isLoading, error } = useBOM(parseInt(params.id as string));
   const { mutate: updateBOM, isPending: isUpdating } = useUpdateBOM();
+
+  const { data: components, isLoading: isLoadingComponents } = useComponents(
+    bom?.id || 0
+  );
+  const { mutate: deleteBOMComponent } = useDeleteComponent();
 
   const handleStatusChange = () => {
     if (!bom) return;
@@ -45,6 +60,11 @@ export default function BOMDetailPage() {
         },
       }
     );
+  };
+
+  const handleDelete = (componentId: number) => {
+    if (!bom?.id) return;
+    deleteBOMComponent({ bomId: bom.id, componentId });
   };
 
   if (error) {
@@ -206,7 +226,55 @@ export default function BOMDetailPage() {
 
       <div>
         <h2 className="text-lg font-semibold mb-4">Bileşenler</h2>
-        <BOMComponentList bomId={bom.id} components={bom.components || []} />
+
+        {isLoadingComponents ? (
+          <div className="space-y-2">
+            <Skeleton className="h-8 w-full" />
+            <Skeleton className="h-8 w-full" />
+            <Skeleton className="h-8 w-full" />
+          </div>
+        ) : !components?.length ? (
+          <div className="text-center py-10 text-muted-foreground">
+            Henüz bileşen eklenmemiş.
+          </div>
+        ) : (
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Sıra</TableHead>
+                <TableHead>Ürün Kodu</TableHead>
+                <TableHead>Ürün Adı</TableHead>
+                <TableHead>Miktar</TableHead>
+                <TableHead>Temin Süresi (Gün)</TableHead>
+                <TableHead>Notlar</TableHead>
+                <TableHead className="w-[100px]"></TableHead>
+              </TableRow>
+            </TableHeader>
+
+            <TableBody>
+              {components.map((component: BOMComponent) => (
+                <TableRow key={component.id}>
+                  <TableCell>{component.sequence_order}</TableCell>
+                  <TableCell>{component.product_code}</TableCell>
+                  <TableCell>{component.product_name}</TableCell>
+                  <TableCell>{component.quantity}</TableCell>
+                  <TableCell>{component.lead_time_days || "-"}</TableCell>
+                  <TableCell>{component.notes || "-"}</TableCell>
+                  <TableCell>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => handleDelete(component.id)}
+                      className="hover:text-red-600 transition-colors"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        )}
       </div>
 
       <AddComponentDialog

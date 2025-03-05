@@ -27,7 +27,7 @@ async function getAuthHeaders() {
 export async function getAllComponentsForBom(bomId: number) {
   const headers = await getAuthHeaders();
   const response = await fetch(
-    `${API_URL}/inventory/bom-components/?bom=${bomId}`,
+    `${API_URL}/api/manufacturing/bom-components/?bom=${bomId}`,
     {
       headers,
     }
@@ -37,21 +37,29 @@ export async function getAllComponentsForBom(bomId: number) {
 
 export async function getComponent(id: number) {
   const headers = await getAuthHeaders();
-  const response = await fetch(`${API_URL}/inventory/bom-components/${id}/`, {
-    headers,
-  });
+  const response = await fetch(
+    `${API_URL}/api/manufacturing/bom-components/${id}/`,
+    {
+      headers,
+    }
+  );
   return response.json();
 }
 
 export async function createComponent(data: Partial<BOMComponent>) {
   const headers = await getAuthHeaders();
-  const response = await fetch(`${API_URL}/inventory/bom-components/`, {
+
+  console.log(data);
+
+  const response = await fetch(`${API_URL}/api/manufacturing/bom-components/`, {
     method: "POST",
     headers,
     body: JSON.stringify(data),
   });
 
   if (!response.ok) {
+    console.log(response.statusText);
+    console.log(await response.json());
     throw new Error(response.statusText);
   }
 
@@ -62,11 +70,14 @@ export async function createComponent(data: Partial<BOMComponent>) {
 
 export async function updateComponent(id: number, data: Partial<BOMComponent>) {
   const headers = await getAuthHeaders();
-  const response = await fetch(`${API_URL}/inventory/bom-components/${id}/`, {
-    method: "PATCH",
-    headers,
-    body: JSON.stringify(data),
-  });
+  const response = await fetch(
+    `${API_URL}/api/manufacturing/bom-components/${id}/`,
+    {
+      method: "PATCH",
+      headers,
+      body: JSON.stringify(data),
+    }
+  );
 
   if (!response.ok) {
     throw new Error(response.statusText);
@@ -78,14 +89,21 @@ export async function updateComponent(id: number, data: Partial<BOMComponent>) {
 
 export async function deleteComponent(id: number) {
   const headers = await getAuthHeaders();
-  const response = await fetch(`${API_URL}/inventory/bom-components/${id}/`, {
-    method: "DELETE",
-    headers,
-  });
+  const response = await fetch(
+    `${API_URL}/api/manufacturing/bom-components/${id}/`,
+    {
+      method: "DELETE",
+      headers,
+    }
+  );
+
+  console.log(response);
 
   if (!response.ok) {
+    console.log(response.statusText);
+    console.log(response);
     throw new Error(response.statusText);
   }
 
-  return response.json();
+  return true;
 }

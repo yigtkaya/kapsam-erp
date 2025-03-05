@@ -67,38 +67,3 @@ export function useDeleteBOM() {
     },
   });
 }
-
-// New hooks for BOM components
-
-export function useUpdateBOMComponents() {
-  const queryClient = useQueryClient();
-  return useMutation<BOM, Error, { id: number; components: BOMComponent[] }>({
-    mutationFn: async ({ id, components }) => {
-      await Promise.all(
-        components.map((component) => updateComponent(component.id, component))
-      );
-      return fetchBOM(id);
-    },
-    onSuccess: (_, variables) => {
-      queryClient.invalidateQueries({ queryKey: ["boms"] });
-      queryClient.invalidateQueries({ queryKey: ["bom", variables.id] });
-    },
-  });
-}
-
-export function useAddBOMComponent() {
-  const queryClient = useQueryClient();
-  return useMutation<
-    BOMComponent,
-    Error,
-    { bomId: number; component: CreateBOMComponentRequest }
-  >({
-    mutationFn: async ({ bomId, component }) => {
-      return createComponent({ ...component, bom: bomId });
-    },
-    onSuccess: (_, variables) => {
-      queryClient.invalidateQueries({ queryKey: ["boms"] });
-      queryClient.invalidateQueries({ queryKey: ["bom", variables.bomId] });
-    },
-  });
-}

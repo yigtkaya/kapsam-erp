@@ -39,7 +39,6 @@ export async function fetchBOM(id: number): Promise<BOM> {
   }
 
   const responseData = await response.json();
-  console.log(responseData);
   return responseData;
 }
 

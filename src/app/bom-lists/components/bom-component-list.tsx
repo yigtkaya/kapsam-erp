@@ -9,8 +9,13 @@ import {
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Trash2 } from "lucide-react";
-import { useUpdateBOMComponents } from "@/hooks/useBOMs";
 import { toast } from "sonner";
+import {
+  useUpdateComponent,
+  useDeleteComponent,
+  useComponents,
+} from "@/hooks/useComponents";
+import { Skeleton } from "@/components/ui/skeleton";
 
 interface BOMComponentListProps {
   bomId: number;
@@ -18,24 +23,29 @@ interface BOMComponentListProps {
 }
 
 export function BOMComponentList({ bomId, components }: BOMComponentListProps) {
-  const { mutate: updateComponents, isPending } = useUpdateBOMComponents();
+  const { mutate: updateComponents, isPending } = useUpdateComponent();
+  const { mutate: deleteBOMComponent, isPending: isDeleting } =
+    useDeleteComponent();
+  const { data: liveComponents, isLoading } = useComponents(bomId);
 
   const handleDelete = (componentId: number) => {
-    const updatedComponents = components.filter((c) => c.id !== componentId);
-    updateComponents(
-      { id: bomId, components: updatedComponents },
-      {
-        onSuccess: () => {
-          toast.success("Bileşen başarıyla silindi.");
-        },
-        onError: () => {
-          toast.error("Bileşen silinirken bir hata oluştu.");
-        },
-      }
-    );
+    deleteBOMComponent({ bomId, componentId });
   };
 
-  if (components.length === 0) {
+  // Use live components data if available, otherwise fall back to prop
+  const displayComponents = liveComponents || components;
+
+  if (isLoading) {
+    return (
+      <div className="space-y-2">
+        <Skeleton className="h-8 w-full" />
+        <Skeleton className="h-8 w-full" />
+        <Skeleton className="h-8 w-full" />
+      </div>
+    );
+  }
+
+  if (!displayComponents?.length) {
     return (
       <div className="text-center py-10 text-muted-foreground">
         Henüz bileşen eklenmemiş.
@@ -56,8 +66,9 @@ export function BOMComponentList({ bomId, components }: BOMComponentListProps) {
           <TableHead className="w-[100px]"></TableHead>
         </TableRow>
       </TableHeader>
+
       <TableBody>
-        {components.map((component) => (
+        {displayComponents.map((component: BOMComponent) => (
           <TableRow key={component.id}>
             <TableCell>{component.sequence_order}</TableCell>
             <TableCell>{component.product_code}</TableCell>
@@ -71,6 +82,7 @@ export function BOMComponentList({ bomId, components }: BOMComponentListProps) {
                 size="icon"
                 onClick={() => handleDelete(component.id)}
                 disabled={isPending}
+                className="hover:text-red-600 transition-colors"
               >
                 <Trash2 className="h-4 w-4" />
               </Button>

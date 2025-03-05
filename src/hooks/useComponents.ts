@@ -13,6 +13,10 @@ export function useComponents(bomId: number) {
     queryKey: ["components", bomId],
     queryFn: () => getAllComponentsForBom(bomId),
     enabled: !!bomId,
+    refetchOnMount: true,
+    refetchOnWindowFocus: true,
+    retry: 1,
+    staleTime: 0,
   });
 }
 
@@ -20,18 +24,13 @@ export function useCreateComponent() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async ({
-      bomId,
-      data,
-    }: {
-      bomId: number;
-      data: Omit<BOMComponent, "id" | "created_at" | "updated_at" | "bom">;
-    }) => {
-      return createComponent(data);
-    },
-    onSuccess: (_, { bomId }) => {
-      queryClient.invalidateQueries({ queryKey: ["components", bomId] });
-      toast.success("Komponent başarıyla oluşturuldu.");
+    mutationFn: createComponent,
+    onSuccess: (_, variables) => {
+      // Invalidate the specific components query for this BOM
+      queryClient.invalidateQueries({
+        queryKey: ["components", variables.bom],
+      });
+      toast.success("Komponent başarıyla eklendi.");
     },
     onError: (error: Error) => {
       toast.error(error.message);
@@ -77,14 +76,48 @@ export function useDeleteComponent() {
       bomId: number;
       componentId: number;
     }) => {
-      return deleteComponent(componentId);
+      const result = await deleteComponent(componentId);
+      return { result, componentId };
     },
     onSuccess: (_, { bomId }) => {
-      queryClient.invalidateQueries({ queryKey: ["components", bomId] });
       toast.success("Komponent başarıyla silindi.");
+      // Invalidate both the components and BOM queries
+      queryClient.invalidateQueries({ queryKey: ["components", bomId] });
+      queryClient.invalidateQueries({ queryKey: ["bom", bomId] });
     },
-    onError: (error: Error) => {
+    onMutate: async ({ bomId, componentId }) => {
+      // Cancel any outgoing refetches
+      await queryClient.cancelQueries({ queryKey: ["components", bomId] });
+      await queryClient.cancelQueries({ queryKey: ["bom", bomId] });
+
+      // Snapshot the previous value
+      const previousComponents = queryClient.getQueryData([
+        "components",
+        bomId,
+      ]);
+
+      // Optimistically update to the new value
+      queryClient.setQueryData(["components", bomId], (old: any) => {
+        return (
+          old?.filter((component: any) => component.id !== componentId) ?? []
+        );
+      });
+
+      // Return a context object with the snapshotted value
+      return { previousComponents };
+    },
+    onError: (error: Error, { bomId }, context) => {
+      // If the mutation fails, use the context returned from onMutate to roll back
+      queryClient.setQueryData(
+        ["components", bomId],
+        context?.previousComponents
+      );
       toast.error(error.message);
+    },
+    onSettled: (_, __, { bomId }) => {
+      // Always refetch after error or success to ensure consistency
+      queryClient.invalidateQueries({ queryKey: ["components", bomId] });
+      queryClient.invalidateQueries({ queryKey: ["bom", bomId] });
     },
   });
 }
