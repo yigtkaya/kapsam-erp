@@ -1,20 +1,24 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { SalesOrder, SalesOrderItem } from "@/types/sales";
+import { toast } from "sonner";
 import {
-  approveSalesOrder,
-  cancelSalesOrder,
   createSalesOrder,
   deleteSalesOrder,
-  fetchSalesOrder,
-  fetchSalesOrders,
+  getSalesOrder,
+  getSalesOrders,
   updateSalesOrder,
-} from "../api/actions";
-import { CreateSalesOrderDTO, SalesOrder, UpdateSalesOrderDTO } from "../types";
-import { toast } from "sonner";
+} from "@/api/sales";
 
 export function useSalesOrders() {
   return useQuery<SalesOrder[]>({
     queryKey: ["sales-orders"],
-    queryFn: fetchSalesOrders,
+    queryFn: async () => {
+      const response = await getSalesOrders();
+      if (Array.isArray(response)) {
+        return response;
+      }
+      return response.results || [];
+    },
   });
 }
 
@@ -22,10 +26,29 @@ export function useCreateSalesOrder() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (data: CreateSalesOrderDTO) => createSalesOrder(data),
+    mutationFn: (data: {
+      customer: number;
+      deadline_date: string;
+      order_receiving_date: string;
+      kapsam_deadline_date: string;
+      status: string;
+      items: Pick<SalesOrderItem, "product" | "quantity">[];
+    }) =>
+      createSalesOrder({
+        ...data,
+        customer: data.customer,
+        items: data.items.map((item) => ({
+          ...item,
+          product: item.product,
+        })),
+      }),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["sales-orders"] });
-      toast.success("Sales order created successfully");
+      queryClient.invalidateQueries({
+        queryKey: ["sales-orders"],
+        exact: true,
+        refetchType: "all",
+      });
+      toast.success("Satış siparişi başarıyla oluşturuldu");
     },
     onError: () => {
       toast.error("Failed to create sales order");
@@ -37,10 +60,19 @@ export function useUpdateSalesOrder() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({ id, data }: { id: string; data: UpdateSalesOrderDTO }) =>
-      updateSalesOrder(id, data),
-    onSuccess: () => {
+    mutationFn: ({
+      id,
+      data,
+    }: {
+      id: string;
+      data: Partial<{
+        deadline_date: string;
+        status: string;
+      }>;
+    }) => updateSalesOrder(id, data),
+    onSuccess: (_, { id }) => {
       queryClient.invalidateQueries({ queryKey: ["sales-orders"] });
+      queryClient.invalidateQueries({ queryKey: ["sales-order", id] });
       toast.success("Sales order updated successfully");
     },
     onError: () => {
@@ -49,59 +81,25 @@ export function useUpdateSalesOrder() {
   });
 }
 
+export function useSalesOrder(id: string) {
+  return useQuery({
+    queryKey: ["sales-order", id],
+    queryFn: () => getSalesOrder(id),
+  });
+}
+
 export function useDeleteSalesOrder() {
   const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: (id: string) => deleteSalesOrder(id),
-    onSuccess: () => {
+    onSuccess: (_, id) => {
       queryClient.invalidateQueries({ queryKey: ["sales-orders"] });
-      toast.success("Sales order deleted successfully");
+      queryClient.removeQueries({ queryKey: "sales-order", id });
+      toast.success("Satış siparişi başarıyla silindi");
     },
     onError: () => {
-      toast.error("Failed to delete sales order");
+      toast.error("Satış siparişi silinirken bir hata oluştu");
     },
   });
-}
-
-export function useApproveSalesOrder() {
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: (id: string) => approveSalesOrder(id),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["sales-orders"] });
-      toast.success("Sales order approved successfully");
-    },
-    onError: () => {
-      toast.error("Failed to approve sales order");
-    },
-  });
-}
-
-export function useCancelSalesOrder() {
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: (id: string) => cancelSalesOrder(id),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["sales-orders"] });
-      toast.success("Sales order cancelled successfully");
-    },
-    onError: () => {
-      toast.error("Failed to cancel sales order");
-    },
-  });
-}
-
-export function useSalesOrder(id: string) {
-  const { data: salesOrder, isLoading } = useQuery({
-    queryKey: ["sales-order", id],
-    queryFn: () => fetchSalesOrder(id),
-  });
-
-  return {
-    salesOrder,
-    isLoading,
-  };
 }
