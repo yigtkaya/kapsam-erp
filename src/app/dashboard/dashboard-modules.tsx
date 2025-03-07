@@ -91,14 +91,14 @@ const modules = [
     color: "bg-blue-100",
     roles: ["ADMIN"],
   },
-  {
-    title: "Ürün Reçeteleri",
-    description: "Ürün reçetelerinin takibi ve yönetimi",
-    icon: Workflow,
-    href: "/boms",
-    color: "bg-blue-100",
-    roles: ["ADMIN"],
-  },
+  // {
+  //   title: "Ürün Reçeteleri",
+  //   description: "Ürün reçetelerinin takibi ve yönetimi",
+  //   icon: Workflow,
+  //   href: "/boms",
+  //   color: "bg-blue-100",
+  //   roles: ["ADMIN"],
+  // },
   {
     title: "İş Emirleri",
     description: "İş emirlerinin takibi ve yönetimi",

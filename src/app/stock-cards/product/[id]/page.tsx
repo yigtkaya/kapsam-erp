@@ -49,6 +49,7 @@ const productTypeToCategory: Record<ProductType, InventoryCategoryName> = {
   SEMI: "PROSES", // Semi-finished products go to process
   SINGLE: "MAMUL", // Single products go to finished products
   MONTAGED: "MAMUL", // Montaged products also go to finished products
+  SPRING: "HAMMADDE",
 };
 
 export default function ProductDetailsPage() {
