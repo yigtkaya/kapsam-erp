@@ -2,21 +2,7 @@ import { Product } from "./inventory";
 import { Customer } from "./core";
 import { User } from "./user";
 
-export type ShipmentStatus =
-  | "DRAFT"
-  | "PENDING"
-  | "CONFIRMED"
-  | "PICKED_UP"
-  | "IN_TRANSIT"
-  | "DELIVERED"
-  | "CANCELLED";
-
-export type SalesOrderStatus =
-  | "DRAFT"
-  | "PENDING_APPROVAL"
-  | "APPROVED"
-  | "CANCELLED"
-  | "COMPLETED";
+export type SalesOrderStatus = "OPEN" | "CLOSED";
 
 export interface SalesOrderItem {
   id?: number;
@@ -49,51 +35,27 @@ export interface Shipping {
   id: string;
   shipping_no: string;
   shipping_date: string;
-  shipping_amount: number;
   order: string;
-  shipping_note: string | null;
-  items: ShipmentItem[];
-  created_at: string;
-  updated_at: string;
-}
-
-export interface ShipmentItem {
-  id: string;
-  shipment: string;
   order_item: string;
-  product: number;
-  product_details?: Product;
   quantity: number;
   package_number: number;
-  lot_number: string | null;
-  serial_numbers: string[];
+  shipping_note: string | null;
   created_at: string;
   updated_at: string;
 }
 
 export interface CreateShipmentRequest {
+  shipping_no: string;
   shipping_date: string;
-  shipping_amount: number;
-  shipping_note?: string;
   order: string;
-  items: Array<{
-    order_item: string;
-    quantity: number;
-    package_number: number;
-    lot_number?: string;
-    serial_numbers?: string[];
-  }>;
+  order_item: string;
+  quantity: number;
+  package_number: number;
+  shipping_note?: string;
 }
 
 export interface UpdateShipmentStatusRequest {
-  status: ShipmentStatus;
+  status: "OPEN" | "CLOSED";
   tracking_number?: string;
   estimated_delivery_date?: string;
-}
-
-export interface PaginatedResponse<T> {
-  count: number;
-  next: string | null;
-  previous: string | null;
-  results: T[];
 }

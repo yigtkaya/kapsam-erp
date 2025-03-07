@@ -45,7 +45,12 @@ export interface UnitOfMeasure {
 }
 
 // Product and Customer types
-export type ProductType = "SINGLE" | "SEMI" | "MONTAGED" | "STANDARD_PART";
+export type ProductType =
+  | "SINGLE"
+  | "SEMI"
+  | "MONTAGED"
+  | "STANDARD_PART"
+  | "SPRING";
 
 export interface Product {
   id: number;

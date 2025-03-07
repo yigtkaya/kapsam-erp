@@ -19,17 +19,7 @@ export function SalesCard({ order }: SalesCardProps) {
           <div className="space-y-2">
             <div className="flex items-center justify-between">
               <h3 className="font-semibold">{order.order_number}</h3>
-              <Badge
-                variant={
-                  order.status === "COMPLETED"
-                    ? "default"
-                    : order.status === "CANCELLED"
-                    ? "destructive"
-                    : "secondary"
-                }
-              >
-                {order.status_display}
-              </Badge>
+              <Badge variant="default">{order.status_display}</Badge>
             </div>
             <p className="text-sm text-muted-foreground">
               {order.customer_name}

@@ -1,6 +1,6 @@
 "use server";
 
-import { Shipment } from "@/app/sales/types";
+import { Shipping, CreateShipmentRequest } from "@/types/sales";
 import { cookies } from "next/headers";
 
 const API_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
@@ -22,12 +22,9 @@ export async function getAuthHeaders() {
   };
 }
 
-export async function createShipment(data: {
-  shipping_date: string;
-  shipping_amount: number;
-  order: string;
-  shipping_note?: string;
-}): Promise<Shipment> {
+export async function createShipment(
+  data: CreateShipmentRequest
+): Promise<Shipping> {
   const response = await fetch(`${API_URL}/api/sales/shipments/`, {
     method: "POST",
     headers: await getAuthHeaders(),
@@ -35,14 +32,14 @@ export async function createShipment(data: {
   });
 
   if (!response.ok) {
-    console.log(response);
-    throw new Error("Failed to create shipment");
+    const errorData = await response.json().catch(() => null);
+    throw new Error(errorData?.message || "Failed to create shipment");
   }
 
   return response.json();
 }
 
-export async function fetchShipment(shippingNo: string): Promise<Shipment> {
+export async function fetchShipment(shippingNo: string): Promise<Shipping> {
   const response = await fetch(
     `${API_URL}/api/sales/shipments/${shippingNo}/`,
     {

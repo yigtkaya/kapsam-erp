@@ -23,6 +23,7 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { useDeleteSalesOrder } from "../hooks/useSalesOrders";
+import { useState } from "react";
 
 interface DataTableRowActionsProps {
   row: SalesOrder;
@@ -31,17 +32,23 @@ interface DataTableRowActionsProps {
 export function DataTableRowActions({ row }: DataTableRowActionsProps) {
   const router = useRouter();
   const { mutate: deleteSalesOrder } = useDeleteSalesOrder();
+  const [isAlertOpen, setIsAlertOpen] = useState(false);
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
 
-  const handleDelete = async () => {
+  const handleDelete = async (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
     try {
-      deleteSalesOrder(row.id!);
+      await deleteSalesOrder(row.id!);
+      setIsAlertOpen(false);
+      setIsDropdownOpen(false);
     } catch (error) {
       console.error("Failed to delete sales order:", error);
     }
   };
 
   return (
-    <DropdownMenu>
+    <DropdownMenu open={isDropdownOpen} onOpenChange={setIsDropdownOpen}>
       <DropdownMenuTrigger asChild>
         <Button variant="ghost" className="h-8 w-8 p-0">
           <span className="sr-only">Menüyü aç</span>
@@ -60,14 +67,20 @@ export function DataTableRowActions({ row }: DataTableRowActionsProps) {
           Düzenle
         </DropdownMenuItem>
         <DropdownMenuSeparator />
-        <AlertDialog>
+        <AlertDialog open={isAlertOpen} onOpenChange={setIsAlertOpen}>
           <AlertDialogTrigger asChild>
-            <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
+            <DropdownMenuItem
+              onSelect={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                setIsAlertOpen(true);
+              }}
+            >
               <Trash className="mr-2 h-4 w-4" />
               Sil
             </DropdownMenuItem>
           </AlertDialogTrigger>
-          <AlertDialogContent>
+          <AlertDialogContent onClick={(e) => e.stopPropagation()}>
             <AlertDialogHeader>
               <AlertDialogTitle>Emin misiniz?</AlertDialogTitle>
               <AlertDialogDescription>
@@ -75,7 +88,9 @@ export function DataTableRowActions({ row }: DataTableRowActionsProps) {
               </AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter>
-              <AlertDialogCancel>İptal</AlertDialogCancel>
+              <AlertDialogCancel onClick={(e) => e.stopPropagation()}>
+                İptal
+              </AlertDialogCancel>
               <AlertDialogAction
                 onClick={handleDelete}
                 className="bg-red-600 hover:bg-red-700"

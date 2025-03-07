@@ -27,6 +27,7 @@ export function useCreateSalesOrder() {
 
   return useMutation({
     mutationFn: (data: {
+      order_number: string;
       customer: number;
       deadline_date: string;
       order_receiving_date: string;
@@ -36,6 +37,7 @@ export function useCreateSalesOrder() {
     }) =>
       createSalesOrder({
         ...data,
+        order_number: data.order_number,
         customer: data.customer,
         items: data.items.map((item) => ({
           ...item,
@@ -48,11 +50,8 @@ export function useCreateSalesOrder() {
         exact: true,
         refetchType: "all",
       });
-      toast.success("Satış siparişi başarıyla oluşturuldu");
     },
-    onError: () => {
-      toast.error("Failed to create sales order");
-    },
+    onError: () => {},
   });
 }
 
@@ -73,11 +72,8 @@ export function useUpdateSalesOrder() {
     onSuccess: (_, { id }) => {
       queryClient.invalidateQueries({ queryKey: ["sales-orders"] });
       queryClient.invalidateQueries({ queryKey: ["sales-order", id] });
-      toast.success("Sales order updated successfully");
     },
-    onError: () => {
-      toast.error("Failed to update sales order");
-    },
+    onError: () => {},
   });
 }
 
@@ -92,13 +88,32 @@ export function useDeleteSalesOrder() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (id: string) => deleteSalesOrder(id),
-    onSuccess: (_, id) => {
+    mutationFn: async (id: string) => {
+      await deleteSalesOrder(id);
+      return id;
+    },
+    onMutate: async (id) => {
+      await queryClient.cancelQueries({ queryKey: ["sales-orders"] });
+      await queryClient.cancelQueries({ queryKey: ["sales-order", id] });
+
+      const previousOrders = queryClient.getQueryData(["sales-orders"]);
+
+      queryClient.setQueryData(["sales-orders"], (old: any) =>
+        Array.isArray(old) ? old.filter((order: any) => order.id !== id) : old
+      );
+
+      return { previousOrders };
+    },
+    onSuccess: (id) => {
       queryClient.invalidateQueries({ queryKey: ["sales-orders"] });
-      queryClient.removeQueries({ queryKey: "sales-order", id });
+      queryClient.removeQueries({ queryKey: ["sales-order", id] });
       toast.success("Satış siparişi başarıyla silindi");
     },
-    onError: () => {
+    onError: (error, id, context: any) => {
+      if (context?.previousOrders) {
+        queryClient.setQueryData(["sales-orders"], context.previousOrders);
+      }
+      console.error("Delete error:", error);
       toast.error("Satış siparişi silinirken bir hata oluştu");
     },
   });

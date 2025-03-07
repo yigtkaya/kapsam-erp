@@ -1,6 +1,10 @@
 "use server";
 
-import { CreateShipmentRequest, SalesOrderItem } from "@/types/sales";
+import {
+  CreateShipmentRequest,
+  SalesOrderItem,
+  SalesOrderStatus,
+} from "@/types/sales";
 
 import { cookies } from "next/headers";
 
@@ -54,38 +58,65 @@ export const getSalesOrder = async (orderId: string) => {
   }
 
   const responseData = await response.json();
+  console.log(responseData);
+
   return responseData;
 };
 
-export const createSalesOrder = async (data: {
+interface CreateSalesOrderRequest {
+  order_number: string;
   customer: number;
   deadline_date: string;
-  order_receiving_date: string;
-  kapsam_deadline_date: string;
-  status: string;
-  items: {
+  order_receiving_date?: string;
+  kapsam_deadline_date?: string;
+  items: Array<{
     product: number;
     quantity: number;
-  }[];
-}) => {
-  console.log(data);
+  }>;
+}
+
+interface CreateSalesOrderResponse {
+  id: number;
+  order_number: string;
+  customer: number;
+  customer_name: string;
+  order_date: string;
+  order_receiving_date: string | null;
+  deadline_date: string;
+  kapsam_deadline_date: string | null;
+  approved_by: string | null;
+  status: SalesOrderStatus;
+  status_display: string;
+  items: Array<{
+    id: number;
+    product: number;
+    product_details: {
+      product_code: string;
+      product_name: string;
+      [key: string]: any;
+    };
+    quantity: number;
+    fulfilled_quantity: number;
+  }>;
+  shipments: any[];
+}
+
+export const createSalesOrder = async (
+  data: CreateSalesOrderRequest
+): Promise<CreateSalesOrderResponse> => {
   const response = await fetch(`${API_URL}/api/sales/orders/`, {
     method: "POST",
     headers: await getAuthHeaders(),
     body: JSON.stringify(data),
   });
 
-  console.log(response);
+  const responseData = await response.json();
 
   if (!response.ok) {
-    console.log(await response.json());
-    console.log(response.statusText);
-    console.log(response.status);
+    console.error("Failed to create sales order:", responseData);
     throw new Error("Failed to create sales order");
   }
 
-  const responseData = await response.json();
-  console.log(responseData);
   return responseData;
 };
 
@@ -99,7 +130,8 @@ export const deleteSalesOrder = async (orderId: string) => {
     throw new Error("Failed to delete sales order");
   }
 
-  return response;
+  // Don't return anything for 204 responses
+  return;
 };
 
 export const updateSalesOrder = async (
@@ -178,4 +210,53 @@ export const deleteShipment = async (shipmentId: string) => {
   }
 
   return response;
+};
+
+interface CreateOrderShipmentRequest {
+  shipping_date: string;
+  shipping_amount: number;
+  order_item: number;
+  quantity: number;
+  package_number: number;
+  shipping_note?: string;
+}
+
+interface CreateOrderShipmentResponse {
+  id: string;
+  shipping_no: string;
+  shipping_date: string;
+  shipping_amount: number;
+  order: number;
+  order_item: number;
+  product_details: {
+    product_code: string;
+    product_name: string;
+    [key: string]: any;
+  };
+  quantity: number;
+  package_number: number;
+  shipping_note: string | null;
+}
+
+export const createOrderShipment = async (
+  orderId: string,
+  data: CreateOrderShipmentRequest
+): Promise<CreateOrderShipmentResponse> => {
+  const response = await fetch(
+    `${API_URL}/api/sales/orders/${orderId}/create-shipment/`,
+    {
+      method: "POST",
+      headers: await getAuthHeaders(),
+      body: JSON.stringify(data),
+    }
+  );
+
+  const responseData = await response.json();
+
+  if (!response.ok) {
+    console.error("Failed to create shipment:", responseData);
+    throw new Error("Failed to create shipment");
+  }
+
+  return responseData;
 };

@@ -1,12 +1,11 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Shipment } from "../types";
 import { toast } from "sonner";
 import { fetchShipment } from "@/api/shipments";
 import { createShipment, deleteShipment } from "@/api/sales";
-import { CreateShipmentRequest } from "@/types/sales";
+import { CreateShipmentRequest, Shipping } from "@/types/sales";
 
 export function useShipment(shippingNo: string) {
-  return useQuery({
+  return useQuery<Shipping>({
     queryKey: ["shipment", shippingNo],
     queryFn: () => fetchShipment(shippingNo),
     enabled: !!shippingNo,
@@ -16,18 +15,23 @@ export function useShipment(shippingNo: string) {
 export function useCreateShipment() {
   const queryClient = useQueryClient();
 
-  return useMutation({
+  return useMutation<Shipping, Error, CreateShipmentRequest>({
     mutationFn: async (data: CreateShipmentRequest) => {
       try {
         return await createShipment(data);
       } catch (error) {
-        // Rethrow the error with the response data
+        if (error instanceof Error) {
+          toast.error(error.message);
+        } else {
+          toast.error("Sevkiyat oluşturulurken bir hata oluştu");
+        }
         throw error;
       }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["sales-orders"] });
       queryClient.invalidateQueries({ queryKey: ["shipment"] });
+      toast.success("Sevkiyat başarıyla oluşturuldu");
     },
   });
 }

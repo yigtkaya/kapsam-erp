@@ -107,7 +107,7 @@ export default function SalesPage() {
   }, [salesOrders, query, sort]);
 
   return (
-    <div className="container mx-auto py-4 space-y-6">
+    <div className="max-w-[1600px] mx-auto py-4 space-y-6 px-4">
       <PageHeader
         title="Siparişler"
         description="Siparişlerin takibi ve yönetimi"

@@ -79,6 +79,7 @@ export function NewStockCardForm() {
       SEMI: 2,
       MONTAGED: 3,
       STANDARD_PART: 1,
+      SPRING: 1,
     };
     return categoryMap[productType];
   }
@@ -198,6 +199,7 @@ export function NewStockCardForm() {
                     <SelectItem value="STANDARD_PART">
                       Standart Parça
                     </SelectItem>
+                    <SelectItem value="SPRING">Yay</SelectItem>
                   </SelectContent>
                 </Select>
                 <FormMessage />

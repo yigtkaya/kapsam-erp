@@ -11,13 +11,8 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { MoreHorizontal, Pencil, Trash, Check, X } from "lucide-react";
 import { useRouter } from "next/navigation";
-import {
-  useApproveSalesOrder,
-  useCancelSalesOrder,
-  useDeleteSalesOrder,
-  useSalesOrders,
-} from "../hooks/useSalesOrders";
-import { SalesOrder } from "../types";
+import { useDeleteSalesOrder, useSalesOrders } from "../hooks/useSalesOrders";
+import { SalesOrder } from "@/types/sales";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -36,8 +31,6 @@ interface DataTableRowActionsProps {
 
 export function DataTableRowActions({ row }: DataTableRowActionsProps) {
   const router = useRouter();
-  const { mutateAsync: approveOrder } = useApproveSalesOrder();
-  const { mutateAsync: cancelOrder } = useCancelSalesOrder();
   const { mutateAsync: deleteOrder } = useDeleteSalesOrder();
   const order = row.original;
 
@@ -56,18 +49,6 @@ export function DataTableRowActions({ row }: DataTableRowActionsProps) {
           <Pencil className="mr-2 h-4 w-4" />
           Edit
         </DropdownMenuItem>
-        {order.status === "PENDING_APPROVAL" && (
-          <>
-            <DropdownMenuItem onClick={() => approveOrder(order.order_number)}>
-              <Check className="mr-2 h-4 w-4" />
-              Approve
-            </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => cancelOrder(order.order_number)}>
-              <X className="mr-2 h-4 w-4" />
-              Cancel
-            </DropdownMenuItem>
-          </>
-        )}
         <DropdownMenuSeparator />
         <AlertDialog>
           <AlertDialogTrigger asChild>

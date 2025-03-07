@@ -18,6 +18,7 @@ import {
 } from "@/components/ui/table";
 import { DataTablePagination } from "./data-table-pagination";
 import { DataTableRowActions } from "./data-table-row-actions";
+import { useRouter } from "next/navigation";
 
 interface DataTableProps {
   data: SalesOrder[];
@@ -36,6 +37,7 @@ export function DataTable({
   pageCount,
   onPageChange,
 }: DataTableProps) {
+  const router = useRouter();
   const table = useReactTable({
     data,
     columns,
@@ -108,7 +110,22 @@ export function DataTable({
           <TableBody>
             {table.getRowModel().rows?.length ? (
               table.getRowModel().rows.map((row) => (
-                <TableRow key={row.id}>
+                <TableRow
+                  key={row.id}
+                  className="group cursor-pointer transition-colors hover:bg-muted/50"
+                  onClick={(e) => {
+                    // Prevent navigation if clicking on action buttons or their container
+                    if (
+                      (e.target as HTMLElement).closest(".action-button") ||
+                      (e.target as HTMLElement).closest('[role="menuitem"]') ||
+                      (e.target as HTMLElement).closest('[role="dialog"]')
+                    ) {
+                      e.stopPropagation();
+                      return;
+                    }
+                    router.push(`/sales/${row.original.id}`);
+                  }}
+                >
                   {row.getVisibleCells().map((cell) => (
                     <TableCell key={cell.id}>
                       {flexRender(
@@ -117,7 +134,7 @@ export function DataTable({
                       )}
                     </TableCell>
                   ))}
-                  <TableCell>
+                  <TableCell className="action-button">
                     <DataTableRowActions row={row.original} />
                   </TableCell>
                 </TableRow>
@@ -128,7 +145,7 @@ export function DataTable({
                   colSpan={columns.length + 1}
                   className="h-24 text-center"
                 >
-                  No results.
+                  Sipariş bulunamadı.
                 </TableCell>
               </TableRow>
             )}
