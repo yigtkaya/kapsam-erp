@@ -94,11 +94,11 @@ export default function SalesPage() {
           return b.customer_name.localeCompare(a.customer_name);
         case "date_asc":
           return (
-            new Date(a.order_date).getTime() - new Date(b.order_date).getTime()
+            new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
           );
         case "date_desc":
           return (
-            new Date(b.order_date).getTime() - new Date(a.order_date).getTime()
+            new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
           );
         default:
           return 0;
@@ -107,34 +107,36 @@ export default function SalesPage() {
   }, [salesOrders, query, sort]);
 
   return (
-    <div className="max-w-[1600px] mx-auto py-4 space-y-6 px-4">
-      <PageHeader
-        title="Siparişler"
-        description="Siparişlerin takibi ve yönetimi"
-        showBackButton
-        onBack={() => router.replace("/dashboard")}
-        action={
-          <Link href="/sales/new">
-            <Button className="gap-1.5">
-              <Plus className="h-4 w-4" />
-              Yeni Sipariş
-            </Button>
-          </Link>
-        }
-      />
+    <div className="overflow-x-hidden">
+      <div className="mx-auto py-4 space-y-6 px-4">
+        <PageHeader
+          title="Siparişler"
+          description="Siparişlerin takibi ve yönetimi"
+          showBackButton
+          onBack={() => router.replace("/dashboard")}
+          action={
+            <Link href="/sales/new">
+              <Button className="gap-1.5">
+                <Plus className="h-4 w-4" />
+                Yeni Sipariş
+              </Button>
+            </Link>
+          }
+        />
 
-      <SalesView
-        isLoading={isLoading}
-        error={error}
-        items={filteredAndSortedOrders}
-        searchQuery={query}
-        onSearchChange={handleSearchChange}
-        sortBy={sort}
-        onSortChange={handleSortChange}
-        currentPage={page}
-        onPageChange={handlePageChange}
-        pageSize={PAGE_SIZE}
-      />
+        <SalesView
+          isLoading={isLoading}
+          error={error}
+          items={filteredAndSortedOrders}
+          searchQuery={query}
+          onSearchChange={handleSearchChange}
+          sortBy={sort}
+          onSortChange={handleSortChange}
+          currentPage={page}
+          onPageChange={handlePageChange}
+          pageSize={PAGE_SIZE}
+        />
+      </div>
     </div>
   );
 }

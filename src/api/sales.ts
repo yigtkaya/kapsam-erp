@@ -1,7 +1,9 @@
 "use server";
 
 import {
+  CreateSalesOrderRequest,
   CreateShipmentRequest,
+  SalesOrder,
   SalesOrderItem,
   SalesOrderStatus,
 } from "@/types/sales";
@@ -44,6 +46,7 @@ export const getSalesOrders = async (params?: Record<string, any>) => {
   }
 
   const responseData = await response.json();
+  console.log(responseData);
   return responseData;
 };
 
@@ -53,7 +56,10 @@ export const getSalesOrder = async (orderId: string) => {
     headers: await getAuthHeaders(),
   });
 
+  console.log(response);
+
   if (!response.ok) {
+    console.log(await response.json());
     throw new Error("Failed to fetch sales order");
   }
 
@@ -63,57 +69,20 @@ export const getSalesOrder = async (orderId: string) => {
   return responseData;
 };
 
-interface CreateSalesOrderRequest {
-  order_number: string;
-  customer: number;
-  deadline_date: string;
-  order_receiving_date?: string;
-  kapsam_deadline_date?: string;
-  items: Array<{
-    product: number;
-    quantity: number;
-  }>;
-}
-
-interface CreateSalesOrderResponse {
-  id: number;
-  order_number: string;
-  customer: number;
-  customer_name: string;
-  order_date: string;
-  order_receiving_date: string | null;
-  deadline_date: string;
-  kapsam_deadline_date: string | null;
-  approved_by: string | null;
-  status: SalesOrderStatus;
-  status_display: string;
-  items: Array<{
-    id: number;
-    product: number;
-    product_details: {
-      product_code: string;
-      product_name: string;
-      [key: string]: any;
-    };
-    quantity: number;
-    fulfilled_quantity: number;
-  }>;
-  shipments: any[];
-}
-
 export const createSalesOrder = async (
   data: CreateSalesOrderRequest
-): Promise<CreateSalesOrderResponse> => {
+): Promise<SalesOrder> => {
+  console.log(data);
   const response = await fetch(`${API_URL}/api/sales/orders/`, {
     method: "POST",
     headers: await getAuthHeaders(),
     body: JSON.stringify(data),
   });
 
+  console.log(response);
   const responseData = await response.json();
-
   if (!response.ok) {
-    console.error("Failed to create sales order:", responseData);
+    console.log(responseData);
     throw new Error("Failed to create sales order");
   }
 
@@ -259,4 +228,77 @@ export const createOrderShipment = async (
   }
 
   return responseData;
+};
+
+// Add new sales order item
+export const createSalesOrderItem = async (
+  orderId: string,
+  data: Omit<SalesOrderItem, "id" | "product_details">
+): Promise<SalesOrderItem> => {
+  const response = await fetch(
+    `${API_URL}/api/sales/orders/${orderId}/items/`,
+    {
+      method: "POST",
+      headers: await getAuthHeaders(),
+      body: JSON.stringify(data),
+    }
+  );
+
+  const responseData = await response.json();
+
+  if (!response.ok) {
+    console.error("Failed to create sales order item:", responseData);
+    throw new Error("Failed to create sales order item");
+  }
+
+  return responseData;
+};
+
+// Update existing sales order item
+export const updateSalesOrderItem = async (
+  orderId: string,
+  itemId: number,
+  data: Partial<Omit<SalesOrderItem, "id" | "product_details">>
+): Promise<SalesOrderItem> => {
+  console.log(data);
+
+  const response = await fetch(
+    `${API_URL}/api/sales/orders/${orderId}/items/${itemId}/`,
+    {
+      method: "PATCH",
+      headers: await getAuthHeaders(),
+      body: JSON.stringify(data),
+    }
+  );
+
+  console.log(response);
+
+  const responseData = await response.json();
+
+  if (!response.ok) {
+    console.log(responseData);
+    console.log(response.statusText);
+    throw new Error("Failed to update sales order item");
+  }
+
+  return responseData;
+};
+
+// Delete sales order item
+export const deleteSalesOrderItem = async (
+  orderId: string,
+  itemId: number
+): Promise<void> => {
+  const response = await fetch(
+    `${API_URL}/api/sales/orders/${orderId}/items/${itemId}/`,
+    {
+      method: "DELETE",
+      headers: await getAuthHeaders(),
+    }
+  );
+
+  if (!response.ok) {
+    console.error("Failed to delete sales order item");
+    throw new Error("Failed to delete sales order item");
+  }
 };

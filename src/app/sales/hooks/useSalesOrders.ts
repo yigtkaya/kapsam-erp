@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { SalesOrder, SalesOrderItem } from "@/types/sales";
+import { CreateSalesOrderRequest, SalesOrder } from "@/types/sales";
 import { toast } from "sonner";
 import {
   createSalesOrder,
@@ -26,24 +26,7 @@ export function useCreateSalesOrder() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (data: {
-      order_number: string;
-      customer: number;
-      deadline_date: string;
-      order_receiving_date: string;
-      kapsam_deadline_date: string;
-      status: string;
-      items: Pick<SalesOrderItem, "product" | "quantity">[];
-    }) =>
-      createSalesOrder({
-        ...data,
-        order_number: data.order_number,
-        customer: data.customer,
-        items: data.items.map((item) => ({
-          ...item,
-          product: item.product,
-        })),
-      }),
+    mutationFn: (data: CreateSalesOrderRequest) => createSalesOrder(data),
     onSuccess: () => {
       queryClient.invalidateQueries({
         queryKey: ["sales-orders"],

@@ -65,7 +65,7 @@ const formSchema = z.object({
   shipping_no: z.string().min(1, "Sevkiyat numarası zorunludur"),
   shipping_date: z.string().min(1, "Sevkiyat tarihi zorunludur"),
   shipping_note: z.string().optional(),
-  order_item: z.string().min(1, "Lütfen bir ürün seçiniz"),
+  order_item: z.number().min(1, "Lütfen bir ürün seçiniz"),
   quantity: z
     .number()
     .min(1, "Miktar 1'den büyük olmalıdır")
@@ -90,7 +90,7 @@ export default function CreateShipmentPage() {
       shipping_no: `SHP-${new Date().getTime().toString().slice(-6)}`,
       shipping_date: new Date().toISOString().split("T")[0],
       shipping_note: "",
-      order_item: "",
+      order_item: 0,
       quantity: 1,
       package_number: 1,
     },
@@ -103,7 +103,7 @@ export default function CreateShipmentPage() {
     }
 
     const remainingQuantity =
-      selectedItem.quantity - (selectedItem.fulfilled_quantity || 0);
+      selectedItem.ordered_quantity - (selectedItem.fulfilled_quantity || 0);
     if (values.quantity > remainingQuantity) {
       toast.error(
         `Sevk miktarı kalan miktardan (${remainingQuantity}) fazla olamaz`
@@ -134,7 +134,7 @@ export default function CreateShipmentPage() {
 
   const handleItemSelect = (item: SalesOrderItem) => {
     setSelectedItem(item);
-    form.setValue("order_item", item.id?.toString() || "");
+    form.setValue("order_item", item.id || 0);
   };
 
   if (isLoading) {
@@ -161,7 +161,8 @@ export default function CreateShipmentPage() {
   }
 
   const availableItems = order.items.filter(
-    (item: SalesOrderItem) => item.quantity - (item.fulfilled_quantity || 0) > 0
+    (item: SalesOrderItem) =>
+      item.ordered_quantity - (item.fulfilled_quantity || 0) > 0
   );
 
   if (availableItems.length === 0) {
@@ -248,7 +249,7 @@ export default function CreateShipmentPage() {
                   >
                     {availableItems.map((item: SalesOrderItem) => {
                       const remainingQuantity =
-                        item.quantity - (item.fulfilled_quantity || 0);
+                        item.ordered_quantity - (item.fulfilled_quantity || 0);
                       return (
                         <div
                           key={item.id}
@@ -318,7 +319,7 @@ export default function CreateShipmentPage() {
                                 type="number"
                                 min="1"
                                 max={
-                                  selectedItem.quantity -
+                                  selectedItem.ordered_quantity -
                                   (selectedItem.fulfilled_quantity || 0)
                                 }
                                 {...field}
@@ -329,7 +330,7 @@ export default function CreateShipmentPage() {
                             </FormControl>
                             <FormDescription>
                               Maksimum:{" "}
-                              {selectedItem.quantity -
+                              {selectedItem.ordered_quantity -
                                 (selectedItem.fulfilled_quantity || 0)}
                             </FormDescription>
                             <FormMessage />

@@ -12,7 +12,7 @@ export function useShipment(shippingNo: string) {
   });
 }
 
-export function useCreateShipment() {
+export function useCreateShipment(orderId?: string) {
   const queryClient = useQueryClient();
 
   return useMutation<Shipping, Error, CreateShipmentRequest>({
@@ -31,12 +31,15 @@ export function useCreateShipment() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["sales-orders"] });
       queryClient.invalidateQueries({ queryKey: ["shipment"] });
+      if (orderId) {
+        queryClient.invalidateQueries({ queryKey: ["salesOrder", orderId] });
+      }
       toast.success("Sevkiyat başarıyla oluşturuldu");
     },
   });
 }
 
-export function useDeleteShipment() {
+export function useDeleteShipment(orderId?: string) {
   const queryClient = useQueryClient();
 
   return useMutation({
@@ -44,6 +47,9 @@ export function useDeleteShipment() {
     onSuccess: (_, id) => {
       queryClient.invalidateQueries({ queryKey: ["shipment"] });
       queryClient.invalidateQueries({ queryKey: ["sales-orders"] });
+      if (orderId) {
+        queryClient.invalidateQueries({ queryKey: ["salesOrder", orderId] });
+      }
       toast.success("Sevkiyat başarıyla silindi");
     },
     onError: () => {

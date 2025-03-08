@@ -52,6 +52,8 @@ export function SalesView({
   const end = start + pageSize;
   const currentItems = items.slice(start, end);
   const totalPages = Math.ceil(items.length / pageSize);
+  const items2 = currentItems.flatMap((item) => item.items);
+  console.log(items2);
 
   return (
     <div className="space-y-4">
@@ -80,7 +82,7 @@ export function SalesView({
       <SalesFilters />
 
       <DataTable
-        data={currentItems}
+        data={currentItems.flatMap((item) => item.items)}
         columns={columns}
         isLoading={isLoading}
         currentPage={currentPage}

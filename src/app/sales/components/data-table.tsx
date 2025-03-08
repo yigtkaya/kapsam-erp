@@ -6,7 +6,7 @@ import {
   flexRender,
   getCoreRowModel,
   useReactTable,
-  Table as TableInstance,
+  getExpandedRowModel,
 } from "@tanstack/react-table";
 import {
   Table,
@@ -19,10 +19,11 @@ import {
 import { DataTablePagination } from "./data-table-pagination";
 import { DataTableRowActions } from "./data-table-row-actions";
 import { useRouter } from "next/navigation";
+import type { SalesOrderItem } from "@/types/sales";
 
 interface DataTableProps {
-  data: SalesOrder[];
-  columns: ColumnDef<SalesOrder>[];
+  data: SalesOrderItem[];
+  columns: ColumnDef<SalesOrderItem>[];
   isLoading: boolean;
   currentPage: number;
   pageCount: number;
@@ -51,22 +52,20 @@ export function DataTable({
       <div className="rounded-md border">
         <Table>
           <TableHeader>
-            <TableRow>
-              {table
-                .getHeaderGroups()
-                .map((headerGroup) =>
-                  headerGroup.headers.map((header) => (
-                    <TableHead key={header.id}>
-                      {header.isPlaceholder
-                        ? null
-                        : flexRender(
-                            header.column.columnDef.header,
-                            header.getContext()
-                          )}
-                    </TableHead>
-                  ))
-                )}
-            </TableRow>
+            {table.getHeaderGroups().map((headerGroup) => (
+              <TableRow key={headerGroup.id}>
+                {headerGroup.headers.map((header) => (
+                  <TableHead key={header.id}>
+                    {header.isPlaceholder
+                      ? null
+                      : flexRender(
+                          header.column.columnDef.header,
+                          header.getContext()
+                        )}
+                  </TableHead>
+                ))}
+              </TableRow>
+            ))}
           </TableHeader>
           <TableBody>
             {Array.from({ length: 5 }).map((_, rowIndex) => (
@@ -89,23 +88,20 @@ export function DataTable({
       <div className="rounded-md border">
         <Table>
           <TableHeader>
-            <TableRow>
-              {table
-                .getHeaderGroups()
-                .map((headerGroup) =>
-                  headerGroup.headers.map((header) => (
-                    <TableHead key={header.id}>
-                      {header.isPlaceholder
-                        ? null
-                        : flexRender(
-                            header.column.columnDef.header,
-                            header.getContext()
-                          )}
-                    </TableHead>
-                  ))
-                )}
-              <TableHead>Actions</TableHead>
-            </TableRow>
+            {table.getHeaderGroups().map((headerGroup) => (
+              <TableRow key={headerGroup.id}>
+                {headerGroup.headers.map((header) => (
+                  <TableHead key={header.id}>
+                    {header.isPlaceholder
+                      ? null
+                      : flexRender(
+                          header.column.columnDef.header,
+                          header.getContext()
+                        )}
+                  </TableHead>
+                ))}
+              </TableRow>
+            ))}
           </TableHeader>
           <TableBody>
             {table.getRowModel().rows?.length ? (
@@ -113,18 +109,9 @@ export function DataTable({
                 <TableRow
                   key={row.id}
                   className="group cursor-pointer transition-colors hover:bg-muted/50"
-                  onClick={(e) => {
-                    // Prevent navigation if clicking on action buttons or their container
-                    if (
-                      (e.target as HTMLElement).closest(".action-button") ||
-                      (e.target as HTMLElement).closest('[role="menuitem"]') ||
-                      (e.target as HTMLElement).closest('[role="dialog"]')
-                    ) {
-                      e.stopPropagation();
-                      return;
-                    }
-                    router.push(`/sales/${row.original.id}`);
-                  }}
+                  onClick={() =>
+                    router.push(`/sales/${row.original.order_number}`)
+                  }
                 >
                   {row.getVisibleCells().map((cell) => (
                     <TableCell key={cell.id}>
@@ -134,25 +121,21 @@ export function DataTable({
                       )}
                     </TableCell>
                   ))}
-                  <TableCell className="action-button">
-                    <DataTableRowActions row={row.original} />
-                  </TableCell>
                 </TableRow>
               ))
             ) : (
               <TableRow>
                 <TableCell
-                  colSpan={columns.length + 1}
+                  colSpan={columns.length}
                   className="h-24 text-center"
                 >
-                  Sipariş bulunamadı.
+                  Sipariş kalemi bulunamadı.
                 </TableCell>
               </TableRow>
             )}
           </TableBody>
         </Table>
       </div>
-
       <DataTablePagination
         table={table}
         currentPage={currentPage}

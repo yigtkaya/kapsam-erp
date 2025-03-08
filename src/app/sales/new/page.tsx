@@ -22,7 +22,11 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { SalesOrder, SalesOrderStatus } from "@/types/sales";
+import {
+  SalesOrder,
+  SalesOrderStatus,
+  CreateSalesOrderRequest,
+} from "@/types/sales";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Check, ChevronsUpDown, Loader2, Plus, X } from "lucide-react";
 import { useState } from "react";
@@ -46,19 +50,29 @@ import { Customer } from "@/types/customer";
 import { PageHeader } from "@/components/ui/page-header";
 import { useCreateSalesOrder } from "../hooks/useSalesOrders";
 import { Separator } from "@/components/ui/separator";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 
 const formSchema = z.object({
   order_number: z.string().min(1, "Sipariş numarası zorunludur"),
   customer: z.number().min(1, "Müşteri seçimi zorunludur"),
-  deadline_date: z.string().min(1, "Termin tarihi zorunludur"),
-  order_receiving_date: z.string().min(1, "Sipariş alım tarihi zorunludur"),
-  kapsam_deadline_date: z.string().min(1, "Kapsam termin tarihi zorunludur"),
   status: z.enum(["OPEN", "CLOSED"] as const),
   items: z
     .array(
       z.object({
         product: z.number().min(1, "Ürün seçimi zorunludur"),
-        quantity: z.number().min(1, "Miktar en az 1 olmalıdır"),
+        ordered_quantity: z.number().min(1, "Miktar en az 1 olmalıdır"),
+        deadline_date: z.string().min(1, "Termin tarihi zorunludur"),
+        kapsam_deadline_date: z
+          .string()
+          .min(1, "Kapsam termin tarihi zorunludur"),
+        receiving_date: z.string().min(1, "Alım tarihi zorunludur"),
       })
     )
     .min(1, "En az bir kalem girilmelidir"),
@@ -83,9 +97,15 @@ export default function NewSalesOrderPage() {
     error,
   } = useCreateSalesOrder();
   const [customerOpen, setCustomerOpen] = useState(false);
-  const [productOpen, setProductOpen] = useState(false);
+  const [productOpenStates, setProductOpenStates] = useState<{
+    [key: number]: boolean;
+  }>({});
   const [customerSearchQuery, setCustomerSearchQuery] = useState("");
   const [productSearchQuery, setProductSearchQuery] = useState("");
+
+  const handleProductOpenChange = (index: number, isOpen: boolean) => {
+    setProductOpenStates((prev) => ({ ...prev, [index]: isOpen }));
+  };
 
   const filteredCustomers = customers?.filter((customer: Customer) => {
     if (!customerSearchQuery) return true;
@@ -110,9 +130,15 @@ export default function NewSalesOrderPage() {
     defaultValues: {
       order_number: "",
       status: "OPEN",
-      items: [{ product: 0, quantity: 1 }],
-      order_receiving_date: "",
-      kapsam_deadline_date: "",
+      items: [
+        {
+          product: 0,
+          ordered_quantity: 1,
+          deadline_date: "",
+          kapsam_deadline_date: "",
+          receiving_date: "",
+        },
+      ],
     },
   });
 
@@ -123,18 +149,23 @@ export default function NewSalesOrderPage() {
 
   async function onSubmit(values: FormValues) {
     try {
-      const payload = {
+      const payload: CreateSalesOrderRequest = {
         order_number: values.order_number,
         customer: values.customer,
-        deadline_date: values.deadline_date,
-        order_receiving_date: values.order_receiving_date,
-        kapsam_deadline_date: values.kapsam_deadline_date,
         status: values.status,
         items: values.items.map((item) => ({
           product: item.product,
-          quantity: item.quantity,
+          order_number: values.order_number,
+          ordered_quantity: item.ordered_quantity,
+          deadline_date: new Date(item.deadline_date).toISOString(),
+          kapsam_deadline_date: new Date(
+            item.kapsam_deadline_date
+          ).toISOString(),
+          receiving_date: new Date(item.receiving_date).toISOString(),
+          fulfilled_quantity: 0,
         })),
       };
+
       await createSalesOrder(payload);
       toast.success("Satış siparişi başarıyla oluşturuldu");
       router.back();
@@ -161,9 +192,9 @@ export default function NewSalesOrderPage() {
                   <h3 className="text-lg font-medium mb-4">
                     Sipariş Bilgileri
                   </h3>
-                  <div className="grid gap-6">
-                    {/* Order Number and Customer */}
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="flex flex-row gap-4 flex-wrap">
+                    {/* Order Number */}
+                    <div className="flex-1 min-w-[250px]">
                       <FormField
                         control={form.control}
                         name="order_number"
@@ -174,14 +205,17 @@ export default function NewSalesOrderPage() {
                               <Input
                                 placeholder="SO-2024-001"
                                 {...field}
-                                className="bg-white"
+                                className="bg-white w-full"
                               />
                             </FormControl>
                             <FormMessage />
                           </FormItem>
                         )}
                       />
+                    </div>
 
+                    {/* Customer Select */}
+                    <div className="flex-1 min-w-[300px]">
                       <FormField
                         control={form.control}
                         name="customer"
@@ -265,65 +299,8 @@ export default function NewSalesOrderPage() {
                       />
                     </div>
 
-                    {/* Dates Section */}
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                      <FormField
-                        control={form.control}
-                        name="order_receiving_date"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Sipariş Alım Tarihi</FormLabel>
-                            <FormControl>
-                              <Input
-                                type="date"
-                                {...field}
-                                className="bg-white"
-                              />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-
-                      <FormField
-                        control={form.control}
-                        name="deadline_date"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Termin Tarihi</FormLabel>
-                            <FormControl>
-                              <Input
-                                type="date"
-                                {...field}
-                                className="bg-white"
-                              />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-
-                      <FormField
-                        control={form.control}
-                        name="kapsam_deadline_date"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Kapsam Termin Tarihi</FormLabel>
-                            <FormControl>
-                              <Input
-                                type="date"
-                                {...field}
-                                className="bg-white"
-                              />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                    </div>
-
-                    {/* Status */}
-                    <div className="max-w-xs">
+                    {/* Status Select */}
+                    <div className="flex-1 min-w-[200px]">
                       <FormField
                         control={form.control}
                         name="status"
@@ -361,145 +338,227 @@ export default function NewSalesOrderPage() {
               {/* Products Section */}
               <div className="rounded-lg border bg-card text-card-foreground shadow-sm">
                 <div className="p-6">
-                  <div className="flex items-center justify-between mb-6">
-                    <h3 className="text-lg font-medium">Ürünler</h3>
+                  <div className="flex justify-between items-center mb-4">
+                    <h3 className="text-lg font-medium ">Sipariş Kalemleri</h3>
                     <Button
                       type="button"
-                      onClick={() => append({ product: 0, quantity: 1 })}
                       variant="outline"
                       size="sm"
-                      className="bg-white"
+                      className="mt-2"
+                      onClick={() =>
+                        append({
+                          product: 0,
+                          ordered_quantity: 1,
+                          deadline_date: "",
+                          kapsam_deadline_date: "",
+                          receiving_date: "",
+                        })
+                      }
                     >
-                      <Plus className="h-4 w-4 mr-2" />
-                      Ürün Ekle
+                      <Plus className="mr-2 h-4 w-4" />
+                      Yeni Kalem Ekle
                     </Button>
                   </div>
 
-                  <div className="space-y-4">
-                    {fields.map((field, index) => (
-                      <div
-                        key={field.id}
-                        className="grid gap-4 grid-cols-1 md:grid-cols-[1fr,120px,40px] items-start bg-white rounded-lg border p-4 hover:border-primary/20 transition-colors"
-                      >
-                        <FormField
-                          control={form.control}
-                          name={`items.${index}.product`}
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel className="text-sm">Ürün</FormLabel>
-                              <Popover
-                                open={productOpen}
-                                onOpenChange={setProductOpen}
-                              >
-                                <PopoverTrigger asChild>
-                                  <FormControl>
-                                    <Button
-                                      variant="outline"
-                                      role="combobox"
-                                      disabled={isLoadingProducts}
-                                      className={cn(
-                                        "w-full justify-between bg-white",
-                                        !field.value && "text-muted-foreground"
-                                      )}
-                                    >
-                                      {field.value
-                                        ? products?.find(
-                                            (product) =>
-                                              product.id === Number(field.value)
-                                          )?.product_name
-                                        : "Ürün seçin"}
-                                      <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                                    </Button>
-                                  </FormControl>
-                                </PopoverTrigger>
-                                <PopoverContent
-                                  className="w-[--radix-popover-trigger-width] p-0"
-                                  align="start"
-                                >
-                                  <Command>
-                                    <CommandInput
-                                      placeholder="Ürün ara..."
-                                      value={productSearchQuery}
-                                      onValueChange={setProductSearchQuery}
-                                    />
-                                    <CommandList className="max-h-[200px]">
-                                      <CommandEmpty>
-                                        Ürün bulunamadı.
-                                      </CommandEmpty>
-                                      <CommandGroup>
-                                        {filteredProducts?.map((product) => (
-                                          <CommandItem
-                                            value={`${product.product_name} (${product.product_code})`}
-                                            key={product.id}
-                                            onSelect={() => {
-                                              form.setValue(
-                                                `items.${index}.product`,
-                                                product.id
-                                              );
-                                              setProductOpen(false);
-                                            }}
-                                          >
-                                            <Check
-                                              className={cn(
-                                                "mr-2 h-4 w-4",
-                                                product.id ===
+                  <Table className="mb-4">
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead className="w-[300px]">Ürün</TableHead>
+                        <TableHead className="w-[100px]">Miktar</TableHead>
+                        <TableHead className="w-[150px]">Alım Tarihi</TableHead>
+                        <TableHead className="w-[150px]">
+                          Termin Tarihi
+                        </TableHead>
+                        <TableHead className="w-[150px]">
+                          Kapsam Tarihi
+                        </TableHead>
+                        <TableHead className="w-[50px]"></TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {fields.map((field, index) => (
+                        <TableRow key={field.id}>
+                          <TableCell>
+                            <FormField
+                              control={form.control}
+                              name={`items.${index}.product`}
+                              render={({ field }) => (
+                                <FormItem>
+                                  <Popover
+                                    open={productOpenStates[index]}
+                                    onOpenChange={(isOpen) =>
+                                      handleProductOpenChange(index, isOpen)
+                                    }
+                                  >
+                                    <PopoverTrigger asChild>
+                                      <FormControl>
+                                        <Button
+                                          variant="outline"
+                                          role="combobox"
+                                          disabled={isLoadingProducts}
+                                          className={cn(
+                                            "w-full justify-between bg-white",
+                                            !field.value &&
+                                              "text-muted-foreground"
+                                          )}
+                                        >
+                                          {field.value
+                                            ? products?.find(
+                                                (product) =>
+                                                  product.id ===
                                                   Number(field.value)
-                                                  ? "opacity-100"
-                                                  : "opacity-0"
-                                              )}
-                                            />
-                                            {product.product_name} (
-                                            {product.product_code})
-                                          </CommandItem>
-                                        ))}
-                                      </CommandGroup>
-                                    </CommandList>
-                                  </Command>
-                                </PopoverContent>
-                              </Popover>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-
-                        <FormField
-                          control={form.control}
-                          name={`items.${index}.quantity`}
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel className="text-sm">Miktar</FormLabel>
-                              <FormControl>
-                                <Input
-                                  type="number"
-                                  min={1}
-                                  {...field}
-                                  className="bg-white"
-                                  onChange={(e) =>
-                                    field.onChange(parseInt(e.target.value))
-                                  }
-                                />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          size="icon"
-                          className="mt-8 hover:bg-destructive/10 hover:text-destructive"
-                          onClick={() => {
-                            if (fields.length > 1) {
-                              remove(index);
-                            }
-                          }}
-                        >
-                          <X className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    ))}
-                  </div>
+                                              )?.product_name
+                                            : "Ürün seçin"}
+                                          <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                                        </Button>
+                                      </FormControl>
+                                    </PopoverTrigger>
+                                    <PopoverContent
+                                      className="w-[--radix-popover-trigger-width] p-0"
+                                      align="start"
+                                    >
+                                      <Command>
+                                        <CommandInput
+                                          placeholder="Ürün ara..."
+                                          value={productSearchQuery}
+                                          onValueChange={setProductSearchQuery}
+                                        />
+                                        <CommandList className="max-h-[200px]">
+                                          <CommandEmpty>
+                                            Ürün bulunamadı.
+                                          </CommandEmpty>
+                                          <CommandGroup>
+                                            {filteredProducts?.map(
+                                              (product) => (
+                                                <CommandItem
+                                                  value={`${product.product_name} (${product.product_code})`}
+                                                  key={product.id}
+                                                  onSelect={() => {
+                                                    form.setValue(
+                                                      `items.${index}.product`,
+                                                      product.id
+                                                    );
+                                                    handleProductOpenChange(
+                                                      index,
+                                                      false
+                                                    );
+                                                  }}
+                                                >
+                                                  <Check
+                                                    className={cn(
+                                                      "mr-2 h-4 w-4",
+                                                      product.id ===
+                                                        Number(field.value)
+                                                        ? "opacity-100"
+                                                        : "opacity-0"
+                                                    )}
+                                                  />
+                                                  {product.product_name} (
+                                                  {product.product_code})
+                                                </CommandItem>
+                                              )
+                                            )}
+                                          </CommandGroup>
+                                        </CommandList>
+                                      </Command>
+                                    </PopoverContent>
+                                  </Popover>
+                                  <FormMessage />
+                                </FormItem>
+                              )}
+                            />
+                          </TableCell>
+                          <TableCell>
+                            <FormField
+                              control={form.control}
+                              name={`items.${index}.ordered_quantity`}
+                              render={({ field }) => (
+                                <FormItem>
+                                  <FormControl>
+                                    <Input
+                                      type="number"
+                                      min="1"
+                                      {...field}
+                                      className="bg-white"
+                                      onChange={(e) =>
+                                        field.onChange(Number(e.target.value))
+                                      }
+                                    />
+                                  </FormControl>
+                                  <FormMessage />
+                                </FormItem>
+                              )}
+                            />
+                          </TableCell>
+                          <TableCell>
+                            <FormField
+                              control={form.control}
+                              name={`items.${index}.receiving_date`}
+                              render={({ field }) => (
+                                <FormItem>
+                                  <FormControl>
+                                    <Input
+                                      type="date"
+                                      {...field}
+                                      className="bg-white"
+                                    />
+                                  </FormControl>
+                                  <FormMessage />
+                                </FormItem>
+                              )}
+                            />
+                          </TableCell>
+                          <TableCell>
+                            <FormField
+                              control={form.control}
+                              name={`items.${index}.deadline_date`}
+                              render={({ field }) => (
+                                <FormItem>
+                                  <FormControl>
+                                    <Input
+                                      type="date"
+                                      {...field}
+                                      className="bg-white"
+                                    />
+                                  </FormControl>
+                                  <FormMessage />
+                                </FormItem>
+                              )}
+                            />
+                          </TableCell>
+                          <TableCell>
+                            <FormField
+                              control={form.control}
+                              name={`items.${index}.kapsam_deadline_date`}
+                              render={({ field }) => (
+                                <FormItem>
+                                  <FormControl>
+                                    <Input
+                                      type="date"
+                                      {...field}
+                                      className="bg-white"
+                                    />
+                                  </FormControl>
+                                  <FormMessage />
+                                </FormItem>
+                              )}
+                            />
+                          </TableCell>
+                          <TableCell>
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => remove(index)}
+                              disabled={fields.length === 1}
+                            >
+                              <X className="h-4 w-4 text-destructive" />
+                            </Button>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
                 </div>
               </div>
 
