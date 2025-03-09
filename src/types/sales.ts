@@ -33,6 +33,7 @@ export type SalesOrderStatus = "OPEN" | "CLOSED";
 export interface SalesOrderItem {
   id: number;
   order_number: string;
+  order_id?: number;
   product: number;
   product_details?: Product;
   ordered_quantity: number;

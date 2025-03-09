@@ -53,3 +53,18 @@ export async function fetchShipment(shippingNo: string): Promise<Shipping> {
 
   return response.json();
 }
+
+export async function fetchShipments(orderId: string): Promise<Shipping[]> {
+  const response = await fetch(
+    `${API_URL}/api/sales/orders/${orderId}/shipments/`,
+    {
+      headers: await getAuthHeaders(),
+    }
+  );
+
+  if (!response.ok) {
+    throw new Error("Failed to fetch shipments");
+  }
+
+  return response.json();
+}

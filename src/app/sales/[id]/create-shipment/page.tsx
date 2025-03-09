@@ -123,7 +123,6 @@ export default function CreateShipmentPage() {
 
     createShipment(shipmentData, {
       onSuccess: () => {
-        toast.success("Sevkiyat başarıyla oluşturuldu");
         router.back();
       },
       onError: (error: any) => {

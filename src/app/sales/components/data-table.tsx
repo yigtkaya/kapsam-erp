@@ -109,9 +109,7 @@ export function DataTable({
                 <TableRow
                   key={row.id}
                   className="group cursor-pointer transition-colors hover:bg-muted/50"
-                  onClick={() =>
-                    router.push(`/sales/${row.original.order_number}`)
-                  }
+                  onClick={() => router.push(`/sales/${row.original.order_id}`)}
                 >
                   {row.getVisibleCells().map((cell) => (
                     <TableCell key={cell.id}>

@@ -254,34 +254,61 @@ export const createSalesOrderItem = async (
   return responseData;
 };
 
-// Update existing sales order item
-export const updateSalesOrderItem = async (
-  orderId: string,
-  itemId: number,
-  data: Partial<Omit<SalesOrderItem, "id" | "product_details">>
-): Promise<SalesOrderItem> => {
-  console.log(data);
+// Add this type definition at the top of the file, after the imports
+export interface SalesOrderItemUpdate {
+  id: number;
+  ordered_quantity?: number;
+  deadline_date?: string;
+  receiving_date?: string;
+  kapsam_deadline_date?: string;
+}
 
-  const response = await fetch(
-    `${API_URL}/api/sales/orders/${orderId}/items/${itemId}/`,
-    {
-      method: "PATCH",
-      headers: await getAuthHeaders(),
-      body: JSON.stringify(data),
-    }
+// Then update the function
+export const updateSaleOrderItems = async (
+  orderId: string,
+  data: SalesOrderItemUpdate[]
+) => {
+  // Format the items according to the new API requirements
+  const formattedItems = data.map((item) => ({
+    id: item.id,
+    ordered_quantity: item.ordered_quantity,
+    deadline_date: item.deadline_date,
+    receiving_date: item.receiving_date,
+    kapsam_deadline_date: item.kapsam_deadline_date,
+  }));
+
+  // Remove undefined values from each item
+  const cleanedItems = formattedItems.map((item) =>
+    Object.fromEntries(
+      Object.entries(item).filter(([_, value]) => value !== undefined)
+    )
   );
 
-  console.log(response);
+  const requestBody = {
+    items: cleanedItems,
+  };
 
-  const responseData = await response.json();
+  try {
+    const response = await fetch(
+      `${API_URL}/api/sales/orders/${orderId}/items/batch-update/`,
+      {
+        method: "PATCH",
+        headers: await getAuthHeaders(),
+        body: JSON.stringify(requestBody),
+      }
+    );
 
-  if (!response.ok) {
-    console.log(responseData);
-    console.log(response.statusText);
-    throw new Error("Failed to update sales order item");
+    if (!response.ok) {
+      const errorData = await response.json();
+      console.error("Failed to update sales order items:", errorData);
+      throw new Error(JSON.stringify(errorData));
+    }
+
+    return await response.json();
+  } catch (error) {
+    console.error("Error updating items:", error);
+    throw error;
   }
-
-  return responseData;
 };
 
 // Delete sales order item
@@ -301,4 +328,19 @@ export const deleteSalesOrderItem = async (
     console.error("Failed to delete sales order item");
     throw new Error("Failed to delete sales order item");
   }
+};
+
+export const fetchSalesOrderItems = async (orderId: string) => {
+  const response = await fetch(
+    `${API_URL}/api/sales/orders/${orderId}/items/`,
+    {
+      headers: await getAuthHeaders(),
+    }
+  );
+
+  if (!response.ok) {
+    throw new Error("Failed to fetch sales order items");
+  }
+
+  return response.json();
 };

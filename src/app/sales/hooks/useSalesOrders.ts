@@ -19,6 +19,9 @@ export function useSalesOrders() {
       }
       return response.results || [];
     },
+    staleTime: 0,
+    refetchOnMount: true,
+    refetchOnWindowFocus: true,
   });
 }
 
@@ -53,8 +56,15 @@ export function useUpdateSalesOrder() {
       }>;
     }) => updateSalesOrder(id, data),
     onSuccess: (_, { id }) => {
-      queryClient.invalidateQueries({ queryKey: ["sales-orders"] });
-      queryClient.invalidateQueries({ queryKey: ["sales-order", id] });
+      queryClient.invalidateQueries({
+        queryKey: ["sales-orders"],
+        exact: true,
+        refetchType: "active",
+      });
+      queryClient.invalidateQueries({
+        queryKey: ["sales-order", id],
+        exact: true,
+      });
     },
     onError: () => {},
   });
