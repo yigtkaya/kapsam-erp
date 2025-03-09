@@ -50,6 +50,7 @@ import { useUpdateSalesOrderItems } from "../hooks/useSalesOrderItems";
 import { toast } from "sonner";
 import { useUpdateSalesOrder } from "../hooks/useSalesOrders";
 import { SalesOrderItemUpdate } from "@/api/sales";
+import { BatchAddItemsDialog } from "./components/BatchAddItemsDialog";
 
 const formSchema = z.object({
   deadline_date: z.string().min(1, "Deadline date is required"),
@@ -149,6 +150,7 @@ function OrderItemsTable({ orderId }: { orderId: string }) {
   const [itemChanges, setItemChanges] = useState<{
     [key: number]: Partial<SalesOrderItem>;
   }>({});
+  const { data: order } = useSalesOrder(orderId);
 
   const handleItemFieldChange = (
     itemId: number,
@@ -275,35 +277,45 @@ function OrderItemsTable({ orderId }: { orderId: string }) {
     <Card className="md:col-span-2">
       <CardHeader className="flex flex-row items-center justify-between">
         <CardTitle>Sipariş Kalemleri</CardTitle>
-        {isEditing ? (
-          <div className="flex items-center gap-2">
-            <Button
-              variant="outline"
-              onClick={handleCancelEdit}
-              disabled={isUpdating}
-            >
-              İptal
-            </Button>
-            <Button
-              onClick={handleSaveChanges}
-              disabled={isUpdating || Object.keys(itemChanges).length === 0}
-            >
-              {isUpdating ? "Kaydediliyor..." : "Kaydet"}
-            </Button>
-          </div>
-        ) : (
-          <Button
-            variant="outline"
-            className="gap-2"
-            onClick={() => {
-              setIsEditing(true);
-              router.push(`/sales/${orderId}?edit=true`);
-            }}
-          >
-            <Pencil className="h-4 w-4" />
-            Düzenle
-          </Button>
-        )}
+        <div className="flex items-center gap-2">
+          {isEditing ? (
+            <>
+              <Button
+                variant="outline"
+                onClick={handleCancelEdit}
+                disabled={isUpdating}
+              >
+                İptal
+              </Button>
+              <Button
+                onClick={handleSaveChanges}
+                disabled={isUpdating || Object.keys(itemChanges).length === 0}
+              >
+                {isUpdating ? "Kaydediliyor..." : "Kaydet"}
+              </Button>
+            </>
+          ) : (
+            <>
+              {order && (
+                <BatchAddItemsDialog
+                  orderId={orderId}
+                  orderNumber={order.order_number}
+                />
+              )}
+              <Button
+                variant="outline"
+                className="gap-2"
+                onClick={() => {
+                  setIsEditing(true);
+                  router.push(`/sales/${orderId}?edit=true`);
+                }}
+              >
+                <Pencil className="h-4 w-4" />
+                Düzenle
+              </Button>
+            </>
+          )}
+        </div>
       </CardHeader>
       <CardContent>
         <Table>
@@ -724,7 +736,7 @@ export default function SalesOrderDetailPage() {
           onBack={() => router.replace("/sales")}
         />
         <div className="flex gap-3">
-          {!isEditing ? (
+          {/* {!isEditing ? (
             <>
               <Button
                 onClick={() => {
@@ -751,7 +763,7 @@ export default function SalesOrderDetailPage() {
               </Button>
               <Button onClick={handleSaveChanges}>Kaydet</Button>
             </div>
-          )}
+          )} */}
         </div>
       </div>
 

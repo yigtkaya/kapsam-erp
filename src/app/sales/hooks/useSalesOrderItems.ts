@@ -5,6 +5,7 @@ import {
   deleteSalesOrderItem,
   fetchSalesOrderItems,
   SalesOrderItemUpdate,
+  batchCreateSalesOrderItems,
 } from "@/api/sales";
 import { SalesOrderItem } from "@/types/sales";
 
@@ -54,6 +55,32 @@ export function useDeleteSalesOrderItem(orderId: string, itemId: number) {
     onSuccess: () => {
       queryClient.invalidateQueries({
         queryKey: ["sales-order-items", orderId],
+        exact: true,
+      });
+    },
+  });
+}
+
+export function useBatchCreateSalesOrderItems(orderId: string) {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (
+      items: Array<
+        Omit<
+          SalesOrderItem,
+          "id" | "product_details" | "order_id" | "fulfilled_quantity"
+        >
+      >
+    ) => batchCreateSalesOrderItems(orderId, items),
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: ["sales-order-items", orderId],
+        exact: true,
+      });
+      // Also invalidate the sales order to update the items list
+      queryClient.invalidateQueries({
+        queryKey: ["sales-order", orderId],
         exact: true,
       });
     },

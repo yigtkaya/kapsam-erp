@@ -344,3 +344,32 @@ export const fetchSalesOrderItems = async (orderId: string) => {
 
   return response.json();
 };
+
+// Batch create sales order items
+export const batchCreateSalesOrderItems = async (
+  orderId: string,
+  items: Array<
+    Omit<
+      SalesOrderItem,
+      "id" | "product_details" | "order_id" | "fulfilled_quantity"
+    >
+  >
+): Promise<SalesOrderItem[]> => {
+  const response = await fetch(
+    `${API_URL}/api/sales/orders/${orderId}/items/batch-create/`,
+    {
+      method: "POST",
+      headers: await getAuthHeaders(),
+      body: JSON.stringify({ items }),
+    }
+  );
+
+  const responseData = await response.json();
+
+  if (!response.ok) {
+    console.error("Failed to batch create sales order items:", responseData);
+    throw new Error(JSON.stringify(responseData));
+  }
+
+  return responseData;
+};
