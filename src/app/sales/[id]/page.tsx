@@ -736,6 +736,12 @@ export default function SalesOrderDetailPage() {
           onBack={() => router.replace("/sales")}
         />
         <div className="flex gap-3">
+          <Button asChild className="gap-2">
+            <Link href={`/sales/${orderId}/create-shipment`}>
+              <Truck className="h-4 w-4" />
+              Yeni Sevkiyat
+            </Link>
+          </Button>
           {/* {!isEditing ? (
             <>
               <Button
