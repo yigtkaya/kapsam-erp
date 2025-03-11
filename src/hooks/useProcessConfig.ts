@@ -7,17 +7,17 @@ import {
   fetchProcessConfig,
   updateMachine,
 } from "@/api/manufacturing";
-import { BOMProcessConfig } from "@/types/manufacture";
+import { ProcessConfig } from "@/types/manufacture";
 
 export function useProcessConfigs() {
-  return useQuery<BOMProcessConfig[]>({
+  return useQuery<ProcessConfig[]>({
     queryKey: ["processConfigs"],
     queryFn: () => fetchProcessConfigs(),
   });
 }
 
 export function useProcessConfig(id: number) {
-  return useQuery<BOMProcessConfig>({
+  return useQuery<ProcessConfig>({
     queryKey: ["processConfig", id],
     queryFn: () => fetchProcessConfig(id),
   });
@@ -27,9 +27,9 @@ export function useCreateProcessConfig() {
   const queryClient = useQueryClient();
 
   return useMutation<
-    BOMProcessConfig,
+    ProcessConfig,
     Error,
-    Omit<BOMProcessConfig, "id" | "created_at" | "updated_at">
+    Omit<ProcessConfig, "id" | "created_at" | "updated_at">
   >({
     mutationFn: (data) => {
       return createProcessConfig(data);
@@ -43,7 +43,7 @@ export function useCreateProcessConfig() {
 export function useUpdateProcessConfig() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (params: { id: number; data: Partial<BOMProcessConfig> }) =>
+    mutationFn: (params: { id: number; data: Partial<ProcessConfig> }) =>
       updateProcessConfig(params.id, params.data),
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: ["processConfigs"] });
