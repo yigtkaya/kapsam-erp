@@ -1,5 +1,11 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Machine, ManufacturingProcess, WorkOrder } from "@/types/manufacture";
+import {
+  Machine,
+  ManufacturingProcess,
+  WorkOrder,
+  WorkflowProcess,
+  ProcessConfig,
+} from "@/types/manufacture";
 import {
   createMachine,
   deleteMachine,
@@ -16,6 +22,16 @@ import {
   fetchWorkOrder,
   fetchWorkOrders,
   updateWorkOrder,
+  fetchWorkflowProcess,
+  fetchWorkflowProcesses,
+  createWorkflowProcess,
+  updateWorkflowProcess,
+  deleteWorkflowProcess,
+  fetchProcessConfig,
+  fetchProcessConfigs,
+  createProcessConfig,
+  updateProcessConfig,
+  deleteProcessConfig,
 } from "@/api/manufacturing";
 
 // Machine hooks
@@ -184,6 +200,146 @@ export function useDeleteWorkOrder() {
     mutationFn: (id) => deleteWorkOrder(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["workOrders"] });
+    },
+  });
+}
+
+// Workflow Process hooks
+export function useWorkflowProcesses(productId?: string) {
+  return useQuery<WorkflowProcess[]>({
+    queryKey: productId
+      ? ["workflowProcesses", productId]
+      : ["workflowProcesses"],
+    queryFn: () => fetchWorkflowProcesses(productId),
+  });
+}
+
+export function useWorkflowProcess(id: number) {
+  return useQuery<WorkflowProcess>({
+    queryKey: ["workflowProcess", id],
+    queryFn: () => fetchWorkflowProcess(id),
+    enabled: !!id,
+  });
+}
+
+export function useCreateWorkflowProcess() {
+  const queryClient = useQueryClient();
+
+  return useMutation<
+    WorkflowProcess,
+    Error,
+    Omit<WorkflowProcess, "id" | "created_at" | "updated_at">
+  >({
+    mutationFn: (data) => createWorkflowProcess(data),
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ["workflowProcesses"] });
+      if (data.product) {
+        queryClient.invalidateQueries({
+          queryKey: ["workflowProcesses", data.product],
+        });
+      }
+    },
+  });
+}
+
+export function useUpdateWorkflowProcess() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (params: { id: number; data: Partial<WorkflowProcess> }) =>
+      updateWorkflowProcess(params.id, params.data),
+    onSuccess: (data, variables) => {
+      queryClient.invalidateQueries({ queryKey: ["workflowProcesses"] });
+      queryClient.invalidateQueries({
+        queryKey: ["workflowProcess", variables.id],
+      });
+      if (data.product) {
+        queryClient.invalidateQueries({
+          queryKey: ["workflowProcesses", data.product],
+        });
+      }
+    },
+  });
+}
+
+export function useDeleteWorkflowProcess() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: deleteWorkflowProcess,
+    onSuccess: (_, deletedId) => {
+      queryClient.invalidateQueries({ queryKey: ["workflowProcesses"] });
+      queryClient.removeQueries({ queryKey: ["workflowProcess", deletedId] });
+    },
+  });
+}
+
+// Process Config hooks
+export function useProcessConfigs(workflowProcessId?: number) {
+  return useQuery<ProcessConfig[]>({
+    queryKey: workflowProcessId
+      ? ["processConfigs", workflowProcessId]
+      : ["processConfigs"],
+    queryFn: () => fetchProcessConfigs(workflowProcessId),
+  });
+}
+
+export function useProcessConfig(id: number) {
+  return useQuery<ProcessConfig>({
+    queryKey: ["processConfig", id],
+    queryFn: () => fetchProcessConfig(id),
+    enabled: !!id,
+  });
+}
+
+export function useCreateProcessConfig() {
+  const queryClient = useQueryClient();
+
+  return useMutation<
+    ProcessConfig,
+    Error,
+    Omit<ProcessConfig, "id" | "created_at" | "updated_at">
+  >({
+    mutationFn: (data) => createProcessConfig(data),
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ["processConfigs"] });
+      if (typeof data.workflow_process === "number") {
+        queryClient.invalidateQueries({
+          queryKey: ["processConfigs", data.workflow_process],
+        });
+      }
+    },
+  });
+}
+
+export function useUpdateProcessConfig() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (params: { id: number; data: Partial<ProcessConfig> }) =>
+      updateProcessConfig(params.id, params.data),
+    onSuccess: (data, variables) => {
+      queryClient.invalidateQueries({ queryKey: ["processConfigs"] });
+      queryClient.invalidateQueries({
+        queryKey: ["processConfig", variables.id],
+      });
+      if (typeof data.workflow_process === "number") {
+        queryClient.invalidateQueries({
+          queryKey: ["processConfigs", data.workflow_process],
+        });
+      }
+    },
+  });
+}
+
+export function useDeleteProcessConfig() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: deleteProcessConfig,
+    onSuccess: (_, deletedId) => {
+      queryClient.invalidateQueries({ queryKey: ["processConfigs"] });
+      queryClient.removeQueries({ queryKey: ["processConfig", deletedId] });
     },
   });
 }

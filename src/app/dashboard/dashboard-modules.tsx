@@ -111,7 +111,7 @@ const modules = [
     title: "Üretim Raporları",
     description: "Üretim raporlarının takibi ve yönetimi",
     icon: Hammer,
-    href: "/production/production-reports",
+    href: "/production",
     color: "bg-blue-500",
     roles: ["ADMIN"],
   },

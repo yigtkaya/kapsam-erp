@@ -5,6 +5,8 @@ import {
   Machine,
   ManufacturingProcess,
   WorkOrder,
+  WorkflowProcess,
+  ProcessConfig,
 } from "@/types/manufacture";
 import { revalidatePath } from "next/cache";
 import { cookies } from "next/headers";
@@ -363,31 +365,28 @@ export async function deleteWorkOrder(id: number) {
   }
 }
 
-export async function fetchProcessConfigs(): Promise<BOMProcessConfig[]> {
+// Process Config API functions
+export async function fetchProcessConfigs(
+  workflowProcessId?: number
+): Promise<ProcessConfig[]> {
   const headers = await getAuthHeaders();
 
-  const response = await fetch(
-    `${API_URL}/api/manufacturing/process-configs/`,
-    {
-      headers,
-    }
-  );
+  const url = workflowProcessId
+    ? `${API_URL}/api/manufacturing/workflow-processes/${workflowProcessId}/configs/`
+    : `${API_URL}/api/manufacturing/process-configs/`;
 
-  console.log(response);
+  const response = await fetch(url, {
+    headers,
+  });
 
   if (!response.ok) {
-    console.log(await response.json());
     throw new Error("Failed to fetch process configs");
   }
 
-  const data = await response.json();
-  console.log(data);
-  return data;
+  return await response.json();
 }
 
-export async function fetchProcessConfig(
-  id: number
-): Promise<BOMProcessConfig> {
+export async function fetchProcessConfig(id: number): Promise<ProcessConfig> {
   const headers = await getAuthHeaders();
 
   const response = await fetch(
@@ -405,33 +404,37 @@ export async function fetchProcessConfig(
 }
 
 export async function createProcessConfig(
-  data: Omit<BOMProcessConfig, "id" | "created_at" | "updated_at">
+  data: Omit<ProcessConfig, "id" | "created_at" | "updated_at">
 ) {
   const headers = await getAuthHeaders();
 
-  console.log(data);
+  // If workflow_process is provided as an ID, use the workflow-specific endpoint
+  const workflowProcessId =
+    typeof data.workflow_process === "number" ? data.workflow_process : null;
+  const url = workflowProcessId
+    ? `${API_URL}/api/manufacturing/workflow-processes/${workflowProcessId}/configs/`
+    : `${API_URL}/api/manufacturing/process-configs/`;
+
+  // Create a copy of the data without the workflow_process field if using the workflow-specific endpoint
+  const requestData = workflowProcessId
+    ? { ...data, workflow_process: undefined }
+    : data;
 
   try {
-    const response = await fetch(
-      `${API_URL}/api/manufacturing/process-configs/`,
-      {
-        method: "POST",
-        credentials: "include",
-        headers,
-        body: JSON.stringify(data),
-      }
-    );
-
-    console.log(response);
+    const response = await fetch(url, {
+      method: "POST",
+      credentials: "include",
+      headers,
+      body: JSON.stringify(requestData),
+    });
 
     if (!response.ok) {
-      console.log(await response.json());
+      const errorData = await response.json();
+      console.error("Error creating process config:", errorData);
       throw new Error("Failed to create process config");
     }
-    const responseData = await response.json();
-    console.log(responseData);
 
-    return responseData;
+    return await response.json();
   } catch (error) {
     console.error("Error creating process config:", error);
     throw error;
@@ -440,7 +443,7 @@ export async function createProcessConfig(
 
 export async function updateProcessConfig(
   id: number,
-  data: Partial<BOMProcessConfig>
+  data: Partial<ProcessConfig>
 ) {
   const headers = await getAuthHeaders();
 
@@ -459,7 +462,6 @@ export async function updateProcessConfig(
       throw new Error("Failed to update process config");
     }
 
-    revalidatePath("/manufacturing/process-configs");
     return await response.json();
   } catch (error) {
     console.error("Error updating process config:", error);
@@ -484,10 +486,130 @@ export async function deleteProcessConfig(id: number) {
       throw new Error("Failed to delete process config");
     }
 
-    revalidatePath("/manufacturing/process-configs");
     return true;
   } catch (error) {
     console.error("Error deleting process config:", error);
+    throw error;
+  }
+}
+
+// Workflow Process API functions
+export async function fetchWorkflowProcesses(
+  productId?: string
+): Promise<WorkflowProcess[]> {
+  const headers = await getAuthHeaders();
+
+  const url = productId
+    ? `${API_URL}/api/manufacturing/workflow-processes/?product=${productId}`
+    : `${API_URL}/api/manufacturing/workflow-processes/`;
+
+  const response = await fetch(url, {
+    headers,
+  });
+
+  if (!response.ok) {
+    throw new Error("Failed to fetch workflow processes");
+  }
+
+  return await response.json();
+}
+
+export async function fetchWorkflowProcess(
+  id: number
+): Promise<WorkflowProcess> {
+  const headers = await getAuthHeaders();
+
+  const response = await fetch(
+    `${API_URL}/api/manufacturing/workflow-processes/${id}/`,
+    {
+      headers,
+    }
+  );
+
+  if (!response.ok) {
+    throw new Error("Failed to fetch workflow process");
+  }
+
+  return await response.json();
+}
+
+export async function createWorkflowProcess(
+  data: Omit<WorkflowProcess, "id" | "created_at" | "updated_at">
+) {
+  const headers = await getAuthHeaders();
+
+  try {
+    const response = await fetch(
+      `${API_URL}/api/manufacturing/workflow-processes/`,
+      {
+        method: "POST",
+        credentials: "include",
+        headers,
+        body: JSON.stringify(data),
+      }
+    );
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      console.error("Error creating workflow process:", errorData);
+      throw new Error("Failed to create workflow process");
+    }
+
+    return await response.json();
+  } catch (error) {
+    console.error("Error creating workflow process:", error);
+    throw error;
+  }
+}
+
+export async function updateWorkflowProcess(
+  id: number,
+  data: Partial<WorkflowProcess>
+) {
+  const headers = await getAuthHeaders();
+
+  try {
+    const response = await fetch(
+      `${API_URL}/api/manufacturing/workflow-processes/${id}/`,
+      {
+        method: "PATCH",
+        credentials: "include",
+        headers,
+        body: JSON.stringify(data),
+      }
+    );
+
+    if (!response.ok) {
+      throw new Error("Failed to update workflow process");
+    }
+
+    return await response.json();
+  } catch (error) {
+    console.error("Error updating workflow process:", error);
+    throw error;
+  }
+}
+
+export async function deleteWorkflowProcess(id: number) {
+  const headers = await getAuthHeaders();
+
+  try {
+    const response = await fetch(
+      `${API_URL}/api/manufacturing/workflow-processes/${id}/`,
+      {
+        method: "DELETE",
+        credentials: "include",
+        headers,
+      }
+    );
+
+    if (!response.ok) {
+      throw new Error("Failed to delete workflow process");
+    }
+
+    return true;
+  } catch (error) {
+    console.error("Error deleting workflow process:", error);
     throw error;
   }
 }

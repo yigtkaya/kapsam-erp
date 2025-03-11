@@ -154,16 +154,29 @@ export interface BOMProcessConfig extends BaseModel {
 }
 
 export interface WorkflowProcess extends BaseModel {
-  product: Product;
-  process: ManufacturingProcess;
-  process_number: string;
+  product: Product | number;
+  product_details?: Product;
+  process: ManufacturingProcess | number;
+  process_details?: ManufacturingProcess;
   stock_code: string;
-  raw_material?: RawMaterial;
+  sequence_order: number;
+  process_configs?: ProcessConfig[];
+}
+
+export interface ProcessConfig extends BaseModel {
+  workflow_process: number | WorkflowProcess;
+  workflow_process_details?: WorkflowProcess;
+  raw_material?: RawMaterial | number;
+  raw_material_details?: RawMaterial;
   axis_count?: AxisCount;
+  axis_count_display?: string;
   estimated_duration_minutes?: number;
   tooling_requirements?: string;
   quality_checks?: string;
-  sequence_order: number;
+  machine_type?: MachineType;
+  machine_type_display?: string;
+  setup_time_minutes?: number;
+  notes?: string;
 }
 
 export interface WorkOrder extends BaseModel {
