@@ -10,15 +10,13 @@ export default function WorkflowCardNewPage() {
   return (
     <div className="container mx-auto py-4 space-y-6">
       <PageHeader
-        title="Add Workflow Process"
-        description="Create a new workflow process for a product"
+        title="İş Akış Kartı Ekle"
+        description="Ürünler için iş akışı kartını oluşturun"
         showBackButton
         onBack={() => router.push("/workflow-cards")}
       />
 
-      <div className="bg-white p-6 rounded-lg shadow">
-        <WorkflowProcessForm />
-      </div>
+      <WorkflowProcessForm />
     </div>
   );
 }

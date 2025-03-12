@@ -108,15 +108,15 @@ export default function WorkflowCardsPage() {
   return (
     <div className="container mx-auto py-4 space-y-6">
       <PageHeader
-        title="İş akışı işlemleri"
-        description="Ürünler için iş akışı işlemlerini yönetin"
+        title="İş akış kartları"
+        description="Ürünler için iş akışı kartlarını yönetin"
         showBackButton
         onBack={() => router.replace("/dashboard")}
         action={
           <Button asChild>
             <Link href="/workflow-cards/new">
               <Plus className="mr-2 h-4 w-4" />
-              İş akışı işlemi ekle
+              İş akışı kartı ekle
             </Link>
           </Button>
         }
@@ -133,6 +133,8 @@ export default function WorkflowCardsPage() {
         currentPage={page}
         onPageChange={handlePageChange}
         pageSize={PAGE_SIZE}
+        view={viewMode}
+        onViewChange={handleViewChange}
       />
     </div>
   );

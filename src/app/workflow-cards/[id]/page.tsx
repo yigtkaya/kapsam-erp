@@ -71,14 +71,12 @@ export default function WorkflowProcessDetailPage() {
       <div className="container mx-auto py-4 space-y-6">
         <PageHeader
           title="Hata"
-          description="İş akışı prosesi yüklenirken bir hata oluştu"
+          description="İş akışı kartı yüklenirken bir hata oluştu"
           showBackButton
           onBack={() => router.push("/workflow-cards")}
         />
-        <div className="bg-red-50 p-4 rounded-md text-red-800">
-          {error instanceof Error
-            ? error.message
-            : "İş akışı prosesi bulunamadı"}
+        <div className="bg-red-50 border border-red-200 p-4 rounded-md text-red-800">
+          {error instanceof Error ? error.message : "İş akışı kartı bulunamadı"}
         </div>
       </div>
     );
@@ -87,20 +85,12 @@ export default function WorkflowProcessDetailPage() {
   return (
     <div className="container mx-auto py-4 space-y-6">
       <PageHeader
-        title={`İş Akışı Prosesi: ${workflowProcess.stock_code}`}
-        description={`Stok Kodu: ${workflowProcess.process_details?.process_name}`}
+        title={`İş Akış Kartı: ${workflowProcess.stock_code}`}
+        description={`Proses Adı: ${workflowProcess.process_details?.process_name}`}
         showBackButton
         onBack={() => router.push("/workflow-cards")}
         action={
           <div className="flex space-x-2">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => router.push(`/workflow-cards/${id}/edit`)}
-            >
-              <Edit className="h-4 w-4 mr-2" />
-              Düzenle
-            </Button>
             <Button variant="destructive" size="sm">
               <Trash2 className="h-4 w-4 mr-2" />
               Sil
@@ -117,9 +107,7 @@ export default function WorkflowProcessDetailPage() {
 
         <TabsContent value="basic" className="space-y-6 pt-4">
           <Card>
-            <CardHeader>
-              <CardTitle>İş Akışı Prosesi Detayları</CardTitle>
-            </CardHeader>
+            <CardHeader></CardHeader>
             <CardContent className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
                 <div>
