@@ -74,10 +74,10 @@ export default function EditProcessConfigPage() {
       <PageHeader
         title={
           isNewConfig
-            ? "Add Process Configuration"
-            : "Edit Process Configuration"
+            ? "Proses Konfigürasyonu Ekle"
+            : "Proses Konfigürasyonu Düzenle"
         }
-        description={`Workflow Process: ${workflowProcess.process_details?.process_code}`}
+        description={`İş Akışı Prosesi: ${workflowProcess.process_details?.process_code}`}
         showBackButton
         onBack={() => router.push(`/workflow-cards/${workflowId}`)}
       />

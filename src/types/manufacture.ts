@@ -3,6 +3,9 @@ import {
   Product,
   RawMaterial,
   InventoryCategory,
+  Tool,
+  ControlGauge,
+  Fixture,
 } from "./inventory";
 import { User } from "./core";
 
@@ -166,17 +169,21 @@ export interface WorkflowProcess extends BaseModel {
 export interface ProcessConfig extends BaseModel {
   workflow_process: number | WorkflowProcess;
   workflow_process_details?: WorkflowProcess;
-  raw_material?: RawMaterial | number;
-  raw_material_details?: RawMaterial;
-  axis_count?: AxisCount;
+  process?: ManufacturingProcess | number | null;
+  process_details?: ManufacturingProcess;
+  tool?: Tool | string | null; // string for stock_code
+  tool_details?: Tool;
+  control_gauge?: ControlGauge | string | null; // string for stock_code
+  control_gauge_details?: ControlGauge;
+  fixture?: Fixture | string | null; // string for code
+  fixture_details?: Fixture;
+  axis_count?: AxisCount | null;
   axis_count_display?: string;
-  estimated_duration_minutes?: number;
-  tooling_requirements?: string;
-  quality_checks?: string;
-  machine_type?: MachineType;
-  machine_type_display?: string;
-  setup_time_minutes?: number;
-  notes?: string;
+  machine_time?: number | null;
+  setup_time?: number | null;
+  net_time?: number | null;
+  number_of_bindings?: number | null;
+  cycle_time?: number | null;
 }
 
 export interface WorkOrder extends BaseModel {

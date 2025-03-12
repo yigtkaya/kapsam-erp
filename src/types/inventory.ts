@@ -207,3 +207,41 @@ export interface Holder extends BaseModel {
   updated_at: string; // ISO date string
   description?: string;
 }
+
+export enum Status {
+  ACTIVE = "ACTIVE",
+  INACTIVE = "INACTIVE",
+}
+
+export interface Fixture extends BaseModel {
+  code: string; // Primary key
+  name?: string;
+  status: Status;
+}
+
+export enum GaugeStatus {
+  UYGUN = "UYGUN",
+  KULLANILMIYOR = "KULLANILMIYOR",
+  HURDA = "HURDA",
+  KAYIP = "KAYIP",
+}
+
+export interface ControlGauge extends BaseModel {
+  stock_code: string; // Primary key
+  stock_name: string;
+  stock_type?: string;
+  serial_number?: string;
+  brand?: string;
+  model?: string;
+  measuring_range?: string;
+  resolution?: string;
+  calibration_made_by?: string;
+  calibration_date?: string; // ISO date string
+  calibration_per_year: string;
+  upcoming_calibration_date?: string; // ISO date string
+  certificate_no?: string;
+  status: GaugeStatus;
+  current_location?: string;
+  scrap_lost_date?: string; // ISO date string
+  description?: string;
+}

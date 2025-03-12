@@ -5,74 +5,48 @@ import { PageHeader } from "@/components/ui/page-header";
 import { Plus } from "lucide-react";
 import Link from "next/link";
 import { useWorkflowProcesses } from "@/hooks/useManufacturing";
-import { useSearchParams, useRouter, usePathname } from "next/navigation";
-import { useMemo, useCallback } from "react";
+import { useMemo } from "react";
 import { WorkflowProcessView } from "./components/workflow-process-view";
+import { useUrlState } from "@/hooks/useUrlState";
+import { useRouter } from "next/navigation";
 
 const PAGE_SIZE = 12;
 
 export default function WorkflowCardsPage() {
+  const { getUrlState, setUrlState } = useUrlState();
   const router = useRouter();
-  const pathname = usePathname();
-  const searchParams = useSearchParams();
 
   // Get values from URL or use defaults
-  const query = searchParams.get("q") || "";
-  const sort = searchParams.get("sort") || "stock_code_asc";
-  const viewMode = (searchParams.get("view") || "grid") as "grid" | "table";
-  const page = parseInt(searchParams.get("page") || "0");
-
-  // Create URL update function
-  const createQueryString = useCallback(
-    (params: Record<string, string>) => {
-      const newSearchParams = new URLSearchParams(searchParams.toString());
-
-      Object.entries(params).forEach(([key, value]) => {
-        if (value === null || value === "") {
-          newSearchParams.delete(key);
-        } else {
-          newSearchParams.set(key, value);
-        }
-      });
-
-      return newSearchParams.toString();
-    },
-    [searchParams]
-  );
+  const query = getUrlState("q");
+  const sort = getUrlState("sort", "stock_code_asc");
+  const viewMode = getUrlState("view", "grid") as "grid" | "table";
+  const page = parseInt(getUrlState("page", "0"));
 
   // Update URL handlers
   const handleSearchChange = (value: string) => {
-    router.push(
-      `${pathname}?${createQueryString({
-        q: value,
-        page: "0", // Reset page when search changes
-      })}`
-    );
+    setUrlState({
+      q: value,
+      page: "0", // Reset page when search changes
+    });
   };
 
   const handleSortChange = (value: string) => {
-    router.push(
-      `${pathname}?${createQueryString({
-        sort: value,
-        page: "0", // Reset page when sort changes
-      })}`
-    );
+    setUrlState({
+      sort: value,
+      page: "0", // Reset page when sort changes
+    });
   };
 
   const handleViewChange = (value: "grid" | "table") => {
-    router.push(
-      `${pathname}?${createQueryString({
-        view: value,
-      })}`
-    );
+    setUrlState({
+      view: value,
+    });
   };
 
   const handlePageChange = (value: number) => {
-    router.push(
-      `${pathname}?${createQueryString({
-        page: value.toString(),
-      })}`
-    );
+    setUrlState({
+      page: value.toString(),
+    });
   };
 
   const {
@@ -156,8 +130,6 @@ export default function WorkflowCardsPage() {
         onSearchChange={handleSearchChange}
         sortBy={sort}
         onSortChange={handleSortChange}
-        view={viewMode}
-        onViewChange={handleViewChange}
         currentPage={page}
         onPageChange={handlePageChange}
         pageSize={PAGE_SIZE}

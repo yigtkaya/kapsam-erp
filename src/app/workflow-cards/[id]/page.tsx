@@ -1,6 +1,5 @@
 "use client";
 
-import { useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { useWorkflowProcess } from "@/hooks/useManufacturing";
 import { PageHeader } from "@/components/ui/page-header";
@@ -12,12 +11,14 @@ import { Edit, Trash2, ArrowLeft } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ProcessConfigList } from "../components/process-config-list";
+import { useUrlState } from "@/hooks/useUrlState";
 
 export default function WorkflowProcessDetailPage() {
   const params = useParams();
   const router = useRouter();
   const id = parseInt(params.id as string);
-  const [activeTab, setActiveTab] = useState("basic");
+  const { getUrlState, setUrlState } = useUrlState({ replace: true }); // Use replace to avoid adding history entries for tab changes
+  const activeTab = getUrlState("tab", "basic");
 
   const {
     data: workflowProcess,
@@ -27,6 +28,10 @@ export default function WorkflowProcessDetailPage() {
 
   const isLoading = processLoading;
   const error = processError;
+
+  const handleTabChange = (value: string) => {
+    setUrlState({ tab: value });
+  };
 
   if (isLoading) {
     return (
@@ -65,15 +70,15 @@ export default function WorkflowProcessDetailPage() {
     return (
       <div className="container mx-auto py-4 space-y-6">
         <PageHeader
-          title="Error"
-          description="Failed to load workflow process"
+          title="Hata"
+          description="İş akışı prosesi yüklenirken bir hata oluştu"
           showBackButton
           onBack={() => router.push("/workflow-cards")}
         />
         <div className="bg-red-50 p-4 rounded-md text-red-800">
           {error instanceof Error
             ? error.message
-            : "Workflow process not found"}
+            : "İş akışı prosesi bulunamadı"}
         </div>
       </div>
     );
@@ -82,8 +87,8 @@ export default function WorkflowProcessDetailPage() {
   return (
     <div className="container mx-auto py-4 space-y-6">
       <PageHeader
-        title={`Workflow Process: ${workflowProcess.stock_code}`}
-        description={`Stock Code: ${workflowProcess.process_details?.process_name}`}
+        title={`İş Akışı Prosesi: ${workflowProcess.stock_code}`}
+        description={`Stok Kodu: ${workflowProcess.process_details?.process_name}`}
         showBackButton
         onBack={() => router.push("/workflow-cards")}
         action={
@@ -94,32 +99,32 @@ export default function WorkflowProcessDetailPage() {
               onClick={() => router.push(`/workflow-cards/${id}/edit`)}
             >
               <Edit className="h-4 w-4 mr-2" />
-              Edit
+              Düzenle
             </Button>
             <Button variant="destructive" size="sm">
               <Trash2 className="h-4 w-4 mr-2" />
-              Delete
+              Sil
             </Button>
           </div>
         }
       />
 
-      <Tabs value={activeTab} onValueChange={setActiveTab}>
+      <Tabs value={activeTab} onValueChange={handleTabChange}>
         <TabsList>
-          <TabsTrigger value="basic">Basic Information</TabsTrigger>
-          <TabsTrigger value="configs">Process Configurations</TabsTrigger>
+          <TabsTrigger value="basic">Temel Bilgiler</TabsTrigger>
+          <TabsTrigger value="configs">Proses Konfigürasyonları</TabsTrigger>
         </TabsList>
 
         <TabsContent value="basic" className="space-y-6 pt-4">
           <Card>
             <CardHeader>
-              <CardTitle>Process Details</CardTitle>
+              <CardTitle>İş Akışı Prosesi Detayları</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <h3 className="text-sm font-medium text-muted-foreground">
-                    Process Code
+                    Proses Kodu
                   </h3>
                   <p className="text-lg">
                     {workflowProcess.process_details?.process_code}
@@ -127,13 +132,13 @@ export default function WorkflowProcessDetailPage() {
                 </div>
                 <div>
                   <h3 className="text-sm font-medium text-muted-foreground">
-                    Stock Code
+                    Stok Kodu
                   </h3>
                   <p className="text-lg">{workflowProcess.stock_code}</p>
                 </div>
                 <div>
                   <h3 className="text-sm font-medium text-muted-foreground">
-                    Sequence Order
+                    Sıra Numarası
                   </h3>
                   <p className="text-lg">
                     <Badge>{workflowProcess.sequence_order}</Badge>
@@ -145,7 +150,7 @@ export default function WorkflowProcessDetailPage() {
 
               <div>
                 <h3 className="text-sm font-medium text-muted-foreground mb-2">
-                  Product
+                  Ürün
                 </h3>
                 <div className="bg-muted p-3 rounded-md">
                   <p className="font-medium">
@@ -159,7 +164,7 @@ export default function WorkflowProcessDetailPage() {
 
               <div>
                 <h3 className="text-sm font-medium text-muted-foreground mb-2">
-                  Manufacturing Process
+                  İmalat Prosesi
                 </h3>
                 <div className="bg-muted p-3 rounded-md">
                   <p className="font-medium">

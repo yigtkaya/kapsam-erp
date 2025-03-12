@@ -408,29 +408,22 @@ export async function createProcessConfig(
 ) {
   const headers = await getAuthHeaders();
 
-  // If workflow_process is provided as an ID, use the workflow-specific endpoint
-  const workflowProcessId =
-    typeof data.workflow_process === "number" ? data.workflow_process : null;
-  const url = workflowProcessId
-    ? `${API_URL}/api/manufacturing/workflow-processes/${workflowProcessId}/configs/`
-    : `${API_URL}/api/manufacturing/process-configs/`;
-
   // Create a copy of the data without the workflow_process field if using the workflow-specific endpoint
-  const requestData = workflowProcessId
-    ? { ...data, workflow_process: undefined }
-    : data;
-
+  console.log(data);
   try {
-    const response = await fetch(url, {
-      method: "POST",
-      credentials: "include",
-      headers,
-      body: JSON.stringify(requestData),
-    });
+    const response = await fetch(
+      `${API_URL}/api/manufacturing/process-configs/`,
+      {
+        method: "POST",
+        credentials: "include",
+        headers,
+        body: JSON.stringify(data),
+      }
+    );
 
     if (!response.ok) {
-      const errorData = await response.json();
-      console.error("Error creating process config:", errorData);
+      console.log(response);
+      console.log(await response.json());
       throw new Error("Failed to create process config");
     }
 

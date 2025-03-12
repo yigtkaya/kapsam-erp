@@ -11,7 +11,16 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Edit, Trash2 } from "lucide-react";
+import {
+  Plus,
+  Edit,
+  Trash2,
+  Timer,
+  Clock,
+  WrenchIcon,
+  Gauge,
+  Wrench,
+} from "lucide-react";
 import { toast } from "sonner";
 import {
   AlertDialog,
@@ -23,6 +32,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import { Separator } from "@/components/ui/separator";
 
 interface ProcessConfigListProps {
   workflowProcessId: number;
@@ -110,10 +120,10 @@ export function ProcessConfigList({
   return (
     <div className="space-y-4">
       <div className="flex justify-between items-center">
-        <h2 className="text-xl font-semibold">Process Configurations</h2>
+        <h2 className="text-xl font-semibold">Proses Konfigürasyonları</h2>
         <Button onClick={handleAddConfig}>
           <Plus className="h-4 w-4 mr-2" />
-          Add Configuration
+          Konfigürasyon Ekle
         </Button>
       </div>
 
@@ -133,14 +143,14 @@ export function ProcessConfigList({
           <CardContent className="py-10">
             <div className="text-center">
               <h3 className="text-lg font-medium mb-2">
-                No Configurations Found
+                Konfigürasyon Bulunamadı
               </h3>
               <p className="text-muted-foreground">
-                This workflow process doesn't have any configuration details.
+                Bu iş akışı prosesi için henüz bir konfigürasyon eklenmemiş.
               </p>
               <Button className="mt-4" onClick={handleAddConfig}>
                 <Plus className="h-4 w-4 mr-2" />
-                Add Configuration
+                Konfigürasyon Ekle
               </Button>
             </div>
           </CardContent>
@@ -150,20 +160,20 @@ export function ProcessConfigList({
       <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+            <AlertDialogTitle>Emin misiniz?</AlertDialogTitle>
             <AlertDialogDescription>
-              This action cannot be undone. This will permanently delete the
-              process configuration.
+              Bu işlem geri alınamaz. Proses konfigürasyonu kalıcı olarak
+              silinecektir.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel disabled={isDeleting}>Cancel</AlertDialogCancel>
+            <AlertDialogCancel disabled={isDeleting}>İptal</AlertDialogCancel>
             <AlertDialogAction
               onClick={handleConfirmDelete}
               disabled={isDeleting}
               className="bg-red-600 hover:bg-red-700"
             >
-              {isDeleting ? "Deleting..." : "Delete"}
+              {isDeleting ? "Siliniyor..." : "Sil"}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
@@ -182,13 +192,9 @@ function ConfigCard({ config, onEdit, onDelete }: ConfigCardProps) {
   return (
     <Card>
       <CardHeader className="pb-2 flex flex-row items-start justify-between">
-        <div>
-          <CardTitle>
-            {config.machine_type_display ||
-              config.machine_type ||
-              "Configuration"}
-          </CardTitle>
-        </div>
+        <CardTitle className="text-lg font-medium">
+          {config.axis_count_display || config.axis_count || "Standart"}
+        </CardTitle>
         <div className="flex space-x-2">
           <Button variant="outline" size="icon" onClick={onEdit}>
             <Edit className="h-4 w-4" />
@@ -198,86 +204,97 @@ function ConfigCard({ config, onEdit, onDelete }: ConfigCardProps) {
           </Button>
         </div>
       </CardHeader>
-      <CardContent className="space-y-4">
-        <div className="grid grid-cols-2 gap-4">
-          {config.axis_count && (
-            <div>
-              <h3 className="text-sm font-medium text-muted-foreground">
-                Axis Count
-              </h3>
-              <p className="text-lg">
-                <Badge variant="outline">
-                  {config.axis_count_display || config.axis_count}
-                </Badge>
-              </p>
+      <CardContent className="space-y-6">
+        {/* Time Information */}
+        <div className="space-y-3">
+          <div className="flex items-center justify-between text-sm">
+            <div className="flex items-center gap-2">
+              <Clock className="h-4 w-4 text-muted-foreground" />
+              <span className="text-muted-foreground">Çevrim Zamanı:</span>
+            </div>
+            <span className="font-medium">{config.cycle_time || 0} sn</span>
+          </div>
+          <div className="grid grid-cols-3 gap-2 text-sm bg-muted/50 rounded-lg p-2">
+            <div className="flex flex-col items-center gap-1">
+              <div className="flex items-center gap-1 text-muted-foreground">
+                <Timer className="h-3 w-3" />
+                <span>Hazırlık</span>
+              </div>
+              <span>{config.setup_time || 0} sn</span>
+            </div>
+            <div className="flex flex-col items-center gap-1 border-l border-r border-border/50">
+              <div className="flex items-center gap-1 text-muted-foreground">
+                <Timer className="h-3 w-3" />
+                <span>Tezgah</span>
+              </div>
+              <span>{config.machine_time || 0} sn</span>
+            </div>
+            <div className="flex flex-col items-center gap-1">
+              <div className="flex items-center gap-1 text-muted-foreground">
+                <Timer className="h-3 w-3" />
+                <span>Net</span>
+              </div>
+              <span>{config.net_time || 0} sn</span>
+            </div>
+          </div>
+        </div>
+
+        <Separator />
+
+        {/* Tools and Equipment */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          {config.tool_details && (
+            <div className="space-y-2">
+              <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
+                <WrenchIcon className="h-4 w-4" />
+                <span>Takım</span>
+              </div>
+              <div className="bg-muted p-2 rounded-md">
+                <p className="font-medium">{config.tool_details.stock_code}</p>
+                <p className="text-sm text-muted-foreground">
+                  {config.tool_details.tool_type}
+                </p>
+              </div>
             </div>
           )}
 
-          {config.estimated_duration_minutes && (
-            <div>
-              <h3 className="text-sm font-medium text-muted-foreground">
-                Estimated Duration
-              </h3>
-              <p className="text-lg">
-                {config.estimated_duration_minutes} minutes
-              </p>
+          {config.control_gauge_details && (
+            <div className="space-y-2">
+              <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
+                <Gauge className="h-4 w-4" />
+                <span>Kontrol Mastarı</span>
+              </div>
+              <div className="bg-muted p-2 rounded-md">
+                <p className="font-medium">
+                  {config.control_gauge_details.stock_code}
+                </p>
+                <p className="text-sm text-muted-foreground">
+                  {config.control_gauge_details.stock_name}
+                </p>
+              </div>
             </div>
           )}
 
-          {config.setup_time_minutes && (
-            <div>
-              <h3 className="text-sm font-medium text-muted-foreground">
-                Setup Time
-              </h3>
-              <p className="text-lg">{config.setup_time_minutes} minutes</p>
+          {config.fixture_details && (
+            <div className="space-y-2">
+              <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
+                <Wrench className="h-4 w-4" />
+                <span>Bağlama Aparatı</span>
+              </div>
+              <div className="bg-muted p-2 rounded-md">
+                <p className="font-medium">{config.fixture_details.code}</p>
+                {config.fixture_details.name && (
+                  <p className="text-sm text-muted-foreground"></p>
+                )}
+              </div>{" "}
             </div>
           )}
         </div>
 
-        {config.raw_material_details && (
-          <div>
-            <h3 className="text-sm font-medium text-muted-foreground mb-1">
-              Raw Material
-            </h3>
-            <div className="bg-muted p-2 rounded-md">
-              <p className="font-medium">
-                {config.raw_material_details.material_name}
-              </p>
-              <p className="text-sm text-muted-foreground">
-                {config.raw_material_details.material_code}
-              </p>
-            </div>
-          </div>
-        )}
-
-        {config.tooling_requirements && (
-          <div>
-            <h3 className="text-sm font-medium text-muted-foreground mb-1">
-              Tooling Requirements
-            </h3>
-            <p className="text-sm whitespace-pre-wrap">
-              {config.tooling_requirements}
-            </p>
-          </div>
-        )}
-
-        {config.quality_checks && (
-          <div>
-            <h3 className="text-sm font-medium text-muted-foreground mb-1">
-              Quality Checks
-            </h3>
-            <p className="text-sm whitespace-pre-wrap">
-              {config.quality_checks}
-            </p>
-          </div>
-        )}
-
-        {config.notes && (
-          <div>
-            <h3 className="text-sm font-medium text-muted-foreground mb-1">
-              Notes
-            </h3>
-            <p className="text-sm whitespace-pre-wrap">{config.notes}</p>
+        {config.number_of_bindings && (
+          <div className="flex items-center gap-2 text-sm">
+            <span className="text-muted-foreground">Bağlama Sayısı:</span>
+            <Badge variant="outline">{config.number_of_bindings}</Badge>
           </div>
         )}
       </CardContent>
