@@ -7,16 +7,11 @@ import {
   fetchProcessConfigs,
 } from "@/api/manufacturing";
 import { WorkflowProcess, ProcessConfig } from "@/types/manufacture";
-import {
-  useQuery,
-  useQueryClient,
-  useMutation,
-  useSuspenseQuery,
-} from "@tanstack/react-query";
+import { useQuery, useQueryClient, useMutation } from "@tanstack/react-query";
 
 // Workflow Process hooks
 export function useWorkflowProcesses() {
-  return useSuspenseQuery<WorkflowProcess[]>({
+  return useQuery<WorkflowProcess[]>({
     queryKey: ["workflowProcesses"],
     queryFn: () => fetchWorkflowProcesses(),
     staleTime: 5 * 60 * 1000, // 5 minutes
@@ -25,7 +20,7 @@ export function useWorkflowProcesses() {
 }
 
 export function useWorkflowProcess(id: number) {
-  return useSuspenseQuery<WorkflowProcess>({
+  return useQuery<WorkflowProcess>({
     queryKey: ["workflowProcess", id],
     queryFn: () => fetchWorkflowProcess(id),
     staleTime: 5 * 60 * 1000, // 5 minutes

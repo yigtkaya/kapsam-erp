@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { useProducts } from "@/hooks/useProducts";
 import { processProductsColumns } from "./columns";
 import {
@@ -23,7 +23,6 @@ import {
   useReactTable,
 } from "@tanstack/react-table";
 import { DataTablePagination } from "@/components/ui/data-table-pagination";
-import { DataTableSkeleton } from "@/components/ui/data-table-skeleton";
 import { Input } from "@/components/ui/input";
 
 export default function ProcessDataTable() {
@@ -33,13 +32,13 @@ export default function ProcessDataTable() {
   const [pageIndex, setPageIndex] = useState(0);
   const [pageSize, setPageSize] = useState(50);
 
-  const { data, isLoading, error } = useProducts({
+  const { data = [], error } = useProducts({
     product_type: "SEMI",
     category: "PROSES",
   });
 
   const table = useReactTable({
-    data: data ?? [],
+    data,
     columns: processProductsColumns,
     getCoreRowModel: getCoreRowModel(),
     getPaginationRowModel: getPaginationRowModel(),
@@ -57,6 +56,7 @@ export default function ProcessDataTable() {
         pageSize,
       },
     },
+    pageCount: Math.ceil(data.length / pageSize),
     onPaginationChange: (updater) => {
       if (typeof updater === "function") {
         const newState = updater({ pageIndex, pageSize });
@@ -64,29 +64,8 @@ export default function ProcessDataTable() {
         setPageSize(newState.pageSize);
       }
     },
+    manualPagination: true,
   });
-
-  if (isLoading) {
-    return (
-      <div className="space-y-4">
-        <div className="rounded-md border border-muted/200 shadow-sm bg-background">
-          <Table>
-            <TableHeader className="bg-muted/90">
-              <TableRow>
-                {[...Array(processProductsColumns.length)].map((_, index) => (
-                  <TableHead key={index} />
-                ))}
-              </TableRow>
-            </TableHeader>
-            <DataTableSkeleton
-              rowCount={pageSize}
-              columnCount={processProductsColumns.length}
-            />
-          </Table>
-        </div>
-      </div>
-    );
-  }
 
   if (error) {
     return (
@@ -96,7 +75,7 @@ export default function ProcessDataTable() {
     );
   }
 
-  if (data && data.length === 0) {
+  if (data.length === 0) {
     return (
       <div className="text-center py-10 text-muted-foreground">
         Process ürün bulunamadı.
@@ -139,29 +118,15 @@ export default function ProcessDataTable() {
             ))}
           </TableHeader>
           <TableBody>
-            {data && data.length === 0 ? (
-              <TableRow>
-                <TableCell
-                  colSpan={processProductsColumns.length}
-                  className="h-24 text-center text-muted-foreground"
-                >
-                  Process ürün bulunamadı.
-                </TableCell>
+            {table.getRowModel().rows.map((row) => (
+              <TableRow key={row.id} className="hover:bg-muted/90">
+                {row.getVisibleCells().map((cell) => (
+                  <TableCell key={cell.id}>
+                    {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                  </TableCell>
+                ))}
               </TableRow>
-            ) : (
-              table.getRowModel().rows.map((row) => (
-                <TableRow key={row.id} className="hover:bg-muted/90">
-                  {row.getVisibleCells().map((cell) => (
-                    <TableCell key={cell.id}>
-                      {flexRender(
-                        cell.column.columnDef.cell,
-                        cell.getContext()
-                      )}
-                    </TableCell>
-                  ))}
-                </TableRow>
-              ))
-            )}
+            ))}
           </TableBody>
         </Table>
       </div>

@@ -6,16 +6,11 @@ import {
   deleteProcessConfig,
 } from "@/api/manufacturing";
 import { ProcessConfig } from "@/types/manufacture";
-import {
-  useQuery,
-  useQueryClient,
-  useMutation,
-  useSuspenseQuery,
-} from "@tanstack/react-query";
+import { useQuery, useQueryClient, useMutation } from "@tanstack/react-query";
 
 // Process Config hooks
 export function useProcessConfigs(workflowProcessId?: number) {
-  return useSuspenseQuery<ProcessConfig[]>({
+  return useQuery<ProcessConfig[]>({
     queryKey: workflowProcessId
       ? ["processConfigs", workflowProcessId]
       : ["processConfigs"],
@@ -24,7 +19,7 @@ export function useProcessConfigs(workflowProcessId?: number) {
 }
 
 export function useProcessConfig(id: number) {
-  return useSuspenseQuery<ProcessConfig>({
+  return useQuery<ProcessConfig>({
     queryKey: ["processConfig", id],
     queryFn: () => fetchProcessConfig(id),
   });

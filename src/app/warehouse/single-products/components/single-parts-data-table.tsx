@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { useProducts } from "@/hooks/useProducts";
 import {
   Table,
@@ -22,7 +22,6 @@ import {
   useReactTable,
 } from "@tanstack/react-table";
 import { DataTablePagination } from "@/components/ui/data-table-pagination";
-import { DataTableSkeleton } from "@/components/ui/data-table-skeleton";
 import { singlePartsColumns } from "./single-parts-columns";
 import { Input } from "@/components/ui/input";
 
@@ -33,12 +32,12 @@ export default function SinglePartsDataTable() {
   const [pageIndex, setPageIndex] = useState(0);
   const [pageSize, setPageSize] = useState(50);
 
-  const { data, isLoading, error } = useProducts({
+  const { data = [], error } = useProducts({
     product_type: "SINGLE",
   });
 
   const table = useReactTable({
-    data: data ?? [],
+    data,
     columns: singlePartsColumns,
     getCoreRowModel: getCoreRowModel(),
     getPaginationRowModel: getPaginationRowModel(),
@@ -56,7 +55,7 @@ export default function SinglePartsDataTable() {
         pageSize,
       },
     },
-    pageCount: data ? Math.ceil(data.length / pageSize) : -1,
+    pageCount: Math.ceil(data.length / pageSize),
     onPaginationChange: (updater) => {
       if (typeof updater === "function") {
         const newState = updater({
@@ -70,10 +69,6 @@ export default function SinglePartsDataTable() {
     manualPagination: true,
   });
 
-  if (isLoading) {
-    return <DataTableSkeleton />;
-  }
-
   if (error) {
     return (
       <div className="rounded-md bg-red-50 p-4 text-sm text-red-500">
@@ -82,7 +77,7 @@ export default function SinglePartsDataTable() {
     );
   }
 
-  if (data && data.length === 0) {
+  if (data.length === 0) {
     return (
       <div className="text-center py-10 text-muted-foreground">
         Tekil parça bulunamadı.
@@ -125,34 +120,15 @@ export default function SinglePartsDataTable() {
             ))}
           </TableHeader>
           <TableBody>
-            {isLoading ? (
-              <DataTableSkeleton
-                rowCount={pageSize}
-                columnCount={singlePartsColumns.length}
-              />
-            ) : data && data.length === 0 ? (
-              <TableRow>
-                <TableCell
-                  colSpan={singlePartsColumns.length}
-                  className="h-24 text-center text-muted-foreground"
-                >
-                  Ürün bulunamadı
-                </TableCell>
+            {table.getRowModel().rows.map((row) => (
+              <TableRow key={row.id} className="hover:bg-muted/90">
+                {row.getVisibleCells().map((cell) => (
+                  <TableCell key={cell.id}>
+                    {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                  </TableCell>
+                ))}
               </TableRow>
-            ) : (
-              table.getRowModel().rows.map((row) => (
-                <TableRow key={row.id} className="hover:bg-muted/90">
-                  {row.getVisibleCells().map((cell) => (
-                    <TableCell key={cell.id}>
-                      {flexRender(
-                        cell.column.columnDef.cell,
-                        cell.getContext()
-                      )}
-                    </TableCell>
-                  ))}
-                </TableRow>
-              ))
-            )}
+            ))}
           </TableBody>
         </Table>
       </div>

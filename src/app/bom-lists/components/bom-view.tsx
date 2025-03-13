@@ -9,6 +9,7 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { AlertCircle, Loader2 } from "lucide-react";
 import { PaginationControl } from "@/components/ui/pagination-control";
 import { ViewToggle } from "@/components/ui/view-toggle";
+import { Suspense } from "react";
 
 interface BOMViewProps {
   isLoading: boolean;
@@ -23,6 +24,61 @@ interface BOMViewProps {
   currentPage: number;
   onPageChange: (value: number) => void;
   pageSize: number;
+}
+
+// Separate DataTable view component for Suspense
+function DataTableView({
+  items,
+  currentPage,
+  pageSize,
+}: {
+  items: BOM[];
+  currentPage: number;
+  pageSize: number;
+}) {
+  return (
+    <DataTable
+      columns={columns}
+      data={items}
+      rowClassName="cursor-pointer hover:bg-accent"
+      onRowClick={(row: BOM) => {
+        window.location.href = `/bom-lists/${row.id}`;
+      }}
+    />
+  );
+}
+
+// Grid view component for better organization
+function GridView({
+  items,
+  currentPage,
+  pageSize,
+  onPageChange,
+  totalItems,
+}: {
+  items: BOM[];
+  currentPage: number;
+  pageSize: number;
+  onPageChange: (value: number) => void;
+  totalItems: number;
+}) {
+  return (
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+      {items.map((bom) => (
+        <BOMCard key={bom.id} bom={bom} />
+      ))}
+      {items.length > 0 && (
+        <div className="col-span-full">
+          <PaginationControl
+            currentPage={currentPage}
+            totalItems={totalItems}
+            pageSize={pageSize}
+            onPageChange={onPageChange}
+          />
+        </div>
+      )}
+    </div>
+  );
 }
 
 export function BOMView({
@@ -61,7 +117,6 @@ export function BOMView({
 
   const startIndex = currentPage * pageSize;
   const paginatedItems = items.slice(startIndex, startIndex + pageSize);
-  const totalPages = Math.ceil(items.length / pageSize);
 
   return (
     <div className="space-y-4">
@@ -76,30 +131,35 @@ export function BOMView({
       </div>
 
       {view === "table" ? (
-        <DataTable
-          columns={columns}
-          data={paginatedItems}
-          rowClassName="cursor-pointer hover:bg-accent"
-          onRowClick={(row: BOM) => {
-            window.location.href = `/bom-lists/${row.id}`;
-          }}
-        />
-      ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {paginatedItems.map((bom) => (
-            <BOMCard key={bom.id} bom={bom} />
-          ))}
-          {paginatedItems.length > 0 && (
-            <div className="col-span-full">
-              <PaginationControl
-                currentPage={currentPage}
-                totalItems={items.length}
-                pageSize={pageSize}
-                onPageChange={onPageChange}
-              />
+        <Suspense
+          fallback={
+            <div className="py-8 text-center text-muted-foreground">
+              Loading table view...
             </div>
-          )}
-        </div>
+          }
+        >
+          <DataTableView
+            items={paginatedItems}
+            currentPage={currentPage}
+            pageSize={pageSize}
+          />
+        </Suspense>
+      ) : (
+        <Suspense
+          fallback={
+            <div className="py-8 text-center text-muted-foreground">
+              Loading grid view...
+            </div>
+          }
+        >
+          <GridView
+            items={paginatedItems}
+            currentPage={currentPage}
+            pageSize={pageSize}
+            onPageChange={onPageChange}
+            totalItems={items.length}
+          />
+        </Suspense>
       )}
 
       {items.length === 0 && !isLoading && (

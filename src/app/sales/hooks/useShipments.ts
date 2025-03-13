@@ -1,8 +1,4 @@
-import {
-  useMutation,
-  useQueryClient,
-  useSuspenseQuery,
-} from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import {
   fetchShipment,
@@ -14,14 +10,14 @@ import { createShipment, deleteShipment } from "@/api/sales";
 import { CreateShipmentRequest, Shipping } from "@/types/sales";
 
 export function useShipment(shippingNo: string) {
-  return useSuspenseQuery<Shipping>({
+  return useQuery<Shipping>({
     queryKey: ["shipment", shippingNo],
     queryFn: () => fetchShipment(shippingNo),
   });
 }
 
 export function useShipments(orderId: string) {
-  return useSuspenseQuery<Shipping[]>({
+  return useQuery<Shipping[]>({
     queryKey: ["shipments", orderId],
     queryFn: () => fetchShipments(orderId),
   });

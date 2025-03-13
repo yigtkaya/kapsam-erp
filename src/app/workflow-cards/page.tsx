@@ -4,42 +4,34 @@ import { Button } from "@/components/ui/button";
 import { PageHeader } from "@/components/ui/page-header";
 import { Plus } from "lucide-react";
 import Link from "next/link";
-import { useMemo, Suspense, useCallback, useTransition, useState } from "react";
+import { useMemo, Suspense, useCallback, useState } from "react";
 import { WorkflowProcessView } from "./components/workflow-process-view";
-import { useRouter, useSearchParams, usePathname } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { useWorkflowProcesses } from "./hooks/use-workflow-hooks";
-import { useEffect } from "react";
 
 const PAGE_SIZE = 12;
 
 function WorkflowProcessContent() {
   const router = useRouter();
-  const pathname = usePathname();
-  const searchParams = useSearchParams();
-  const [isPending, startTransition] = useTransition();
 
-  // Initialize your parameters from the URL or defaults.
+  // Local state for filters
   const [queryParams, setQueryParams] = useState({
-    q: searchParams.get("q") || "",
-    sort: searchParams.get("sort") || "stock_code_asc",
-    view: (searchParams.get("view") || "grid") as "grid" | "table",
-    page: searchParams.get("page") || "0",
+    q: "",
+    sort: "stock_code_asc",
+    view: "grid" as "grid" | "table",
+    page: 0,
   });
 
-  // When queryParams change, update the URL.
-  useEffect(() => {
-    // Only update if the current URL does not match
-    const newUrl = `${pathname}?${new URLSearchParams(queryParams).toString()}`;
-    router.push(newUrl);
-  }, [queryParams, pathname, router]);
+  // Fetch data
+  const { data: workflowProcesses, isLoading, error } = useWorkflowProcesses();
 
-  // Now, your event handlers only update local state.
+  // Event handlers
   const handleSearchChange = useCallback((value: string) => {
-    setQueryParams((prev) => ({ ...prev, q: value, page: "0" }));
+    setQueryParams((prev) => ({ ...prev, q: value, page: 0 }));
   }, []);
 
   const handleSortChange = useCallback((value: string) => {
-    setQueryParams((prev) => ({ ...prev, sort: value, page: "0" }));
+    setQueryParams((prev) => ({ ...prev, sort: value, page: 0 }));
   }, []);
 
   const handleViewChange = useCallback((value: "grid" | "table") => {
@@ -47,11 +39,8 @@ function WorkflowProcessContent() {
   }, []);
 
   const handlePageChange = useCallback((value: number) => {
-    setQueryParams((prev) => ({ ...prev, page: value.toString() }));
+    setQueryParams((prev) => ({ ...prev, page: value }));
   }, []);
-
-  // Fetch data with useSuspenseQuery
-  const { data: workflowProcesses = [] } = useWorkflowProcesses();
 
   // Filter and sort workflow processes
   const filteredAndSortedProcesses = useMemo(() => {
@@ -105,6 +94,14 @@ function WorkflowProcessContent() {
     });
   }, [workflowProcesses, queryParams.q, queryParams.sort]);
 
+  if (error) {
+    return (
+      <div className="text-center py-10 text-red-500">
+        Error loading workflow processes: {error.message}
+      </div>
+    );
+  }
+
   return (
     <WorkflowProcessView
       items={filteredAndSortedProcesses}
@@ -114,23 +111,20 @@ function WorkflowProcessContent() {
       onSortChange={handleSortChange}
       view={queryParams.view}
       onViewChange={handleViewChange}
-      currentPage={Number(queryParams.page)}
+      currentPage={queryParams.page}
       onPageChange={handlePageChange}
       pageSize={PAGE_SIZE}
-      isLoading={isPending}
+      isLoading={isLoading}
     />
   );
 }
 
 export default function WorkflowCardsPage() {
   const router = useRouter();
-  const [isPending, startTransition] = useTransition();
 
   const handleBack = useCallback(() => {
-    startTransition(() => {
-      router.replace("/dashboard");
-    });
-  }, [router, startTransition]);
+    router.replace("/dashboard");
+  }, [router]);
 
   return (
     <div className="container mx-auto py-4 space-y-6">

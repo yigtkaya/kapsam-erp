@@ -31,6 +31,43 @@ export default function WorkflowProcessDetailPage() {
     setUrlState({ tab: value });
   };
 
+  if (processLoading) {
+    return (
+      <div className="container mx-auto py-4 space-y-6">
+        <PageHeader
+          title="Loading..."
+          description="Loading process details..."
+          showBackButton
+          onBack={() => router.push("/workflow-cards")}
+        />
+        <div className="space-y-4">
+          <Skeleton className="h-[200px] w-full" />
+          <Skeleton className="h-[400px] w-full" />
+        </div>
+      </div>
+    );
+  }
+
+  if (processError || !workflowProcess) {
+    return (
+      <div className="container mx-auto py-4 space-y-6">
+        <PageHeader
+          title="Error"
+          description="Failed to load process details"
+          showBackButton
+          onBack={() => router.push("/workflow-cards")}
+        />
+        <Card>
+          <CardContent className="py-6">
+            <div className="text-center text-muted-foreground">
+              {processError ? processError.message : "Process not found"}
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
   return (
     <div className="container mx-auto py-4 space-y-6">
       <PageHeader
@@ -65,21 +102,23 @@ export default function WorkflowProcessDetailPage() {
                       Proses Kodu
                     </h3>
                     <p className="text-lg">
-                      {workflowProcess.process_details?.process_code}
+                      {workflowProcess.process_details?.process_code || "N/A"}
                     </p>
                   </div>
                   <div>
                     <h3 className="text-sm font-medium text-muted-foreground">
                       Stok Kodu
                     </h3>
-                    <p className="text-lg">{workflowProcess.stock_code}</p>
+                    <p className="text-lg">
+                      {workflowProcess.stock_code || "N/A"}
+                    </p>
                   </div>
                   <div>
                     <h3 className="text-sm font-medium text-muted-foreground">
                       Sıra Numarası
                     </h3>
                     <p className="text-lg">
-                      <Badge>{workflowProcess.sequence_order}</Badge>
+                      <Badge>{workflowProcess.sequence_order || "N/A"}</Badge>
                     </p>
                   </div>
                 </div>

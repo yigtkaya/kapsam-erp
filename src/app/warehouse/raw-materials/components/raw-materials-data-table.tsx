@@ -26,7 +26,6 @@ import {
 } from "@tanstack/react-table";
 import { DataTablePagination } from "@/components/ui/data-table-pagination";
 import { DataTableViewOptions } from "@/components/ui/data-table-view-options";
-import { DataTableSkeleton } from "@/components/ui/data-table-skeleton";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { ArrowDownIcon, ArrowUpIcon } from "lucide-react";
@@ -39,12 +38,12 @@ export default function RawMaterialsDataTable() {
   const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({});
   const [rowSelection, setRowSelection] = useState({});
 
-  const { data, isLoading, error } = useRawMaterials({
+  const { data = [], error } = useRawMaterials({
     category: "HAMMADDE",
   });
 
   const table = useReactTable({
-    data: data ?? [],
+    data,
     columns: rawMaterialsColumns,
     getCoreRowModel: getCoreRowModel(),
     getPaginationRowModel: getPaginationRowModel(),
@@ -67,10 +66,6 @@ export default function RawMaterialsDataTable() {
     },
   });
 
-  if (isLoading) {
-    return <DataTableSkeleton />;
-  }
-
   if (error) {
     return (
       <div className="rounded-md bg-red-50 p-4 text-sm text-red-500">
@@ -79,7 +74,7 @@ export default function RawMaterialsDataTable() {
     );
   }
 
-  if (!data || data.length === 0) {
+  if (data.length === 0) {
     return (
       <div className="text-center py-10 text-muted-foreground">
         Hammadde bulunamadı

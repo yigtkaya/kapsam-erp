@@ -1,9 +1,4 @@
-import {
-  useMutation,
-  useQuery,
-  useQueryClient,
-  useSuspenseQuery,
-} from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { CreateSalesOrderRequest, SalesOrder } from "@/types/sales";
 import { toast } from "sonner";
 import {
@@ -15,7 +10,7 @@ import {
 } from "@/api/sales";
 
 export function useSalesOrders() {
-  return useSuspenseQuery<SalesOrder[]>({
+  return useQuery<SalesOrder[]>({
     queryKey: ["sales-orders"],
     queryFn: async () => {
       const response = await getSalesOrders();
@@ -78,7 +73,7 @@ export function useUpdateSalesOrder() {
 }
 
 export function useSalesOrder(id: string) {
-  return useSuspenseQuery({
+  return useQuery({
     queryKey: ["sales-order", id],
     queryFn: () => getSalesOrder(id),
   });

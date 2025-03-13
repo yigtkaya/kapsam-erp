@@ -1,11 +1,6 @@
 "use client";
 
-import {
-  useMutation,
-  useQuery,
-  useQueryClient,
-  useSuspenseQuery,
-} from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   createBOM,
   deleteBOM,
@@ -13,28 +8,17 @@ import {
   fetchBOMs,
   updateBOM,
 } from "@/api/boms";
-import {
-  BOM,
-  BOMComponent,
-  BomRequest,
-  CreateBOMComponentRequest,
-  CreateBOMRequest,
-} from "@/types/manufacture";
-import {
-  createComponent,
-  deleteComponent,
-  updateComponent,
-} from "@/api/components";
+import { BomRequest, CreateBOMRequest } from "@/types/manufacture";
 
 export function useBOMs() {
-  return useSuspenseQuery({
+  return useQuery({
     queryKey: ["boms"],
     queryFn: fetchBOMs,
   });
 }
 
 export function useBOM(id: number) {
-  return useSuspenseQuery({
+  return useQuery({
     queryKey: ["bom", id],
     queryFn: () => fetchBOM(id),
   });

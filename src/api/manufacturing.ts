@@ -498,6 +498,8 @@ export async function fetchWorkflowProcesses(): Promise<WorkflowProcess[]> {
   );
 
   if (!response.ok) {
+    console.log(response);
+    console.log(await response.json());
     throw new Error("Failed to fetch workflow processes");
   }
 

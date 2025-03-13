@@ -1,9 +1,4 @@
-import {
-  useQuery,
-  useMutation,
-  useQueryClient,
-  useSuspenseQuery,
-} from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   createComponent,
   updateComponent,
@@ -14,7 +9,7 @@ import { BOMComponent } from "@/types/manufacture";
 import { toast } from "sonner";
 
 export function useComponents(bomId: number) {
-  return useSuspenseQuery({
+  return useQuery({
     queryKey: ["components", bomId],
     queryFn: () => getAllComponentsForBom(bomId),
     refetchOnMount: true,

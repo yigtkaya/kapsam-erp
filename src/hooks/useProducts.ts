@@ -1,9 +1,4 @@
-import {
-  useMutation,
-  useQuery,
-  useQueryClient,
-  useSuspenseQuery,
-} from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   fetchProduct,
   createProduct,
@@ -17,7 +12,7 @@ import { ProcessProduct, Product, TechnicalDrawing } from "@/types/inventory";
 import { fetchProducts as clientFetchProducts } from "@/api/products";
 
 export function useProcessProducts() {
-  return useSuspenseQuery<ProcessProduct[]>({
+  return useQuery<ProcessProduct[]>({
     queryKey: ["process-products"],
     queryFn: () => fetchProcessProducts(),
   });
@@ -36,7 +31,7 @@ export function useProducts({
   product_name,
   product_code,
 }: UseProductsParams = {}) {
-  return useSuspenseQuery<Product[]>({
+  return useQuery<Product[]>({
     queryKey: ["products", category, product_type, product_name, product_code],
     queryFn: () =>
       clientFetchProducts({
@@ -49,7 +44,7 @@ export function useProducts({
 }
 
 export function useProduct(id: string) {
-  return useSuspenseQuery<Product>({
+  return useQuery<Product>({
     queryKey: ["product", id],
     queryFn: () => fetchProduct({ id }),
   });

@@ -5,6 +5,7 @@ import { ProductTable } from "./product-table";
 import { ViewToggle } from "./view-toggle";
 import { PaginationControl } from "./pagination-control";
 import { RawMaterialCard } from "./raw-material-card";
+import { Suspense } from "react";
 
 interface RawMaterialViewProps {
   items: RawMaterial[];
@@ -19,18 +20,8 @@ interface RawMaterialViewProps {
   pageSize: number;
 }
 
-export function RawMaterialView({
-  items,
-  searchQuery,
-  onSearchChange,
-  sortBy,
-  onSortChange,
-  view,
-  onViewChange,
-  currentPage,
-  onPageChange,
-  pageSize,
-}: RawMaterialViewProps) {
+// Separate DataTable view component for Suspense
+function DataTableView({ items }: { items: RawMaterial[] }) {
   // Convert RawMaterial to Product type for display
   const convertToProduct = (material: RawMaterial): Product => ({
     id: material.id,
@@ -49,6 +40,58 @@ export function RawMaterialView({
     inventory_category_display: material.inventory_category?.name,
   });
 
+  return (
+    <ProductTable
+      products={items.map((material) => convertToProduct(material))}
+    />
+  );
+}
+
+// Grid view component for better organization
+function GridView({
+  items,
+  currentPage,
+  pageSize,
+  onPageChange,
+  totalItems,
+}: {
+  items: RawMaterial[];
+  currentPage: number;
+  pageSize: number;
+  onPageChange: (page: number) => void;
+  totalItems: number;
+}) {
+  return (
+    <>
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+        {items.map((material) => (
+          <RawMaterialCard key={material.id} material={material} />
+        ))}
+      </div>
+      {items.length > 0 && (
+        <PaginationControl
+          currentPage={currentPage}
+          totalItems={totalItems}
+          pageSize={pageSize}
+          onPageChange={onPageChange}
+        />
+      )}
+    </>
+  );
+}
+
+export function RawMaterialView({
+  items,
+  searchQuery,
+  onSearchChange,
+  sortBy,
+  onSortChange,
+  view,
+  onViewChange,
+  currentPage,
+  onPageChange,
+  pageSize,
+}: RawMaterialViewProps) {
   const start = currentPage * pageSize;
   const currentItems = items.slice(start, start + pageSize);
 
@@ -65,37 +108,42 @@ export function RawMaterialView({
       </div>
 
       <div className="space-y-4">
-        {view === "grid" ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-            {currentItems.map((material) => (
-              <RawMaterialCard key={material.id} material={material} />
-            ))}
-          </div>
+        {view === "table" ? (
+          <Suspense
+            fallback={
+              <div className="py-8 text-center text-muted-foreground">
+                Loading table view...
+              </div>
+            }
+          >
+            <DataTableView items={currentItems} />
+          </Suspense>
         ) : (
-          <ProductTable
-            products={currentItems.map((material) =>
-              convertToProduct(material)
-            )}
-          />
+          <Suspense
+            fallback={
+              <div className="py-8 text-center text-muted-foreground">
+                Loading grid view...
+              </div>
+            }
+          >
+            <GridView
+              items={currentItems}
+              currentPage={currentPage}
+              pageSize={pageSize}
+              onPageChange={onPageChange}
+              totalItems={items.length}
+            />
+          </Suspense>
         )}
 
-        {items.length > 0 && (
-          <PaginationControl
-            currentPage={currentPage}
-            totalItems={items.length}
-            pageSize={pageSize}
-            onPageChange={onPageChange}
-          />
+        {items.length === 0 && (
+          <div className="text-center text-muted-foreground">
+            {searchQuery
+              ? "Aramanızla eşleşen hammadde bulunamadı."
+              : "Henüz hammadde bulunmuyor."}
+          </div>
         )}
       </div>
-
-      {items.length === 0 && (
-        <div className="text-center text-muted-foreground">
-          {searchQuery
-            ? "Aramanızla eşleşen hammadde bulunamadı."
-            : "Henüz hammadde bulunmuyor."}
-        </div>
-      )}
     </div>
   );
 }

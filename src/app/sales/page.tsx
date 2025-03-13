@@ -5,62 +5,16 @@ import { PageHeader } from "@/components/ui/page-header";
 import { Plus } from "lucide-react";
 import Link from "next/link";
 import { useSearchParams, useRouter, usePathname } from "next/navigation";
-import { Suspense, useCallback, useMemo, useTransition } from "react";
-import { useSalesOrders } from "./hooks/useSalesOrders";
+import { Suspense, useCallback, useTransition } from "react";
 import { SalesView } from "./components/sales-view";
-import { SalesOrder } from "@/types/sales";
 
 const PAGE_SIZE = 50;
-
-// Move filtering and sorting logic outside component
-function filterAndSortOrders(
-  orders: SalesOrder[],
-  query: string,
-  sort: string
-): SalesOrder[] {
-  if (!orders) return [];
-
-  // First, filter the orders
-  let filtered = orders.filter((order) => {
-    const searchLower = query.toLowerCase();
-    return (
-      order.order_number.toLowerCase().includes(searchLower) ||
-      order.customer_name.toLowerCase().includes(searchLower) ||
-      false
-    );
-  });
-
-  // Then, sort the filtered results
-  return filtered.sort((a, b) => {
-    switch (sort) {
-      case "order_number_asc":
-        return a.order_number.localeCompare(b.order_number);
-      case "order_number_desc":
-        return b.order_number.localeCompare(a.order_number);
-      case "customer_asc":
-        return a.customer_name.localeCompare(b.customer_name);
-      case "customer_desc":
-        return b.customer_name.localeCompare(a.customer_name);
-      case "date_asc":
-        return (
-          new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
-        );
-      case "date_desc":
-        return (
-          new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
-        );
-      default:
-        return 0;
-    }
-  });
-}
 
 export default function SalesPage() {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const [isPending, startTransition] = useTransition();
-  const { data: salesOrders = [], isLoading } = useSalesOrders();
 
   // Get values from URL or use defaults
   const query = searchParams.get("q") || "";
@@ -127,12 +81,6 @@ export default function SalesPage() {
     [router, pathname, createQueryString]
   );
 
-  // Filter and sort sales orders
-  const filteredAndSortedOrders = useMemo(
-    () => filterAndSortOrders(salesOrders, query, sort),
-    [salesOrders, query, sort]
-  );
-
   return (
     <div className="overflow-x-hidden">
       <div className="mx-auto py-4 space-y-6 px-4">
@@ -151,11 +99,9 @@ export default function SalesPage() {
           }
         />
 
-        <Suspense>
+        <Suspense fallback={<div>Loading sales data...</div>}>
           <SalesView
-            isLoading={isLoading || isPending}
-            error={null}
-            items={filteredAndSortedOrders}
+            isLoading={isPending}
             searchQuery={query}
             onSearchChange={handleSearchChange}
             sortBy={sort}
