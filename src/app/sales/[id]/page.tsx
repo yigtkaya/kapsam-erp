@@ -17,7 +17,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Truck, Pencil, BarChart2, PlusCircle } from "lucide-react";
+import { Truck, Pencil, BarChart2, PlusCircle, Trash2 } from "lucide-react";
 import Link from "next/link";
 import { SalesOrder, SalesOrderItem, Shipping } from "@/types/sales";
 import { useSalesOrder } from "../hooks/useSalesOrders";
@@ -51,25 +51,161 @@ import { toast } from "sonner";
 import { useUpdateSalesOrder } from "../hooks/useSalesOrders";
 import { SalesOrderItemUpdate } from "@/api/sales";
 import { BatchAddItemsDialog } from "./components/BatchAddItemsDialog";
+import { useCustomers } from "@/hooks/useCustomers";
+import { Customer } from "@/types/customer";
+import { useBatchUpdateShipments } from "../hooks/useShipments";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
+import { useDeleteShipment } from "../hooks/useShipments";
 
 const formSchema = z.object({
-  deadline_date: z.string().min(1, "Deadline date is required"),
   status: z.string().min(1, "Status is required"),
-  items: z.array(
-    z.object({
-      id: z.number(),
-      ordered_quantity: z.number().min(1, "Ordered quantity is required"),
-      deadline_date: z.string().min(1, "Deadline date is required"),
-      kapsam_deadline_date: z
-        .string()
-        .min(1, "Kapsam deadline date is required"),
-      receiving_date: z.string().min(1, "Order receiving date is required"),
-    })
-  ),
+  customer: z.number().min(1, "Customer is required"),
 });
 
 function ShipmentsTable({ orderId }: { orderId: string }) {
   const { data: shipments = [], isLoading } = useShipments(orderId);
+  const { mutate: batchUpdate, isPending: isUpdating } =
+    useBatchUpdateShipments(orderId);
+  const { mutate: deleteShipment, isPending: isDeleting } =
+    useDeleteShipment(orderId);
+  const [isEditing, setIsEditing] = useState(false);
+  const [deletingShipmentId, setDeletingShipmentId] = useState<string | null>(
+    null
+  );
+  type ShipmentField =
+    | "shipping_no"
+    | "shipping_date"
+    | "quantity"
+    | "package_number"
+    | "shipping_note";
+
+  interface ShipmentChange {
+    shipping_no?: string;
+    shipping_date?: string;
+    quantity?: number;
+    package_number?: number;
+    shipping_note?: string;
+  }
+
+  const [shipmentChanges, setShipmentChanges] = useState<
+    Record<string, ShipmentChange>
+  >({});
+
+  const getCurrentValue = (
+    shipment: Shipping,
+    field: ShipmentField
+  ): string => {
+    const changes = shipmentChanges[shipment.shipping_no];
+    if (!changes) return String(shipment[field] ?? "");
+    return String(changes[field] ?? shipment[field] ?? "");
+  };
+
+  const handleShipmentFieldChange = (
+    shipping_no: string,
+    field: ShipmentField,
+    value: string | number
+  ) => {
+    if (!shipping_no) {
+      console.error("Invalid shipment number:", shipping_no);
+      return;
+    }
+
+    setShipmentChanges((prev) => ({
+      ...prev,
+      [shipping_no]: {
+        ...(prev[shipping_no] || {}),
+        [field]: value,
+      },
+    }));
+  };
+
+  const handleSaveChanges = async () => {
+    try {
+      const updatedItems = Object.entries(shipmentChanges).map(
+        ([shipping_no, changes]) => {
+          const shipment = shipments.find((s) => s.shipping_no === shipping_no);
+
+          if (!shipment) {
+            throw new Error(`Shipment ${shipping_no} not found`);
+          }
+
+          const updatedShipment = {
+            shipping_no,
+            quantity: Number(changes.quantity ?? shipment.quantity),
+            shipping_date: changes.shipping_date
+              ? new Date(changes.shipping_date).toISOString().split("T")[0]
+              : new Date(shipment.shipping_date).toISOString().split("T")[0],
+            ...(typeof changes.shipping_note === "string" && {
+              shipping_note: changes.shipping_note,
+            }),
+          };
+
+          return updatedShipment;
+        }
+      );
+
+      if (updatedItems.length === 0) {
+        toast.info("Değişiklik yapılmadı");
+        return;
+      }
+
+      await batchUpdate({ shipments: updatedItems });
+      setShipmentChanges({});
+      setIsEditing(false);
+    } catch (error) {
+      let errorMessage = "Sevkiyatlar güncellenirken bir hata oluştu";
+
+      if (error instanceof Error) {
+        try {
+          const parsedError = JSON.parse(error.message);
+          if (parsedError.detail) {
+            errorMessage = parsedError.detail;
+          } else if (parsedError.shipments) {
+            const shipmentErrors = Object.entries(parsedError.shipments)
+              .map(([index, errors]: [string, any]) => {
+                const errorMessages = Object.values(errors).flat().join(", ");
+                return errorMessages;
+              })
+              .join("; ");
+
+            if (shipmentErrors) {
+              errorMessage = shipmentErrors;
+            }
+          }
+        } catch (e) {
+          errorMessage = error.message;
+        }
+      }
+
+      toast.error(errorMessage);
+    }
+  };
+
+  const handleCancelEdit = () => {
+    setShipmentChanges({});
+    setIsEditing(false);
+  };
+
+  const handleDeleteShipment = async (shippingNo: string) => {
+    try {
+      setDeletingShipmentId(shippingNo);
+      await deleteShipment(shippingNo);
+    } catch (error) {
+      console.error("Sevkiyat Silinirken Hata Oluştu", error);
+    } finally {
+      setDeletingShipmentId(null);
+    }
+  };
 
   if (isLoading) {
     return <div>Loading...</div>;
@@ -79,7 +215,36 @@ function ShipmentsTable({ orderId }: { orderId: string }) {
     <Card className="md:col-span-2">
       <CardHeader className="flex flex-row items-center justify-between">
         <CardTitle>Sevkiyatlar</CardTitle>
-        <Badge variant="secondary">{shipments.length}</Badge>
+        <div className="flex items-center gap-2">
+          {isEditing ? (
+            <>
+              <Button
+                variant="outline"
+                onClick={handleCancelEdit}
+                disabled={isUpdating}
+              >
+                İptal
+              </Button>
+              <Button
+                onClick={handleSaveChanges}
+                disabled={
+                  isUpdating || Object.keys(shipmentChanges).length === 0
+                }
+              >
+                {isUpdating ? "Kaydediliyor..." : "Kaydet"}
+              </Button>
+            </>
+          ) : (
+            <Button
+              variant="outline"
+              className="gap-2"
+              onClick={() => setIsEditing(true)}
+            >
+              <Pencil className="h-4 w-4" />
+              Düzenle
+            </Button>
+          )}
+        </div>
       </CardHeader>
       <CardContent className="p-0">
         {shipments.length === 0 ? (
@@ -100,27 +265,149 @@ function ShipmentsTable({ orderId }: { orderId: string }) {
                 <TableHead className="text-right">Miktar</TableHead>
                 <TableHead className="text-right">Paket</TableHead>
                 <TableHead>Not</TableHead>
+                <TableHead className="w-[100px]"></TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              {shipments.map((shipment: Shipping) => (
-                <TableRow key={shipment.id} className="hover:bg-muted/50">
+              {shipments.map((shipment) => (
+                <TableRow
+                  key={shipment.shipping_no}
+                  className="hover:bg-muted/50"
+                >
                   <TableCell className="font-medium">
-                    #{shipment.shipping_no}
+                    {isEditing ? (
+                      <Input
+                        value={getCurrentValue(shipment, "shipping_no")}
+                        className="w-32"
+                        disabled
+                      />
+                    ) : (
+                      `#${shipment.shipping_no}`
+                    )}
                   </TableCell>
                   <TableCell>
-                    {new Date(shipment.shipping_date).toLocaleDateString(
-                      "tr-TR"
+                    {isEditing ? (
+                      <Input
+                        type="date"
+                        value={
+                          (shipmentChanges[shipment.shipping_no]?.shipping_date
+                            ? new Date(
+                                shipmentChanges[shipment.shipping_no]
+                                  .shipping_date as string
+                              )
+                            : new Date(shipment.shipping_date)
+                          )
+                            .toISOString()
+                            .split("T")[0]
+                        }
+                        onChange={(e) =>
+                          handleShipmentFieldChange(
+                            shipment.shipping_no,
+                            "shipping_date",
+                            e.target.value
+                          )
+                        }
+                        className="w-32"
+                      />
+                    ) : (
+                      new Date(shipment.shipping_date).toLocaleDateString(
+                        "tr-TR"
+                      )
                     )}
                   </TableCell>
                   <TableCell className="text-right">
-                    {shipment.quantity}
+                    {isEditing ? (
+                      <Input
+                        type="number"
+                        value={getCurrentValue(shipment, "quantity")}
+                        onChange={(e) =>
+                          handleShipmentFieldChange(
+                            shipment.shipping_no,
+                            "quantity",
+                            Number(e.target.value)
+                          )
+                        }
+                        className="w-24 text-right"
+                      />
+                    ) : (
+                      shipment.quantity
+                    )}
                   </TableCell>
                   <TableCell className="text-right">
-                    {shipment.package_number}
+                    {isEditing ? (
+                      <Input
+                        type="number"
+                        value={getCurrentValue(shipment, "package_number")}
+                        onChange={(e) =>
+                          handleShipmentFieldChange(
+                            shipment.shipping_no,
+                            "package_number",
+                            Number(e.target.value)
+                          )
+                        }
+                        className="w-24 text-right"
+                      />
+                    ) : (
+                      shipment.package_number
+                    )}
                   </TableCell>
                   <TableCell className="max-w-[200px] truncate">
-                    {shipment.shipping_note || "-"}
+                    {isEditing ? (
+                      <Input
+                        value={getCurrentValue(shipment, "shipping_note")}
+                        onChange={(e) =>
+                          handleShipmentFieldChange(
+                            shipment.shipping_no,
+                            "shipping_note",
+                            e.target.value
+                          )
+                        }
+                      />
+                    ) : (
+                      shipment.shipping_note || "-"
+                    )}
+                  </TableCell>
+                  <TableCell>
+                    {!isEditing && (
+                      <AlertDialog>
+                        <AlertDialogTrigger asChild>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="hover:bg-destructive/10 hover:text-destructive"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </AlertDialogTrigger>
+                        <AlertDialogContent>
+                          <AlertDialogHeader>
+                            <AlertDialogTitle>Sevkiyatı Sil</AlertDialogTitle>
+                            <AlertDialogDescription>
+                              #{shipment.shipping_no} numaralı sevkiyatı silmek
+                              istediğinize emin misiniz? Bu işlem geri alınamaz.
+                            </AlertDialogDescription>
+                          </AlertDialogHeader>
+                          <AlertDialogFooter>
+                            <AlertDialogCancel>İptal</AlertDialogCancel>
+                            <AlertDialogAction
+                              onClick={() =>
+                                handleDeleteShipment(shipment.shipping_no)
+                              }
+                              className="bg-destructive hover:bg-destructive/90"
+                              disabled={
+                                isDeleting &&
+                                deletingShipmentId === shipment.shipping_no
+                              }
+                            >
+                              {isDeleting &&
+                              deletingShipmentId === shipment.shipping_no
+                                ? "Siliniyor..."
+                                : "Sil"}
+                            </AlertDialogAction>
+                          </AlertDialogFooter>
+                        </AlertDialogContent>
+                      </AlertDialog>
+                    )}
                   </TableCell>
                 </TableRow>
               ))}
@@ -254,12 +541,12 @@ function OrderItemsTable({ orderId }: { orderId: string }) {
           }
         } catch (e) {
           // If parsing fails, use the original error message
-          console.error("Error parsing error message:", e);
+          console.error("Sipariş Kalemleri Güncellenirken Hata Oluştu", e);
         }
       }
 
       toast.error(errorMessage);
-      console.error("Failed to update items:", error);
+      console.error("Sipariş Kalemleri Güncellenirken Hata Oluştu", error);
     }
   };
 
@@ -619,29 +906,22 @@ export default function SalesOrderDetailPage() {
 
   const { data: order, isLoading, error } = useSalesOrder(orderId);
   const { mutate: updateOrder, isPending: isUpdating } = useUpdateSalesOrder();
+  const { data: customers = [], isLoading: isLoadingCustomers } =
+    useCustomers();
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      deadline_date: "",
       status: "",
-      items: [],
+      customer: 0,
     },
   });
 
   useEffect(() => {
     if (order) {
       form.reset({
-        deadline_date: order.deadline_date,
         status: order.status,
-        items: order.items.map((item: SalesOrderItem) => ({
-          id: item.id,
-          product_id: item.product.toString(),
-          ordered_quantity: item.ordered_quantity,
-          deadline_date: item.deadline_date || "",
-          kapsam_deadline_date: item.kapsam_deadline_date || "",
-          receiving_date: item.receiving_date || "",
-        })),
+        customer: order.customer,
       });
     }
   }, [order, form]);
@@ -654,11 +934,11 @@ export default function SalesOrderDetailPage() {
   const handleSaveChanges = async () => {
     try {
       const values = form.getValues();
-      await updateOrder({
+      updateOrder({
         id: orderId,
         data: {
           status: values.status,
-          deadline_date: values.deadline_date,
+          customer: Number(values.customer),
         },
       });
       toast.success("Sipariş başarıyla güncellendi");
@@ -666,16 +946,15 @@ export default function SalesOrderDetailPage() {
       router.replace(`/sales/${orderId}`);
     } catch (error) {
       toast.error("Sipariş güncellenirken bir hata oluştu");
-      console.error("Failed to update order:", error);
+      console.error("Sipariş Güncellenirken Hata Oluştu", error);
     }
   };
 
   const handleCancelEdit = () => {
-    // Reset form to original values
     if (order) {
       form.reset({
-        deadline_date: order.deadline_date,
         status: order.status,
+        customer: order.customer,
       });
     }
     setIsEditing(false);
@@ -736,13 +1015,16 @@ export default function SalesOrderDetailPage() {
           onBack={() => router.replace("/sales")}
         />
         <div className="flex gap-3">
-          <Button asChild className="gap-2">
-            <Link href={`/sales/${orderId}/create-shipment`}>
-              <Truck className="h-4 w-4" />
-              Yeni Sevkiyat
-            </Link>
-          </Button>
-          {/* {!isEditing ? (
+          {!isEditing ? (
+            <Button asChild className="gap-2">
+              <Link href={`/sales/${orderId}/create-shipment`}>
+                <Truck className="h-4 w-4" />
+                Yeni Sevkiyat
+              </Link>
+            </Button>
+          ) : null}
+
+          {!isEditing ? (
             <>
               <Button
                 onClick={() => {
@@ -755,12 +1037,6 @@ export default function SalesOrderDetailPage() {
                 <Pencil className="h-4 w-4" />
                 Düzenle
               </Button>
-              <Button asChild className="gap-2">
-                <Link href={`/sales/${orderId}/create-shipment`}>
-                  <Truck className="h-4 w-4" />
-                  Yeni Sevkiyat
-                </Link>
-              </Button>
             </>
           ) : (
             <div className="flex gap-2">
@@ -769,7 +1045,7 @@ export default function SalesOrderDetailPage() {
               </Button>
               <Button onClick={handleSaveChanges}>Kaydet</Button>
             </div>
-          )} */}
+          )}
         </div>
       </div>
 
@@ -830,7 +1106,7 @@ export default function SalesOrderDetailPage() {
             ) : (
               <Form {...form}>
                 <form className="space-y-4">
-                  <div className="grid grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <FormField
                       control={form.control}
                       name="status"
@@ -838,25 +1114,48 @@ export default function SalesOrderDetailPage() {
                         <FormItem>
                           <FormLabel>Durum</FormLabel>
                           <Select
+                            disabled={!isEditing}
                             onValueChange={field.onChange}
                             defaultValue={field.value}
                           >
-                            <SelectTrigger className="w-full">
-                              <SelectValue placeholder="Durum Seçiniz" />
+                            <SelectTrigger>
+                              <SelectValue placeholder="Durum seçiniz" />
                             </SelectTrigger>
                             <SelectContent>
-                              <SelectItem
-                                value="CLOSED"
-                                className="flex items-center gap-2"
-                              >
-                                <span className="text-rose-600">●</span> Kapalı
+                              <SelectItem value="OPEN">Açık</SelectItem>
+                              <SelectItem value="CLOSED">Kapalı</SelectItem>
+                              <SelectItem value="CANCELLED">
+                                İptal Edildi
                               </SelectItem>
-                              <SelectItem
-                                value="OPEN"
-                                className="flex items-center gap-2"
-                              >
-                                <span className="text-green-600">●</span> Açık
-                              </SelectItem>
+                            </SelectContent>
+                          </Select>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="customer"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Müşteri</FormLabel>
+                          <Select
+                            disabled={!isEditing || isLoadingCustomers}
+                            onValueChange={field.onChange}
+                            defaultValue={field.value.toString()}
+                          >
+                            <SelectTrigger>
+                              <SelectValue placeholder="Müşteri seçiniz" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {customers.map((customer: Customer) => (
+                                <SelectItem
+                                  key={customer.id}
+                                  value={customer.id.toString()}
+                                >
+                                  {customer.name}
+                                </SelectItem>
+                              ))}
                             </SelectContent>
                           </Select>
                           <FormMessage />

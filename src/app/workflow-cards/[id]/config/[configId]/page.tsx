@@ -1,10 +1,11 @@
 "use client";
 
 import { useParams, useRouter } from "next/navigation";
-import { useWorkflowProcess, useProcessConfig } from "@/hooks/useManufacturing";
 import { PageHeader } from "@/components/ui/page-header";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ProcessConfigForm } from "../../../components/process-config-form";
+import { useWorkflowProcess } from "@/app/workflow-cards/hooks/use-workflow-hooks";
+import { useProcessConfig } from "@/hooks/useProcessConfig";
 
 export default function EditProcessConfigPage() {
   const params = useParams();

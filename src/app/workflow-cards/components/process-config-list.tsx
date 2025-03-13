@@ -1,12 +1,13 @@
 "use client";
 
+import { Suspense } from "react";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { ProcessConfig } from "@/types/manufacture";
 import {
   useProcessConfigs,
   useDeleteProcessConfig,
-} from "@/hooks/useManufacturing";
+} from "@/app/workflow-cards/hooks/use-process-config";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -33,23 +34,20 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { Separator } from "@/components/ui/separator";
+import { ErrorBoundary } from "react-error-boundary";
 
 interface ProcessConfigListProps {
   workflowProcessId: number;
 }
 
-export function ProcessConfigList({
+function ProcessConfigListContent({
   workflowProcessId,
 }: ProcessConfigListProps) {
   const router = useRouter();
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [configToDelete, setConfigToDelete] = useState<number | null>(null);
 
-  const {
-    data: processConfigs,
-    isLoading,
-    error,
-  } = useProcessConfigs(workflowProcessId);
+  const { data: processConfigs } = useProcessConfigs(workflowProcessId);
 
   const { mutate: deleteProcessConfig, isPending: isDeleting } =
     useDeleteProcessConfig();
@@ -67,7 +65,7 @@ export function ProcessConfigList({
           setDeleteDialogOpen(false);
           setConfigToDelete(null);
         },
-        onError: (error) => {
+        onError: (error: Error) => {
           toast.error(
             `Failed to delete process configuration: ${error.message}`
           );
@@ -84,39 +82,6 @@ export function ProcessConfigList({
     router.push(`/workflow-cards/${workflowProcessId}/config/${configId}`);
   };
 
-  if (isLoading) {
-    return (
-      <div className="space-y-4">
-        <div className="flex justify-between items-center">
-          <Skeleton className="h-8 w-64" />
-          <Skeleton className="h-10 w-32" />
-        </div>
-        {Array.from({ length: 2 }).map((_, i) => (
-          <Card key={i}>
-            <CardHeader>
-              <Skeleton className="h-6 w-48" />
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-2">
-                <Skeleton className="h-4 w-full" />
-                <Skeleton className="h-4 w-3/4" />
-                <Skeleton className="h-4 w-1/2" />
-              </div>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div className="bg-red-50 p-4 rounded-md text-red-800">
-        Failed to load process configurations: {error.message}
-      </div>
-    );
-  }
-
   return (
     <div className="space-y-4">
       <div className="flex justify-between items-center">
@@ -129,7 +94,7 @@ export function ProcessConfigList({
 
       {processConfigs && processConfigs.length > 0 ? (
         <div className="grid grid-cols-1 gap-4">
-          {processConfigs.map((config) => (
+          {processConfigs.map((config: ProcessConfig) => (
             <ConfigCard
               key={config.id}
               config={config}
@@ -179,6 +144,49 @@ export function ProcessConfigList({
         </AlertDialogContent>
       </AlertDialog>
     </div>
+  );
+}
+
+function ProcessConfigListFallback() {
+  return (
+    <div className="space-y-4">
+      <div className="flex justify-between items-center">
+        <Skeleton className="h-8 w-64" />
+        <Skeleton className="h-10 w-32" />
+      </div>
+      {Array.from({ length: 2 }).map((_, i) => (
+        <Card key={i}>
+          <CardHeader>
+            <Skeleton className="h-6 w-48" />
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-2">
+              <Skeleton className="h-4 w-full" />
+              <Skeleton className="h-4 w-3/4" />
+              <Skeleton className="h-4 w-1/2" />
+            </div>
+          </CardContent>
+        </Card>
+      ))}
+    </div>
+  );
+}
+
+function ProcessConfigListError({ error }: { error: Error }) {
+  return (
+    <div className="bg-red-50 p-4 rounded-md text-red-800">
+      Failed to load process configurations: {error.message}
+    </div>
+  );
+}
+
+export function ProcessConfigList(props: ProcessConfigListProps) {
+  return (
+    <ErrorBoundary FallbackComponent={ProcessConfigListError}>
+      <Suspense fallback={<ProcessConfigListFallback />}>
+        <ProcessConfigListContent {...props} />
+      </Suspense>
+    </ErrorBoundary>
   );
 }
 

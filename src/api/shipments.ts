@@ -68,3 +68,35 @@ export async function fetchShipments(orderId: string): Promise<Shipping[]> {
 
   return response.json();
 }
+
+export interface BatchUpdateShipmentRequest {
+  shipments: Array<{
+    shipping_no: string;
+    quantity: number;
+    shipping_date: string;
+    shipping_note?: string;
+  }>;
+}
+
+export async function batchUpdateShipments(
+  orderId: string,
+  data: BatchUpdateShipmentRequest
+): Promise<Shipping[]> {
+  console.log(data);
+  const response = await fetch(
+    `${API_URL}/api/sales/orders/${orderId}/shipments/batch-update/`,
+    {
+      method: "PATCH",
+      headers: await getAuthHeaders(),
+      body: JSON.stringify(data),
+    }
+  );
+
+  if (!response.ok) {
+    console.log(response);
+    console.log(await response.json());
+    throw new Error("Failed to update shipments");
+  }
+
+  return response.json();
+}

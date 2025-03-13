@@ -50,7 +50,7 @@ export const getSalesOrders = async (params?: Record<string, any>) => {
   return responseData;
 };
 
-export const getSalesOrder = async (orderId: string) => {
+export const getSalesOrder = async (orderId: string): Promise<SalesOrder> => {
   const response = await fetch(`${API_URL}/api/sales/orders/${orderId}/`, {
     method: "GET",
     headers: await getAuthHeaders(),
@@ -106,8 +106,8 @@ export const deleteSalesOrder = async (orderId: string) => {
 export const updateSalesOrder = async (
   orderId: string,
   data: Partial<{
-    deadline_date: string;
     status: string;
+    customer: number;
   }>
 ) => {
   console.log(data);
@@ -135,11 +135,14 @@ export const createShipment = async (data: CreateShipmentRequest) => {
   console.log("Creating shipment with data:", data);
 
   try {
-    const response = await fetch(`${API_URL}/api/sales/shipments/`, {
-      method: "POST",
-      headers: await getAuthHeaders(),
-      body: JSON.stringify(data),
-    });
+    const response = await fetch(
+      `${API_URL}/api/sales/orders/${data.order}/shipments/`,
+      {
+        method: "POST",
+        headers: await getAuthHeaders(),
+        body: JSON.stringify(data),
+      }
+    );
 
     const responseData = await response.json();
 
@@ -162,9 +165,9 @@ export const createShipment = async (data: CreateShipmentRequest) => {
   }
 };
 
-export const deleteShipment = async (shipmentId: string) => {
+export const deleteShipment = async (shipmentId: string, order_id: number) => {
   const response = await fetch(
-    `${API_URL}/api/sales/shipments/${shipmentId}/`,
+    `${API_URL}/api/sales/orders/${order_id}/shipments/${shipmentId}/`,
     {
       method: "DELETE",
       headers: await getAuthHeaders(),
@@ -172,13 +175,12 @@ export const deleteShipment = async (shipmentId: string) => {
   );
 
   if (!response.ok) {
-    console.log(await response.json());
-    console.log(response.statusText);
-    console.log(response.status);
-    throw new Error("Failed to delete shipment");
+    const errorData = await response.json().catch(() => null);
+    throw new Error(errorData?.message || "Failed to delete shipment");
   }
 
-  return response;
+  // Return true for successful deletion (204 No Content)
+  return true;
 };
 
 interface CreateOrderShipmentRequest {

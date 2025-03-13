@@ -4,13 +4,8 @@ import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import { AxisCount, MachineType } from "@/types/manufacture";
 import { useProducts } from "@/hooks/useProducts";
-import {
-  useProcesses,
-  useCreateWorkflowProcess,
-  useCreateProcessConfig,
-} from "@/hooks/useManufacturing";
+import { useProcesses } from "@/hooks/useManufacturing";
 import { useRawMaterials } from "@/hooks/useRawMaterials";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
@@ -52,6 +47,8 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
+import { useCreateProcessConfig } from "../hooks/use-process-config";
+import { useCreateWorkflowProcess } from "../hooks/use-workflow-hooks";
 
 // Schema for the workflow process
 const workflowProcessSchema = z.object({
@@ -153,7 +150,7 @@ export function WorkflowProcessForm() {
                               </Button>
                             </FormControl>
                           </PopoverTrigger>
-                          <PopoverContent className="w-[400px] p-0">
+                          <PopoverContent className="w-full p-0">
                             <Command>
                               <CommandInput placeholder="Ürün ara..." />
                               <CommandEmpty>Ürün bulunamadı.</CommandEmpty>
@@ -223,7 +220,7 @@ export function WorkflowProcessForm() {
                               </Button>
                             </FormControl>
                           </PopoverTrigger>
-                          <PopoverContent className="w-[400px] p-0">
+                          <PopoverContent className="w-full p-0">
                             <Command>
                               <CommandInput placeholder="Operasyon ara..." />
                               <CommandEmpty>Operasyon bulunamadı.</CommandEmpty>

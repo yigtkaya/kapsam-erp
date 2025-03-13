@@ -28,21 +28,10 @@ function WorkflowProcessContent() {
 
   // When queryParams change, update the URL.
   useEffect(() => {
-    // Construct the desired search string from queryParams.
-    const newSearch = new URLSearchParams(queryParams).toString();
-    // Get the current search string from the URL.
-    const currentSearch = searchParams.toString();
-
-    // Only push if the search strings differ.
-    if (newSearch !== currentSearch) {
-      const timer = setTimeout(() => {
-        startTransition(() => {
-          router.push(`${pathname}?${newSearch}`);
-        });
-      }, 0);
-      return () => clearTimeout(timer);
-    }
-  }, [queryParams, pathname, router, searchParams, startTransition]);
+    // Only update if the current URL does not match
+    const newUrl = `${pathname}?${new URLSearchParams(queryParams).toString()}`;
+    router.push(newUrl);
+  }, [queryParams, pathname, router]);
 
   // Now, your event handlers only update local state.
   const handleSearchChange = useCallback((value: string) => {

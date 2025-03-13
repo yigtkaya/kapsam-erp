@@ -58,8 +58,8 @@ export function useUpdateSalesOrder() {
     }: {
       id: string;
       data: Partial<{
-        deadline_date: string;
         status: string;
+        customer: number;
       }>;
     }) => updateSalesOrder(id, data),
     onSuccess: (_, { id }) => {

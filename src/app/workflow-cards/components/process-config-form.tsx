@@ -5,12 +5,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { AxisCount, ProcessConfig } from "@/types/manufacture";
-import {
-  useCreateProcessConfig,
-  useUpdateProcessConfig,
-  useProcessConfig,
-  useProcesses,
-} from "@/hooks/useManufacturing";
+import { useProcesses } from "@/hooks/useManufacturing";
 import { toast } from "sonner";
 import { useParams } from "next/navigation";
 
@@ -51,6 +46,11 @@ import {
 import { useTools } from "@/hooks/use-tools";
 import { useFixtures } from "@/hooks/useFixture";
 import { useGauges } from "@/hooks/useGauges";
+import {
+  useCreateProcessConfig,
+  useProcessConfig,
+  useUpdateProcessConfig,
+} from "@/hooks/useProcessConfig";
 
 // Schema for the process configuration
 const formSchema = z.object({

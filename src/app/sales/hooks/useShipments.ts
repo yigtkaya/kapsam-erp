@@ -4,7 +4,12 @@ import {
   useSuspenseQuery,
 } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { fetchShipment, fetchShipments } from "@/api/shipments";
+import {
+  fetchShipment,
+  fetchShipments,
+  batchUpdateShipments,
+  BatchUpdateShipmentRequest,
+} from "@/api/shipments";
 import { createShipment, deleteShipment } from "@/api/sales";
 import { CreateShipmentRequest, Shipping } from "@/types/sales";
 
@@ -53,24 +58,53 @@ export function useCreateShipment(orderId?: string) {
   });
 }
 
-export function useDeleteShipment(orderId?: string) {
+export function useDeleteShipment(orderId: string) {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (id: string) => deleteShipment(id),
-    onSuccess: (_, id) => {
-      queryClient.invalidateQueries({ queryKey: ["shipment"] });
+    mutationFn: (shipmentId: string) =>
+      deleteShipment(shipmentId, Number(orderId)),
+    onSuccess: () => {
+      // Invalidate the shipments list for this order
+      queryClient.invalidateQueries({ queryKey: ["shipments", orderId] });
+
+      // Invalidate the specific sales order to update its state
+      queryClient.invalidateQueries({ queryKey: ["sales-order", orderId] });
+
+      // Invalidate the general sales orders list
       queryClient.invalidateQueries({
         queryKey: ["sales-orders"],
         refetchType: "active",
       });
-      if (orderId) {
-        queryClient.removeQueries({ queryKey: ["sales-order", orderId] });
-      }
+
       toast.success("Sevkiyat başarıyla silindi");
     },
     onError: () => {
       toast.error("Sevkiyat silinirken bir hata oluştu");
+    },
+  });
+}
+
+export function useBatchUpdateShipments(orderId: string) {
+  const queryClient = useQueryClient();
+
+  return useMutation<Shipping[], Error, BatchUpdateShipmentRequest>({
+    mutationFn: async (data: BatchUpdateShipmentRequest) => {
+      try {
+        return await batchUpdateShipments(orderId, data);
+      } catch (error) {
+        if (error instanceof Error) {
+          toast.error(error.message);
+        } else {
+          toast.error("Sevkiyatlar güncellenirken bir hata oluştu");
+        }
+        throw error;
+      }
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["shipments", orderId] });
+      queryClient.invalidateQueries({ queryKey: ["sales-order", orderId] });
+      toast.success("Sevkiyatlar başarıyla güncellendi");
     },
   });
 }
