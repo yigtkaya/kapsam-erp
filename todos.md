@@ -1,0 +1,1 @@
+-- URL state değişikliklerinde History.push kullanılmalı

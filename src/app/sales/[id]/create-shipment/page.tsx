@@ -87,7 +87,7 @@ export default function CreateShipmentPage() {
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      shipping_no: `SHP-${new Date().getTime().toString().slice(-6)}`,
+      shipping_no: ``,
       shipping_date: new Date().toISOString().split("T")[0],
       shipping_note: "",
       order_item: 0,

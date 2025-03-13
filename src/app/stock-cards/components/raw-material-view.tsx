@@ -7,8 +7,6 @@ import { PaginationControl } from "./pagination-control";
 import { RawMaterialCard } from "./raw-material-card";
 
 interface RawMaterialViewProps {
-  isLoading: boolean;
-  error: unknown;
   items: RawMaterial[];
   searchQuery: string;
   onSearchChange: (value: string) => void;
@@ -22,8 +20,6 @@ interface RawMaterialViewProps {
 }
 
 export function RawMaterialView({
-  isLoading,
-  error,
   items,
   searchQuery,
   onSearchChange,
@@ -58,58 +54,42 @@ export function RawMaterialView({
 
   return (
     <div className="space-y-6">
-      {!isLoading && !error && (
-        <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-          <ProductFilters
-            searchQuery={searchQuery}
-            onSearchChange={onSearchChange}
-            sortBy={sortBy}
-            onSortChange={onSortChange}
+      <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+        <ProductFilters
+          searchQuery={searchQuery}
+          onSearchChange={onSearchChange}
+          sortBy={sortBy}
+          onSortChange={onSortChange}
+        />
+        <ViewToggle view={view} onViewChange={onViewChange} />
+      </div>
+
+      <div className="space-y-4">
+        {view === "grid" ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+            {currentItems.map((material) => (
+              <RawMaterialCard key={material.id} material={material} />
+            ))}
+          </div>
+        ) : (
+          <ProductTable
+            products={currentItems.map((material) =>
+              convertToProduct(material)
+            )}
           />
-          <ViewToggle view={view} onViewChange={onViewChange} />
-        </div>
-      )}
+        )}
 
-      {error ? (
-        <div className="text-center text-destructive">
-          Hammaddeler yüklenirken bir hata oluştu.
-        </div>
-      ) : (
-        <div className="space-y-4">
-          {isLoading ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-              {Array(8)
-                .fill(null)
-                .map((_, index) => (
-                  <ProductCardSkeleton key={index} />
-                ))}
-            </div>
-          ) : view === "grid" ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-              {currentItems.map((material) => (
-                <RawMaterialCard key={material.id} material={material} />
-              ))}
-            </div>
-          ) : (
-            <ProductTable
-              products={currentItems.map((material) =>
-                convertToProduct(material)
-              )}
-            />
-          )}
+        {items.length > 0 && (
+          <PaginationControl
+            currentPage={currentPage}
+            totalItems={items.length}
+            pageSize={pageSize}
+            onPageChange={onPageChange}
+          />
+        )}
+      </div>
 
-          {!isLoading && items.length > 0 && (
-            <PaginationControl
-              currentPage={currentPage}
-              totalItems={items.length}
-              pageSize={pageSize}
-              onPageChange={onPageChange}
-            />
-          )}
-        </div>
-      )}
-
-      {!isLoading && !error && items.length === 0 && (
+      {items.length === 0 && (
         <div className="text-center text-muted-foreground">
           {searchQuery
             ? "Aramanızla eşleşen hammadde bulunamadı."

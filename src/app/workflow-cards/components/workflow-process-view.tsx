@@ -1,8 +1,4 @@
 import { WorkflowProcess } from "@/types/manufacture";
-
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { AlertCircle, ChevronDown, ChevronRight, Loader2 } from "lucide-react";
-import { PaginationControl } from "@/components/ui/pagination-control";
 import { WorkflowProcessFilters } from "./workflow-process-filters";
 import { WorkflowProcessCard } from "./workflow-process-card";
 import { ViewToggle } from "@/components/ui/view-toggle";
@@ -11,10 +7,9 @@ import { columns } from "./columns";
 import { useState } from "react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
+import { ChevronDown, ChevronRight } from "lucide-react";
 
 interface WorkflowProcessViewProps {
-  isLoading: boolean;
-  error: Error | null;
   items: WorkflowProcess[];
   searchQuery: string;
   onSearchChange: (value: string) => void;
@@ -25,6 +20,7 @@ interface WorkflowProcessViewProps {
   pageSize: number;
   view: "grid" | "table";
   onViewChange: (view: "grid" | "table") => void;
+  isLoading?: boolean;
 }
 
 interface GroupState {
@@ -32,8 +28,6 @@ interface GroupState {
 }
 
 export function WorkflowProcessView({
-  isLoading,
-  error,
   items,
   searchQuery,
   onSearchChange,
@@ -44,28 +38,9 @@ export function WorkflowProcessView({
   pageSize,
   view,
   onViewChange,
+  isLoading = false,
 }: WorkflowProcessViewProps) {
   const [expandedGroups, setExpandedGroups] = useState<GroupState>({});
-
-  if (error) {
-    return (
-      <Alert variant="destructive">
-        <AlertCircle className="h-4 w-4" />
-        <AlertTitle>Hata</AlertTitle>
-        <AlertDescription>
-          İş akışı işlemleri yüklenirken bir hata oluştu: {error.message}
-        </AlertDescription>
-      </Alert>
-    );
-  }
-
-  if (isLoading) {
-    return (
-      <div className="flex items-center justify-center h-64">
-        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
-      </div>
-    );
-  }
 
   const startIndex = currentPage * pageSize;
   const paginatedItems = items.slice(startIndex, startIndex + pageSize);
@@ -95,7 +70,9 @@ export function WorkflowProcessView({
   };
 
   return (
-    <div className="space-y-4">
+    <div
+      className={cn("space-y-4", isLoading && "opacity-70 pointer-events-none")}
+    >
       <div className="flex items-center justify-between gap-4">
         <WorkflowProcessFilters
           searchQuery={searchQuery}
@@ -146,7 +123,7 @@ export function WorkflowProcessView({
         />
       )}
 
-      {items.length === 0 && !isLoading && (
+      {items.length === 0 && (
         <div className="text-center py-10 text-muted-foreground">
           Arama kriterlerine uygun iş akışı işlemi bulunamadı.
         </div>

@@ -5,10 +5,14 @@ import {
   updateHolder,
 } from "@/api/holders";
 import { Holder } from "@/types/inventory";
-import { useQuery, useQueryClient, useMutation } from "@tanstack/react-query";
+import {
+  useQueryClient,
+  useMutation,
+  useSuspenseQuery,
+} from "@tanstack/react-query";
 
 export function useHolders() {
-  return useQuery({
+  return useSuspenseQuery({
     queryKey: ["holders"],
     queryFn: fetchHolders,
   });

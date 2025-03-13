@@ -11,7 +11,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Settings, Timer, Clock } from "lucide-react";
-import { useProcessConfigs } from "@/hooks/useManufacturing";
+import { useProcessConfigs } from "../hooks/use-workflow-hooks";
 import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
 

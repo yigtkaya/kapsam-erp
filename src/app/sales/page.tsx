@@ -5,17 +5,62 @@ import { PageHeader } from "@/components/ui/page-header";
 import { Plus } from "lucide-react";
 import Link from "next/link";
 import { useSearchParams, useRouter, usePathname } from "next/navigation";
-import { useCallback, useMemo } from "react";
+import { Suspense, useCallback, useMemo, useTransition } from "react";
 import { useSalesOrders } from "./hooks/useSalesOrders";
 import { SalesView } from "./components/sales-view";
+import { SalesOrder } from "@/types/sales";
 
 const PAGE_SIZE = 50;
+
+// Move filtering and sorting logic outside component
+function filterAndSortOrders(
+  orders: SalesOrder[],
+  query: string,
+  sort: string
+): SalesOrder[] {
+  if (!orders) return [];
+
+  // First, filter the orders
+  let filtered = orders.filter((order) => {
+    const searchLower = query.toLowerCase();
+    return (
+      order.order_number.toLowerCase().includes(searchLower) ||
+      order.customer_name.toLowerCase().includes(searchLower) ||
+      false
+    );
+  });
+
+  // Then, sort the filtered results
+  return filtered.sort((a, b) => {
+    switch (sort) {
+      case "order_number_asc":
+        return a.order_number.localeCompare(b.order_number);
+      case "order_number_desc":
+        return b.order_number.localeCompare(a.order_number);
+      case "customer_asc":
+        return a.customer_name.localeCompare(b.customer_name);
+      case "customer_desc":
+        return b.customer_name.localeCompare(a.customer_name);
+      case "date_asc":
+        return (
+          new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
+        );
+      case "date_desc":
+        return (
+          new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+        );
+      default:
+        return 0;
+    }
+  });
+}
 
 export default function SalesPage() {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
-  const { data: salesOrders = [], isLoading, error } = useSalesOrders();
+  const [isPending, startTransition] = useTransition();
+  const { data: salesOrders = [], isLoading } = useSalesOrders();
 
   // Get values from URL or use defaults
   const query = searchParams.get("q") || "";
@@ -40,71 +85,53 @@ export default function SalesPage() {
     [searchParams]
   );
 
-  // Update URL handlers
-  const handleSearchChange = (value: string) => {
-    router.push(
-      `${pathname}?${createQueryString({
-        q: value,
-        page: "0", // Reset page when search changes
-      })}`
-    );
-  };
+  // Update URL handlers with transitions
+  const handleSearchChange = useCallback(
+    (value: string) => {
+      startTransition(() => {
+        router.push(
+          `${pathname}?${createQueryString({
+            q: value,
+            page: "0", // Reset page when search changes
+          })}`
+        );
+      });
+    },
+    [router, pathname, createQueryString]
+  );
 
-  const handleSortChange = (value: string) => {
-    router.push(
-      `${pathname}?${createQueryString({
-        sort: value,
-        page: "0", // Reset page when sort changes
-      })}`
-    );
-  };
+  const handleSortChange = useCallback(
+    (value: string) => {
+      startTransition(() => {
+        router.push(
+          `${pathname}?${createQueryString({
+            sort: value,
+            page: "0", // Reset page when sort changes
+          })}`
+        );
+      });
+    },
+    [router, pathname, createQueryString]
+  );
 
-  const handlePageChange = (value: number) => {
-    router.push(
-      `${pathname}?${createQueryString({
-        page: value.toString(),
-      })}`
-    );
-  };
+  const handlePageChange = useCallback(
+    (value: number) => {
+      startTransition(() => {
+        router.push(
+          `${pathname}?${createQueryString({
+            page: value.toString(),
+          })}`
+        );
+      });
+    },
+    [router, pathname, createQueryString]
+  );
 
   // Filter and sort sales orders
-  const filteredAndSortedOrders = useMemo(() => {
-    if (!salesOrders) return [];
-
-    // First, filter the orders
-    let filtered = salesOrders.filter((order) => {
-      const searchLower = query.toLowerCase();
-      return (
-        order.order_number.toLowerCase().includes(searchLower) ||
-        order.customer_name.toLowerCase().includes(searchLower) ||
-        false
-      );
-    });
-
-    // Then, sort the filtered results
-    return filtered.sort((a, b) => {
-      switch (sort) {
-        case "order_number_asc":
-          return a.order_number.localeCompare(b.order_number);
-        case "order_number_desc":
-          return b.order_number.localeCompare(a.order_number);
-        case "customer_asc":
-          return a.customer_name.localeCompare(b.customer_name);
-        case "customer_desc":
-          return b.customer_name.localeCompare(a.customer_name);
-        case "date_asc":
-          return (
-            new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
-          );
-        case "date_desc":
-          return (
-            new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
-          );
-        default:
-          return 0;
-      }
-    });
-  }, [salesOrders, query, sort]);
+  const filteredAndSortedOrders = useMemo(
+    () => filterAndSortOrders(salesOrders, query, sort),
+    [salesOrders, query, sort]
+  );
 
   return (
     <div className="overflow-x-hidden">
@@ -124,18 +151,20 @@ export default function SalesPage() {
           }
         />
 
-        <SalesView
-          isLoading={isLoading}
-          error={error}
-          items={filteredAndSortedOrders}
-          searchQuery={query}
-          onSearchChange={handleSearchChange}
-          sortBy={sort}
-          onSortChange={handleSortChange}
-          currentPage={page}
-          onPageChange={handlePageChange}
-          pageSize={PAGE_SIZE}
-        />
+        <Suspense>
+          <SalesView
+            isLoading={isLoading || isPending}
+            error={null}
+            items={filteredAndSortedOrders}
+            searchQuery={query}
+            onSearchChange={handleSearchChange}
+            sortBy={sort}
+            onSortChange={handleSortChange}
+            currentPage={page}
+            onPageChange={handlePageChange}
+            pageSize={PAGE_SIZE}
+          />
+        </Suspense>
       </div>
     </div>
   );

@@ -1,7 +1,6 @@
 "use client";
 
 import { useParams, useRouter } from "next/navigation";
-import { useWorkflowProcess } from "@/hooks/useManufacturing";
 import { PageHeader } from "@/components/ui/page-header";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -12,6 +11,7 @@ import { Separator } from "@/components/ui/separator";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ProcessConfigList } from "../components/process-config-list";
 import { useUrlState } from "@/hooks/useUrlState";
+import { useWorkflowProcess } from "../hooks/use-workflow-hooks";
 
 export default function WorkflowProcessDetailPage() {
   const params = useParams();
@@ -26,61 +26,9 @@ export default function WorkflowProcessDetailPage() {
     error: processError,
   } = useWorkflowProcess(id);
 
-  const isLoading = processLoading;
-  const error = processError;
-
   const handleTabChange = (value: string) => {
     setUrlState({ tab: value });
   };
-
-  if (isLoading) {
-    return (
-      <div className="container mx-auto py-4 space-y-6">
-        <div className="flex items-center justify-between space-x-4 pb-6">
-          <div className="flex items-center space-x-4">
-            <Button
-              variant="outline"
-              size="icon"
-              onClick={() => router.push("/workflow-cards")}
-            >
-              <ArrowLeft className="h-4 w-4" />
-            </Button>
-            <div>
-              <Skeleton className="h-8 w-64 mb-2" />
-              <Skeleton className="h-4 w-96" />
-            </div>
-          </div>
-        </div>
-        <Card>
-          <CardHeader>
-            <Skeleton className="h-6 w-48 mb-2" />
-            <Skeleton className="h-4 w-64" />
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <Skeleton className="h-4 w-full" />
-            <Skeleton className="h-4 w-3/4" />
-            <Skeleton className="h-4 w-1/2" />
-          </CardContent>
-        </Card>
-      </div>
-    );
-  }
-
-  if (error || !workflowProcess) {
-    return (
-      <div className="container mx-auto py-4 space-y-6">
-        <PageHeader
-          title="Hata"
-          description="İş akışı kartı yüklenirken bir hata oluştu"
-          showBackButton
-          onBack={() => router.push("/workflow-cards")}
-        />
-        <div className="bg-red-50 border border-red-200 p-4 rounded-md text-red-800">
-          {error instanceof Error ? error.message : "İş akışı kartı bulunamadı"}
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div className="container mx-auto py-4 space-y-6">

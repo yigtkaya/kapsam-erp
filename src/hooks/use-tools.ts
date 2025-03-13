@@ -1,4 +1,9 @@
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import {
+  useMutation,
+  useQuery,
+  useQueryClient,
+  useSuspenseQuery,
+} from "@tanstack/react-query";
 import {
   createTool,
   deleteTool,
@@ -9,14 +14,14 @@ import {
 import { Tool } from "@/types/inventory";
 
 export function useTools() {
-  return useQuery({
+  return useSuspenseQuery({
     queryKey: ["tools"],
     queryFn: fetchTools,
   });
 }
 
 export function useTool(id: number) {
-  return useQuery({
+  return useSuspenseQuery({
     queryKey: ["tool", id],
     queryFn: () => fetchTool(id),
   });

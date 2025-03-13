@@ -1,4 +1,9 @@
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import {
+  useMutation,
+  useQuery,
+  useQueryClient,
+  useSuspenseQuery,
+} from "@tanstack/react-query";
 import {
   fetchProduct,
   createProduct,
@@ -12,7 +17,7 @@ import { ProcessProduct, Product, TechnicalDrawing } from "@/types/inventory";
 import { fetchProducts as clientFetchProducts } from "@/api/products";
 
 export function useProcessProducts() {
-  return useQuery<ProcessProduct[]>({
+  return useSuspenseQuery<ProcessProduct[]>({
     queryKey: ["process-products"],
     queryFn: () => fetchProcessProducts(),
   });
@@ -31,7 +36,7 @@ export function useProducts({
   product_name,
   product_code,
 }: UseProductsParams = {}) {
-  return useQuery<Product[]>({
+  return useSuspenseQuery<Product[]>({
     queryKey: ["products", category, product_type, product_name, product_code],
     queryFn: () =>
       clientFetchProducts({
@@ -44,7 +49,7 @@ export function useProducts({
 }
 
 export function useProduct(id: string) {
-  return useQuery<Product>({
+  return useSuspenseQuery<Product>({
     queryKey: ["product", id],
     queryFn: () => fetchProduct({ id }),
   });
@@ -90,7 +95,6 @@ export function useDeleteProduct() {
     mutationFn: deleteProduct,
     onSuccess: (_, deletedProduct) => {
       queryClient.invalidateQueries({ queryKey: ["products"] });
-
       queryClient.removeQueries({ queryKey: ["product", deletedProduct] });
     },
   });

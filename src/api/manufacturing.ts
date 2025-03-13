@@ -487,18 +487,15 @@ export async function deleteProcessConfig(id: number) {
 }
 
 // Workflow Process API functions
-export async function fetchWorkflowProcesses(
-  productId?: string
-): Promise<WorkflowProcess[]> {
+export async function fetchWorkflowProcesses(): Promise<WorkflowProcess[]> {
   const headers = await getAuthHeaders();
 
-  const url = productId
-    ? `${API_URL}/api/manufacturing/workflow-processes/?product=${productId}`
-    : `${API_URL}/api/manufacturing/workflow-processes/`;
-
-  const response = await fetch(url, {
-    headers,
-  });
+  const response = await fetch(
+    `${API_URL}/api/manufacturing/workflow-processes/`,
+    {
+      headers,
+    }
+  );
 
   if (!response.ok) {
     throw new Error("Failed to fetch workflow processes");

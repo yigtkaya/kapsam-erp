@@ -1,4 +1,9 @@
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import {
+  useMutation,
+  useQuery,
+  useQueryClient,
+  useSuspenseQuery,
+} from "@tanstack/react-query";
 import { CreateSalesOrderRequest, SalesOrder } from "@/types/sales";
 import { toast } from "sonner";
 import {
@@ -10,7 +15,7 @@ import {
 } from "@/api/sales";
 
 export function useSalesOrders() {
-  return useQuery<SalesOrder[]>({
+  return useSuspenseQuery<SalesOrder[]>({
     queryKey: ["sales-orders"],
     queryFn: async () => {
       const response = await getSalesOrders();
@@ -19,9 +24,11 @@ export function useSalesOrders() {
       }
       return response.results || [];
     },
-    staleTime: 0,
-    refetchOnMount: true,
-    refetchOnWindowFocus: true,
+    staleTime: 30 * 1000, // 30 seconds
+    gcTime: 5 * 60 * 1000, // 5 minutes
+    refetchOnMount: "always",
+    refetchOnWindowFocus: false,
+    refetchInterval: false,
   });
 }
 
@@ -71,7 +78,7 @@ export function useUpdateSalesOrder() {
 }
 
 export function useSalesOrder(id: string) {
-  return useQuery({
+  return useSuspenseQuery({
     queryKey: ["sales-order", id],
     queryFn: () => getSalesOrder(id),
   });
