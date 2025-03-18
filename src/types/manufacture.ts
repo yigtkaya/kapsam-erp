@@ -1,14 +1,3 @@
-import {
-  ProcessProduct,
-  Product,
-  RawMaterial,
-  InventoryCategory,
-  Tool,
-  ControlGauge,
-  Fixture,
-} from "./inventory";
-import { User } from "./core";
-
 // Enums
 export enum AxisCount {
   NINE_AXIS = "9EKSEN",
@@ -18,6 +7,7 @@ export enum AxisCount {
   THREE_AXIS = "3EKSEN",
   TWO_AXIS = "2EKSEN",
   ONE_AXIS = "1EKSEN",
+  NONE = "YOK",
 }
 
 export enum MachineType {
@@ -63,6 +53,18 @@ export enum OutputStatus {
   QUARANTINE = "QUARANTINE",
 }
 
+export enum WorkflowStatus {
+  DRAFT = "DRAFT",
+  ACTIVE = "ACTIVE",
+  ARCHIVED = "ARCHIVED",
+}
+
+export enum ProcessConfigStatus {
+  DRAFT = "DRAFT",
+  ACTIVE = "ACTIVE",
+  ARCHIVED = "ARCHIVED",
+}
+
 // Base interface for common fields
 export interface BaseModel {
   id: number;
@@ -101,95 +103,51 @@ export interface Machine extends BaseModel {
 export interface ManufacturingProcess extends BaseModel {
   process_code: string;
   process_name: string;
-  standard_time_minutes: number;
-  machine_type: MachineType | null;
-  approved_by?: number; // User ID
 }
 
-export interface CreateBOMComponentRequest {
-  bom: number;
-  sequence_order: number;
-  quantity: string;
+export interface ProductWorkflow extends BaseModel {
   product: number;
-  lead_time_days?: number | null;
-  notes?: string | null;
-}
-
-export interface BomRequest {
-  product: string;
+  product_code: string;
+  product_name: string;
   version: string;
-  is_active: boolean;
-}
-
-export interface BOM extends BaseModel {
-  product: Product;
-  version: string;
-  is_active: boolean;
-  is_approved: boolean;
-  approved_by: User | null;
+  status: WorkflowStatus;
+  effective_date: string | null;
+  notes: string | null;
+  process_configs: ProcessConfig[];
+  created_by: number;
+  created_by_name: string;
+  approved_by: number | null;
   approved_at: string | null;
-  parent_bom: number | null;
-  notes: string | null;
-  components?: BOMComponent[];
-  modified_at?: string;
-}
-
-export interface BOMComponent extends BaseModel {
-  bom: number;
-  sequence_order: number;
-  quantity: string;
-  product?: number | null;
-  product_code?: string;
-  product_name?: string;
-  product_type?: ProductType;
-  lead_time_days: number | null;
-  notes: string | null;
-}
-
-export interface BOMProcessConfig extends BaseModel {
-  process: ManufacturingProcess;
-  raw_material?: RawMaterial;
-  process_product?: ProcessProduct;
-  axis_count?: AxisCount;
-  estimated_duration_minutes?: number;
-  tooling_requirements?: string;
-  quality_checks?: string;
-}
-
-export interface WorkflowProcess extends BaseModel {
-  product: Product | number;
-  product_details?: Product;
-  process: ManufacturingProcess | number;
-  process_details?: ManufacturingProcess;
-  stock_code: string;
-  sequence_order: number;
-  process_configs?: ProcessConfig[];
 }
 
 export interface ProcessConfig extends BaseModel {
-  workflow_process: number | WorkflowProcess;
-  workflow_process_details?: WorkflowProcess;
-  process?: ManufacturingProcess | number | null;
-  process_details?: ManufacturingProcess;
-  tool?: Tool | string | null; // string for stock_code
-  tool_details?: Tool;
-  control_gauge?: ControlGauge | string | null; // string for stock_code
-  control_gauge_details?: ControlGauge;
-  fixture?: Fixture | string | null; // string for code
-  fixture_details?: Fixture;
+  workflow: number;
+  process: number;
+  process_code: string;
+  process_name: string;
+  version: string;
+  status: ProcessConfigStatus;
+  sequence_order: number;
+  stock_code: string;
+  tool?: string | null;
+  control_gauge?: string | null;
+  fixture?: string | null;
+  fixture_name?: string | null;
   axis_count?: AxisCount | null;
-  axis_count_display?: string;
   machine_time?: number | null;
   setup_time?: number | null;
   net_time?: number | null;
-  number_of_bindings?: number | null;
-  cycle_time?: number | null;
+  number_of_bindings: number;
+  effective_date?: string | null;
+  description?: string | null;
+  cycle_time?: number;
+  modified_at: string;
 }
 
 export interface WorkOrder extends BaseModel {
   order_number: string;
   sales_order_item: number;
-  bom: BOM;
+  bom: number;
   quantity: number;
   planned_start: string;
   planned_end: string;
@@ -199,21 +157,21 @@ export interface WorkOrder extends BaseModel {
   priority: number;
   notes?: string;
   completion_percentage: number;
-  assigned_to?: number; // User ID
+  assigned_to?: number;
 }
 
 export interface WorkOrderStatusChange extends BaseModel {
   work_order: number;
   from_status: WorkOrderStatus;
   to_status: WorkOrderStatus;
-  changed_by?: number; // User ID
+  changed_by?: number;
   changed_at: string;
   notes?: string;
 }
 
 export interface SubWorkOrder extends BaseModel {
   parent_work_order: number;
-  bom_component: BOMComponent;
+  bom_component: number;
   quantity: number;
   planned_start: string;
   planned_end: string;
@@ -222,15 +180,15 @@ export interface SubWorkOrder extends BaseModel {
   status: WorkOrderStatus;
   output_quantity?: number;
   scrap_quantity: number;
-  target_category?: number; // InventoryCategory ID
+  target_category?: number;
   notes?: string;
   completion_percentage: number;
-  assigned_to?: number; // User ID
+  assigned_to?: number;
 }
 
 export interface SubWorkOrderProcess extends BaseModel {
   sub_work_order: number;
-  workflow_process: number;
+  process_config?: number;
   machine?: number;
   sequence_order: number;
   planned_duration_minutes?: number;
@@ -238,7 +196,7 @@ export interface SubWorkOrderProcess extends BaseModel {
   status: ProcessStatus;
   start_time?: string;
   end_time?: string;
-  operator?: number; // User ID
+  operator?: number;
   setup_time_minutes?: number;
   notes?: string;
 }
@@ -247,18 +205,12 @@ export interface WorkOrderOutput extends BaseModel {
   sub_work_order: number;
   quantity: number;
   status: OutputStatus;
-  target_category: number; // InventoryCategory ID
+  target_category: number;
   notes?: string;
   quarantine_reason?: string;
   inspection_required: boolean;
-  created_by?: number; // User ID
+  created_by?: number;
   production_date: string;
-}
-
-export interface CreateBOMRequest {
-  product: string; // Product code
-  version?: string;
-  is_active?: boolean;
 }
 
 // Helper function to calculate next maintenance date

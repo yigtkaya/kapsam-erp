@@ -4,10 +4,7 @@ import { Suspense } from "react";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { ProcessConfig } from "@/types/manufacture";
-import {
-  useProcessConfigs,
-  useDeleteProcessConfig,
-} from "@/app/workflow-cards/hooks/use-process-config";
+
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -35,6 +32,10 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Separator } from "@/components/ui/separator";
 import { ErrorBoundary } from "react-error-boundary";
+import {
+  useDeleteProcessConfig,
+  useProcessConfigs,
+} from "../hooks/useProcessConfig";
 
 interface ProcessConfigListProps {
   workflowProcessId: number;
@@ -47,7 +48,10 @@ function ProcessConfigListContent({
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [configToDelete, setConfigToDelete] = useState<number | null>(null);
 
-  const { data: processConfigs } = useProcessConfigs(workflowProcessId);
+  const { data: allProcessConfigs = [] } = useProcessConfigs();
+  const processConfigs: ProcessConfig[] = allProcessConfigs.filter(
+    (config) => config.workflow === workflowProcessId
+  );
 
   const { mutate: deleteProcessConfig, isPending: isDeleting } =
     useDeleteProcessConfig();
@@ -201,7 +205,7 @@ function ConfigCard({ config, onEdit, onDelete }: ConfigCardProps) {
     <Card>
       <CardHeader className="pb-2 flex flex-row items-start justify-between">
         <CardTitle className="text-lg font-medium">
-          {config.axis_count_display || config.axis_count || "Standart"}
+          {config.axis_count || "Standart"}
         </CardTitle>
         <div className="flex space-x-2">
           <Button variant="outline" size="icon" onClick={onEdit}>
@@ -251,50 +255,44 @@ function ConfigCard({ config, onEdit, onDelete }: ConfigCardProps) {
 
         {/* Tools and Equipment */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          {config.tool_details && (
+          {config.tool && (
             <div className="space-y-2">
               <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
                 <WrenchIcon className="h-4 w-4" />
                 <span>Takım</span>
               </div>
               <div className="bg-muted p-2 rounded-md">
-                <p className="font-medium">{config.tool_details.stock_code}</p>
-                <p className="text-sm text-muted-foreground">
-                  {config.tool_details.tool_type}
-                </p>
+                <p className="font-medium">{config.tool}</p>
               </div>
             </div>
           )}
 
-          {config.control_gauge_details && (
+          {config.control_gauge && (
             <div className="space-y-2">
               <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
                 <Gauge className="h-4 w-4" />
                 <span>Kontrol Mastarı</span>
               </div>
               <div className="bg-muted p-2 rounded-md">
-                <p className="font-medium">
-                  {config.control_gauge_details.stock_code}
-                </p>
-                <p className="text-sm text-muted-foreground">
-                  {config.control_gauge_details.stock_name}
-                </p>
+                <p className="font-medium">{config.control_gauge}</p>
               </div>
             </div>
           )}
 
-          {config.fixture_details && (
+          {config.fixture && (
             <div className="space-y-2">
               <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
                 <Wrench className="h-4 w-4" />
                 <span>Bağlama Aparatı</span>
               </div>
               <div className="bg-muted p-2 rounded-md">
-                <p className="font-medium">{config.fixture_details.code}</p>
-                {config.fixture_details.name && (
-                  <p className="text-sm text-muted-foreground"></p>
+                <p className="font-medium">{config.fixture}</p>
+                {config.fixture_name && (
+                  <p className="text-sm text-muted-foreground">
+                    {config.fixture_name}
+                  </p>
                 )}
-              </div>{" "}
+              </div>
             </div>
           )}
         </div>

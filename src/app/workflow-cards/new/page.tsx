@@ -1,7 +1,7 @@
 "use client";
 
 import { PageHeader } from "@/components/ui/page-header";
-import { WorkflowProcessForm } from "../components/workflow-process-form";
+import { WorkflowCreateForm } from "../components/WorkflowCreateForm";
 import { useRouter } from "next/navigation";
 
 export default function WorkflowCardNewPage() {
@@ -16,7 +16,7 @@ export default function WorkflowCardNewPage() {
         onBack={() => router.push("/workflow-cards")}
       />
 
-      <WorkflowProcessForm />
+      <WorkflowCreateForm />
     </div>
   );
 }

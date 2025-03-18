@@ -1,38 +1,26 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { Machine, ManufacturingProcess, WorkOrder } from "@/types/manufacture";
 import {
-  Machine,
-  ManufacturingProcess,
-  WorkOrder,
-  WorkflowProcess,
-  ProcessConfig,
-} from "@/types/manufacture";
-import {
-  createMachine,
-  deleteMachine,
-  fetchMachine,
   fetchMachines,
+  fetchMachine,
+  createMachine,
   updateMachine,
-  createProcess,
-  deleteProcess,
-  fetchProcess,
+  deleteMachine,
+} from "@/api/machines";
+import {
   fetchProcesses,
+  fetchProcess,
+  createProcess,
   updateProcess,
-  createWorkOrder,
-  deleteWorkOrder,
-  fetchWorkOrder,
+  deleteProcess,
+} from "@/api/manufacturing-processes";
+import {
   fetchWorkOrders,
+  fetchWorkOrder,
+  createWorkOrder,
   updateWorkOrder,
-  fetchWorkflowProcess,
-  fetchWorkflowProcesses,
-  createWorkflowProcess,
-  updateWorkflowProcess,
-  deleteWorkflowProcess,
-  fetchProcessConfig,
-  fetchProcessConfigs,
-  createProcessConfig,
-  updateProcessConfig,
-  deleteProcessConfig,
-} from "@/api/manufacturing";
+  deleteWorkOrder,
+} from "@/api/work-orders";
 
 // Machine hooks
 export function useMachines() {
@@ -45,7 +33,7 @@ export function useMachines() {
 export function useMachine(id: number) {
   return useQuery<Machine>({
     queryKey: ["machine", id],
-    queryFn: () => fetchMachine(id),
+    queryFn: () => fetchMachine(id.toString()),
     enabled: !!id,
   });
 }
@@ -53,12 +41,8 @@ export function useMachine(id: number) {
 export function useCreateMachine() {
   const queryClient = useQueryClient();
 
-  return useMutation<
-    Machine,
-    Error,
-    Omit<Machine, "id" | "created_at" | "updated_at">
-  >({
-    mutationFn: (data) => createMachine(data),
+  return useMutation<Machine, Error, Machine>({
+    mutationFn: (data) => createMachine(data).then((res) => res.data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["machines"] });
     },
@@ -68,8 +52,8 @@ export function useCreateMachine() {
 export function useUpdateMachine() {
   const queryClient = useQueryClient();
 
-  return useMutation<Machine, Error, { id: number; data: Partial<Machine> }>({
-    mutationFn: ({ id, data }) => updateMachine(id, data),
+  return useMutation<Machine, Error, Machine>({
+    mutationFn: (data) => updateMachine(data).then((res) => res.data),
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: ["machines"] });
       queryClient.invalidateQueries({ queryKey: ["machine", variables.id] });

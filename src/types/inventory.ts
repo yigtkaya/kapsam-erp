@@ -1,7 +1,7 @@
 // File: inventory_types.ts
 
 import { Customer, User, BaseModel } from "./core";
-import { BOMProcessConfig } from "./manufacture";
+import { ProcessConfig } from "./manufacture";
 
 export type TutucuType =
   | "pens"
@@ -76,7 +76,7 @@ export interface ProcessProduct {
   description?: string;
   current_stock: number;
   bom_process_config: number;
-  bom_process_config_details: BOMProcessConfig;
+  bom_process_config_details: ProcessConfig;
 }
 
 export interface TechnicalDrawing {
