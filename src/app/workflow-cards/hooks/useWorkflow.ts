@@ -22,6 +22,7 @@ export function useWorkflow(id: number) {
     queryKey: ["workflow", id],
     queryFn: () => fetchWorkflow(id),
     enabled: !!id,
+    staleTime: 0,
   });
 }
 
@@ -52,6 +53,7 @@ export function useUpdateWorkflow() {
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: ["workflows"] });
       queryClient.invalidateQueries({ queryKey: ["workflow", variables.id] });
+      queryClient.invalidateQueries({ queryKey: ["process-configs"] });
     },
   });
 }

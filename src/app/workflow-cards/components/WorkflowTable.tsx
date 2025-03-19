@@ -37,7 +37,7 @@ const columns: ColumnDef<WorkflowTableRow>[] = [
           variant="ghost"
           onClick={(e) => {
             e.stopPropagation();
-            row.getToggleExpandedHandler();
+            row.toggleExpanded();
           }}
           className="p-0 w-6 h-6"
         >
@@ -125,7 +125,7 @@ export function WorkflowTable({ data }: WorkflowTableProps) {
           size="sm"
           onClick={() => router.push(`/process/${process.id}`)}
         >
-          Process Git
+          Prosese Git
         </Button>
       );
     }

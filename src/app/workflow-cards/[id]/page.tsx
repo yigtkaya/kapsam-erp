@@ -13,6 +13,7 @@ import {
   Settings2,
   ChevronDown,
   MoreVertical,
+  Plus,
 } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -26,6 +27,29 @@ import { cn } from "@/lib/utils";
 import { useWorkflow } from "../hooks/useWorkflow";
 import { ProcessConfig } from "@/types/manufacture";
 import { useState } from "react";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { ProcessConfigForm } from "../components/process-config-form";
+import {
+  useDeleteProcessConfig,
+  useProcessConfigs,
+  useProcessConfigsForWorkflow,
+} from "../hooks/useProcessConfig";
+import { toast } from "sonner";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 export default function WorkflowProcessDetailPage() {
   const params = useParams();
@@ -34,12 +58,23 @@ export default function WorkflowProcessDetailPage() {
   const [expandedProcesses, setExpandedProcesses] = useState<Set<number>>(
     new Set()
   );
+  const [isEditMode, setIsEditMode] = useState(false);
+  const [showAddDialog, setShowAddDialog] = useState(false);
+  const [processToDelete, setProcessToDelete] = useState<number | null>(null);
 
   const {
     data: workflowProcess,
     isLoading: processLoading,
     error: processError,
   } = useWorkflow(id);
+
+  const {
+    data: processConfigs,
+    isLoading: processConfigsLoading,
+    error: processConfigsError,
+  } = useProcessConfigsForWorkflow(id);
+
+  const { mutate: deleteProcessConfig } = useDeleteProcessConfig();
 
   const toggleProcess = (processId: number) => {
     const newExpanded = new Set(expandedProcesses);
@@ -51,7 +86,7 @@ export default function WorkflowProcessDetailPage() {
     setExpandedProcesses(newExpanded);
   };
 
-  if (processLoading) {
+  if (processLoading || processConfigsLoading) {
     return (
       <div className="container mx-auto py-4 space-y-6">
         <PageHeader
@@ -68,7 +103,12 @@ export default function WorkflowProcessDetailPage() {
     );
   }
 
-  if (processError || !workflowProcess) {
+  if (
+    processError ||
+    !workflowProcess ||
+    processConfigsError ||
+    !processConfigs
+  ) {
     return (
       <div className="container mx-auto py-4 space-y-6">
         <PageHeader
@@ -80,7 +120,9 @@ export default function WorkflowProcessDetailPage() {
         <Card>
           <CardContent className="py-6">
             <div className="text-center text-muted-foreground">
-              {processError ? processError.message : "Process not found"}
+              {processError?.message ||
+                processConfigsError?.message ||
+                "Process not found"}
             </div>
           </CardContent>
         </Card>
@@ -88,7 +130,7 @@ export default function WorkflowProcessDetailPage() {
     );
   }
 
-  const sortedProcessConfigs = [...workflowProcess.process_configs].sort(
+  const sortedProcessConfigs = [...processConfigs].sort(
     (a, b) => a.sequence_order - b.sequence_order
   );
 
@@ -101,17 +143,6 @@ export default function WorkflowProcessDetailPage() {
         onBack={() => router.push("/workflow-cards")}
         action={
           <div className="flex items-center space-x-2">
-            <Badge
-              variant="outline"
-              className={cn(
-                "h-7 px-3 text-sm",
-                workflowProcess.status === "ACTIVE"
-                  ? "bg-green-50 text-green-700 border-green-300 dark:bg-green-900/20 dark:text-green-400 dark:border-green-800"
-                  : ""
-              )}
-            >
-              {workflowProcess.status === "ACTIVE" ? "Aktif" : "Taslak"}
-            </Badge>
             <Button variant="destructive" size="sm">
               <Trash2 className="h-4 w-4 mr-2" />
               Sil
@@ -192,10 +223,36 @@ export default function WorkflowProcessDetailPage() {
         <CardHeader className="pb-3">
           <div className="flex items-center justify-between">
             <CardTitle className="text-lg font-medium">Prosesler</CardTitle>
-            <Button variant="outline" size="sm">
-              <Edit className="h-4 w-4 mr-2" />
-              Düzenle
-            </Button>
+            <div className="flex items-center space-x-2">
+              {isEditMode ? (
+                <>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setShowAddDialog(true)}
+                  >
+                    <Plus className="h-4 w-4 mr-2" />
+                    Proses Ekle
+                  </Button>
+                  <Button
+                    variant="secondary"
+                    size="sm"
+                    onClick={() => setIsEditMode(false)}
+                  >
+                    Düzenlemeyi Bitir
+                  </Button>
+                </>
+              ) : (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setIsEditMode(true)}
+                >
+                  <Edit className="h-4 w-4 mr-2" />
+                  Düzenle
+                </Button>
+              )}
+            </div>
           </div>
         </CardHeader>
         <CardContent className="p-0">
@@ -234,17 +291,33 @@ export default function WorkflowProcessDetailPage() {
                             {config.axis_count && (
                               <div className="flex items-center ml-3">
                                 <Settings2 className="h-4 w-4 mr-1" />
-                                <span>{config.axis_count} Eksen</span>
+                                <span>{config.axis_count}</span>
                               </div>
                             )}
                           </div>
-                          <ChevronDown
-                            className={cn(
-                              "h-5 w-5 text-muted-foreground transition-transform",
-                              expandedProcesses.has(config.id) &&
-                                "transform rotate-180"
+                          <div className="flex items-center space-x-2">
+                            {isEditMode && (
+                              <>
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    setProcessToDelete(config.id);
+                                  }}
+                                >
+                                  <Trash2 className="h-4 w-4 text-destructive" />
+                                </Button>
+                              </>
                             )}
-                          />
+                            <ChevronDown
+                              className={cn(
+                                "h-5 w-5 text-muted-foreground transition-transform",
+                                expandedProcesses.has(config.id) &&
+                                  "transform rotate-180"
+                              )}
+                            />
+                          </div>
                         </div>
                       </div>
                     </div>
@@ -387,6 +460,62 @@ export default function WorkflowProcessDetailPage() {
           </ScrollArea>
         </CardContent>
       </Card>
+
+      {/* Add Process Dialog */}
+      <Dialog open={showAddDialog} onOpenChange={setShowAddDialog}>
+        <DialogContent className="max-w-3xl">
+          <DialogHeader>
+            <DialogTitle>Proses Ekle</DialogTitle>
+          </DialogHeader>
+          <ProcessConfigForm
+            workflowProcessId={id}
+            onSuccess={() => {
+              setShowAddDialog(false);
+              setIsEditMode(false);
+              toast.success("Proses başarıyla eklendi");
+            }}
+            onCancel={() => setShowAddDialog(false)}
+          />
+        </DialogContent>
+      </Dialog>
+
+      {/* Delete Confirmation Dialog */}
+      <AlertDialog
+        open={processToDelete !== null}
+        onOpenChange={(open) => !open && setProcessToDelete(null)}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Prosesi Sil</AlertDialogTitle>
+            <AlertDialogDescription>
+              Bu prosesi silmek istediğinizden emin misiniz? Bu işlem geri
+              alınamaz.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>İptal</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => {
+                if (processToDelete) {
+                  deleteProcessConfig(processToDelete, {
+                    onSuccess: () => {
+                      toast.success("Proses başarıyla silindi");
+                      setProcessToDelete(null);
+                      setIsEditMode(false);
+                    },
+                    onError: () => {
+                      toast.error("Proses silinirken bir hata oluştu");
+                    },
+                  });
+                }
+              }}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              Sil
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

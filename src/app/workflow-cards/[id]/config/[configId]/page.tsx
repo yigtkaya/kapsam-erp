@@ -4,8 +4,8 @@ import { useParams, useRouter } from "next/navigation";
 import { PageHeader } from "@/components/ui/page-header";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ProcessConfigForm } from "../../../components/process-config-form";
-import { useWorkflowProcess } from "@/app/workflow-cards/hooks/use-workflow-hooks";
-import { useProcessConfig } from "@/hooks/useProcessConfig";
+import { useWorkflow } from "@/app/workflow-cards/hooks/useWorkflow";
+import { useProcessConfig } from "@/app/workflow-cards/hooks/useProcessConfig";
 
 export default function EditProcessConfigPage() {
   const params = useParams();
@@ -20,7 +20,7 @@ export default function EditProcessConfigPage() {
     data: workflowProcess,
     isLoading: processLoading,
     error: processError,
-  } = useWorkflowProcess(workflowId);
+  } = useWorkflow(workflowId);
 
   const {
     data: processConfig,
@@ -78,7 +78,7 @@ export default function EditProcessConfigPage() {
             ? "Proses Konfigürasyonu Ekle"
             : "Proses Konfigürasyonu Düzenle"
         }
-        description={`İş Akışı Prosesi: ${workflowProcess.process_details?.process_code}`}
+        description={`İş Akışı Prosesi: ${processConfig?.process_code} - ${processConfig?.process_name}`}
         showBackButton
         onBack={() => router.push(`/workflow-cards/${workflowId}`)}
       />

@@ -8,12 +8,20 @@ import {
   deleteProcessConfig,
   activateProcessConfig,
   createNewProcessConfigVersion,
+  fetchProcessConfigsForWorkflow,
 } from "../api/process-configs";
 
 export function useProcessConfigs() {
   return useQuery<ProcessConfig[]>({
     queryKey: ["processConfigs"],
     queryFn: () => fetchProcessConfigs(),
+  });
+}
+
+export function useProcessConfigsForWorkflow(workflowId: number) {
+  return useQuery<ProcessConfig[]>({
+    queryKey: ["processConfigsForWorkflow", workflowId],
+    queryFn: () => fetchProcessConfigsForWorkflow(workflowId),
   });
 }
 
@@ -34,8 +42,14 @@ export function useCreateProcessConfig() {
     Omit<ProcessConfig, "id" | "created_at" | "updated_at">
   >({
     mutationFn: (data) => createProcessConfig(data),
-    onSuccess: () => {
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: ["workflows"] });
+      queryClient.invalidateQueries({ queryKey: ["workflow"] });
       queryClient.invalidateQueries({ queryKey: ["processConfigs"] });
+      queryClient.invalidateQueries({ queryKey: ["processConfig"] });
+      queryClient.invalidateQueries({
+        queryKey: ["processConfigsForWorkflow", variables.workflow],
+      });
     },
   });
 }
@@ -50,10 +64,17 @@ export function useUpdateProcessConfig() {
   >({
     mutationFn: ({ id, data }) => updateProcessConfig(id, data),
     onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: ["workflows"] });
+      queryClient.invalidateQueries({ queryKey: ["workflow"] });
       queryClient.invalidateQueries({ queryKey: ["processConfigs"] });
       queryClient.invalidateQueries({
         queryKey: ["processConfig", variables.id],
       });
+      if (variables.data.workflow) {
+        queryClient.invalidateQueries({
+          queryKey: ["processConfigsForWorkflow", variables.data.workflow],
+        });
+      }
     },
   });
 }
@@ -63,8 +84,14 @@ export function useDeleteProcessConfig() {
 
   return useMutation<boolean, Error, number>({
     mutationFn: (id) => deleteProcessConfig(id),
-    onSuccess: () => {
+    onSuccess: (_, id) => {
+      queryClient.invalidateQueries({ queryKey: ["workflows"] });
+      queryClient.invalidateQueries({ queryKey: ["workflow"] });
       queryClient.invalidateQueries({ queryKey: ["processConfigs"] });
+      queryClient.invalidateQueries({ queryKey: ["processConfig"] });
+      queryClient.invalidateQueries({
+        queryKey: ["processConfigsForWorkflow"],
+      });
     },
   });
 }
@@ -77,6 +104,9 @@ export function useActivateProcessConfig() {
     onSuccess: (_, id) => {
       queryClient.invalidateQueries({ queryKey: ["processConfigs"] });
       queryClient.invalidateQueries({ queryKey: ["processConfig", id] });
+      queryClient.invalidateQueries({
+        queryKey: ["processConfigsForWorkflow", id],
+      });
     },
   });
 }
@@ -88,6 +118,10 @@ export function useCreateNewProcessConfigVersion() {
     mutationFn: (id) => createNewProcessConfigVersion(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["processConfigs"] });
+      queryClient.invalidateQueries({ queryKey: ["processConfig"] });
+      queryClient.invalidateQueries({
+        queryKey: ["processConfigsForWorkflow"],
+      });
     },
   });
 }

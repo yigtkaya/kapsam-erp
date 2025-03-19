@@ -4,7 +4,11 @@ import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import { AxisCount, ProcessConfig } from "@/types/manufacture";
+import {
+  AxisCount,
+  ProcessConfig,
+  ProcessConfigStatus,
+} from "@/types/manufacture";
 import { useProcesses } from "@/hooks/useManufacturing";
 import { toast } from "sonner";
 import { useParams } from "next/navigation";
@@ -50,7 +54,7 @@ import {
   useCreateProcessConfig,
   useProcessConfig,
   useUpdateProcessConfig,
-} from "@/hooks/useProcessConfig";
+} from "../hooks/useProcessConfig";
 
 // Schema for the process configuration
 const formSchema = z.object({
@@ -58,6 +62,9 @@ const formSchema = z.object({
     required_error: "İş akışı prosesi gereklidir",
     invalid_type_error: "İş akışı prosesi bir sayı olmalıdır",
   }),
+  sequence_order: z.coerce
+    .number()
+    .min(1, "Sıra numarası 1'den büyük olmalıdır"),
   tool: z.string().nullable(),
   control_gauge: z.string().nullable(),
   fixture: z.string().nullable(),
@@ -119,6 +126,7 @@ export function ProcessConfigForm({
     resolver: zodResolver(formSchema),
     defaultValues: {
       workflow_process: workflowProcessId,
+      sequence_order: 1,
       tool: null,
       control_gauge: null,
       fixture: null,
@@ -141,18 +149,19 @@ export function ProcessConfigForm({
     if (isEditing && existingConfig) {
       form.reset({
         workflow_process: workflowProcessId,
+        sequence_order: existingConfig.sequence_order,
         tool:
           typeof existingConfig.tool === "string"
             ? existingConfig.tool
-            : existingConfig.tool?.stock_code,
+            : existingConfig.tool,
         control_gauge:
           typeof existingConfig.control_gauge === "string"
             ? existingConfig.control_gauge
-            : existingConfig.control_gauge?.stock_code,
+            : existingConfig.control_gauge,
         fixture:
           typeof existingConfig.fixture === "string"
             ? existingConfig.fixture
-            : existingConfig.fixture?.code,
+            : existingConfig.fixture,
         axis_count: existingConfig.axis_count,
         machine_time: existingConfig.machine_time,
         setup_time: existingConfig.setup_time,
@@ -174,20 +183,42 @@ export function ProcessConfigForm({
 
     setIsSubmitting(true);
     try {
-      console.log("Form data being submitted:", data);
+      const baseData = {
+        workflow: workflowProcessId,
+        process: data.workflow_process,
+        process_code:
+          processes?.find((p) => p.id === data.workflow_process)
+            ?.process_code || "",
+        process_name:
+          processes?.find((p) => p.id === data.workflow_process)
+            ?.process_name || "",
+        version: "1.0",
+        sequence_order: data.sequence_order,
+        stock_code: "",
+        number_of_bindings: data.number_of_bindings ?? 0,
+        modified_at: new Date().toISOString(),
+        tool: data.tool ?? undefined,
+        control_gauge: data.control_gauge ?? undefined,
+        fixture: data.fixture ?? undefined,
+        axis_count: data.axis_count ?? undefined,
+        machine_time: data.machine_time ?? undefined,
+        setup_time: data.setup_time ?? undefined,
+        net_time: data.net_time ?? undefined,
+      };
 
       if (isEditing && configId) {
         console.log("Updating config with ID:", configId);
         await updateProcessConfig({
           id: configId,
-          data: data,
+          data: baseData,
         });
-        toast.success("Proses konfigürasyonu başarıyla güncellendi");
       } else {
         console.log("Creating new config");
-        const result = await createProcessConfig(data);
+        const result = await createProcessConfig({
+          ...baseData,
+          status: ProcessConfigStatus.DRAFT,
+        });
         console.log("Create result:", result);
-        toast.success("Proses konfigürasyonu başarıyla oluşturuldu");
       }
       onSuccess();
     } catch (error) {
@@ -297,6 +328,31 @@ export function ProcessConfigForm({
                   </FormItem>
                 )}
               /> */}
+
+              <FormField
+                control={form.control}
+                name="sequence_order"
+                render={({ field }) => (
+                  <FormItem className="flex flex-col h-[120px]">
+                    <FormLabel>Sıra Numarası</FormLabel>
+                    <FormControl>
+                      <Input
+                        type="number"
+                        placeholder="Sıra numarasını girin"
+                        disabled={isReadOnly}
+                        {...field}
+                        value={field.value || ""}
+                        onChange={(e) => {
+                          const value = e.target.value;
+                          field.onChange(value === "" ? null : parseInt(value));
+                        }}
+                      />
+                    </FormControl>
+                    <FormDescription>Prosesin sıra numarası</FormDescription>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
 
               <FormField
                 control={form.control}
@@ -552,7 +608,7 @@ export function ProcessConfigForm({
                                         : "opacity-0"
                                     )}
                                   />
-                                  {key.replace(/_/g, " ")}
+                                  {value}
                                 </CommandItem>
                               ))}
                             </CommandGroup>
@@ -571,7 +627,7 @@ export function ProcessConfigForm({
                 name="machine_time"
                 render={({ field }) => (
                   <FormItem className="flex flex-col h-[120px]">
-                    <FormLabel>Tezgah Süresi (dakika)</FormLabel>
+                    <FormLabel>Tezgah Süresi (sn)</FormLabel>
                     <FormControl>
                       <Input
                         type="number"
@@ -596,7 +652,7 @@ export function ProcessConfigForm({
                 name="setup_time"
                 render={({ field }) => (
                   <FormItem className="flex flex-col h-[120px]">
-                    <FormLabel>Hazırlık Süresi (dakika)</FormLabel>
+                    <FormLabel>Hazırlık Süresi (sn)</FormLabel>
                     <FormControl>
                       <Input
                         type="number"
@@ -623,7 +679,7 @@ export function ProcessConfigForm({
                 name="net_time"
                 render={({ field }) => (
                   <FormItem className="flex flex-col h-[120px]">
-                    <FormLabel>Net Süre (dakika)</FormLabel>
+                    <FormLabel>Net Süre (sn)</FormLabel>
                     <FormControl>
                       <Input
                         type="number"

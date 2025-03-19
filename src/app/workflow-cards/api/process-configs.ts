@@ -25,6 +25,29 @@ async function getAuthHeaders() {
   };
 }
 
+// /api/manufacturing/workflows/2/configs/
+export async function fetchProcessConfigsForWorkflow(
+  workflowId: number
+): Promise<ProcessConfig[]> {
+  const headers = await getAuthHeaders();
+
+  const response = await fetch(
+    `${API_URL}/api/manufacturing/workflows/${workflowId}/configs/`,
+    {
+      headers,
+    }
+  );
+
+  console.log(response);
+
+  if (!response.ok) {
+    console.log(await response.json());
+
+    throw new Error("Failed to fetch process configs");
+  }
+
+  return await response.json();
+}
 // Process Config API functions
 export async function fetchProcessConfigs(): Promise<ProcessConfig[]> {
   const headers = await getAuthHeaders();
@@ -69,6 +92,8 @@ export async function createProcessConfig(
 ) {
   const headers = await getAuthHeaders();
 
+  console.log("Creating process config:", data);
+
   try {
     const response = await fetch(
       `${API_URL}/api/manufacturing/process-configs/`,
@@ -80,7 +105,10 @@ export async function createProcessConfig(
       }
     );
 
+    console.log("Response:", response);
+
     if (!response.ok) {
+      console.log(await response.json());
       throw new Error("Failed to create process config");
     }
 
