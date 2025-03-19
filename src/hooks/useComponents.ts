@@ -19,15 +19,18 @@ export function useComponents(bomId: number) {
   });
 }
 
-export function useCreateComponent() {
+export function useCreateComponent(bomId: number) {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: createComponent,
-    onSuccess: (_, variables) => {
+    mutationFn: (data: Partial<BOMComponent>) => createComponent(bomId, data),
+    onSuccess: () => {
       // Invalidate the specific components query for this BOM
       queryClient.invalidateQueries({
-        queryKey: ["components", variables.bom],
+        queryKey: ["components", bomId],
+      });
+      queryClient.invalidateQueries({
+        queryKey: ["bom", bomId],
       });
     },
   });
@@ -48,7 +51,7 @@ export function useUpdateComponent() {
         Omit<BOMComponent, "id" | "created_at" | "updated_at" | "bom">
       >;
     }) => {
-      return updateComponent(componentId, data);
+      return updateComponent(bomId, componentId, data);
     },
     onSuccess: (_, { bomId }) => {
       queryClient.invalidateQueries({ queryKey: ["components", bomId] });
@@ -71,7 +74,7 @@ export function useDeleteComponent() {
       bomId: number;
       componentId: number;
     }) => {
-      const result = await deleteComponent(componentId);
+      const result = await deleteComponent(bomId, componentId);
       return { result, componentId };
     },
     onSuccess: (_, { bomId }) => {

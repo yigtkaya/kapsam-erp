@@ -61,7 +61,6 @@ export function BOMComponentList({ bomId, components }: BOMComponentListProps) {
           <TableHead>Ürün Kodu</TableHead>
           <TableHead>Ürün Adı</TableHead>
           <TableHead>Miktar</TableHead>
-          <TableHead>Temin Süresi (Gün)</TableHead>
           <TableHead>Notlar</TableHead>
           <TableHead className="w-[100px]"></TableHead>
         </TableRow>
@@ -74,7 +73,6 @@ export function BOMComponentList({ bomId, components }: BOMComponentListProps) {
             <TableCell>{component.product_code}</TableCell>
             <TableCell>{component.product_name}</TableCell>
             <TableCell>{component.quantity}</TableCell>
-            <TableCell>{component.lead_time_days || "-"}</TableCell>
             <TableCell>{component.notes || "-"}</TableCell>
             <TableCell>
               <Button

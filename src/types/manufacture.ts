@@ -76,18 +76,19 @@ export interface BaseModel {
 }
 
 export interface CreateBOMComponentRequest {
-  bom: number;
+  bom?: number;
   sequence_order: number;
   quantity: string;
   product: number;
-  lead_time_days?: number | null;
   notes?: string | null;
 }
 
 export interface BomRequest {
-  product: string;
+  product: number;
   version: string;
   is_active: boolean;
+  notes?: string | null;
+  components: CreateBOMComponentRequest[] | null;
 }
 
 export interface BOM extends BaseModel {
@@ -111,7 +112,6 @@ export interface BOMComponent extends BaseModel {
   product_code?: string;
   product_name?: string;
   product_type?: ProductType;
-  lead_time_days: number | null;
   notes: string | null;
 }
 

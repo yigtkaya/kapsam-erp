@@ -46,9 +46,10 @@ export default function BOMDetailPage() {
       {
         id: bom.id,
         data: {
-          product: bom.product.product_code,
+          product: bom.product.id,
           version: bom.version,
           is_active: !bom.is_active,
+          components: null,
         },
       },
       {
@@ -245,7 +246,6 @@ export default function BOMDetailPage() {
                 <TableHead>Ürün Kodu</TableHead>
                 <TableHead>Ürün Adı</TableHead>
                 <TableHead>Miktar</TableHead>
-                <TableHead>Temin Süresi (Gün)</TableHead>
                 <TableHead>Notlar</TableHead>
                 <TableHead className="w-[100px]"></TableHead>
               </TableRow>
@@ -258,7 +258,6 @@ export default function BOMDetailPage() {
                   <TableCell>{component.product_code}</TableCell>
                   <TableCell>{component.product_name}</TableCell>
                   <TableCell>{component.quantity}</TableCell>
-                  <TableCell>{component.lead_time_days || "-"}</TableCell>
                   <TableCell>{component.notes || "-"}</TableCell>
                   <TableCell>
                     <Button

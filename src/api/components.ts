@@ -24,21 +24,35 @@ async function getAuthHeaders() {
   };
 }
 
+// GET /api/manufacturing/boms/{bom_pk}/components/                  # List components of a specific BOM
+// GET /api/manufacturing/boms/{bom_pk}/components/{id}/            # Get a specific component
+// POST /api/manufacturing/boms/{bom_pk}/components/                # Add a component to a BOM
+// PUT /api/manufacturing/boms/{bom_pk}/components/{id}/            # Update a component
+// DELETE /api/manufacturing/boms/{bom_pk}/components/{id}/         # Delete a component
+
 export async function getAllComponentsForBom(bomId: number) {
   const headers = await getAuthHeaders();
   const response = await fetch(
-    `${API_URL}/api/manufacturing/bom-components/?bom=${bomId}`,
+    `${API_URL}/api/manufacturing/boms/${bomId}/components/`,
     {
       headers,
     }
   );
-  return response.json();
+
+  if (!response.ok) {
+    console.log(response);
+    console.log(await response.json());
+    throw new Error(response.statusText);
+  }
+
+  const responseData = await response.json();
+  return responseData;
 }
 
-export async function getComponent(id: number) {
+export async function getComponent(bomId: number, id: number) {
   const headers = await getAuthHeaders();
   const response = await fetch(
-    `${API_URL}/api/manufacturing/bom-components/${id}/`,
+    `${API_URL}/api/manufacturing/boms/${bomId}/components/${id}/`,
     {
       headers,
     }
@@ -46,19 +60,25 @@ export async function getComponent(id: number) {
   return response.json();
 }
 
-export async function createComponent(data: Partial<BOMComponent>) {
+export async function createComponent(
+  bomId: number,
+  data: Partial<BOMComponent>
+) {
   const headers = await getAuthHeaders();
 
   console.log(data);
 
-  const response = await fetch(`${API_URL}/api/manufacturing/bom-components/`, {
-    method: "POST",
-    headers,
-    body: JSON.stringify(data),
-  });
+  const response = await fetch(
+    `${API_URL}/api/manufacturing/boms/${bomId}/components/`,
+    {
+      method: "POST",
+      headers,
+      body: JSON.stringify(data),
+    }
+  );
 
   if (!response.ok) {
-    console.log(response.statusText);
+    console.log(response);
     console.log(await response.json());
     throw new Error(response.statusText);
   }
@@ -68,10 +88,14 @@ export async function createComponent(data: Partial<BOMComponent>) {
   return responseData;
 }
 
-export async function updateComponent(id: number, data: Partial<BOMComponent>) {
+export async function updateComponent(
+  bomId: number,
+  id: number,
+  data: Partial<BOMComponent>
+) {
   const headers = await getAuthHeaders();
   const response = await fetch(
-    `${API_URL}/api/manufacturing/bom-components/${id}/`,
+    `${API_URL}/api/manufacturing/boms/${bomId}/components/${id}/`,
     {
       method: "PATCH",
       headers,
@@ -87,10 +111,10 @@ export async function updateComponent(id: number, data: Partial<BOMComponent>) {
   return responseData;
 }
 
-export async function deleteComponent(id: number) {
+export async function deleteComponent(bomId: number, id: number) {
   const headers = await getAuthHeaders();
   const response = await fetch(
-    `${API_URL}/api/manufacturing/bom-components/${id}/`,
+    `${API_URL}/api/manufacturing/boms/${bomId}/components/${id}/`,
     {
       method: "DELETE",
       headers,

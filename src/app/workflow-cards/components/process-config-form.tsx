@@ -220,7 +220,6 @@ export function ProcessConfigForm({
           status: ProcessConfigStatus.DRAFT,
         });
         console.log("Create result:", result);
-        toast.success("Proses konfigürasyonu başarıyla oluşturuldu");
       }
       onSuccess();
     } catch (error) {
@@ -571,11 +570,7 @@ export function ProcessConfigForm({
                             )}
                           >
                             {field.value
-                              ? Object.entries(AxisCount)
-                                  .find(
-                                    ([_, value]) => value === field.value
-                                  )?.[0]
-                                  .replace(/_/g, " ") || "Eksen sayısı seçin"
+                              ? field.value || "Eksen sayısı seçin"
                               : "Eksen sayısı seçin"}
                             <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                           </Button>
@@ -589,10 +584,10 @@ export function ProcessConfigForm({
                               Eksen sayısı bulunamadı.
                             </CommandEmpty>
                             <CommandGroup>
-                              {Object.entries(AxisCount).map(([key, value]) => (
+                              {Object.values(AxisCount).map((value) => (
                                 <CommandItem
-                                  value={key}
-                                  key={key}
+                                  value={value}
+                                  key={value}
                                   onSelect={() => {
                                     form.setValue("axis_count", value);
                                   }}

@@ -51,11 +51,6 @@ const formSchema = z.object({
   component: z.string().min(1, "Ürün seçilmesi zorunludur"),
   sequence_order: z.coerce.number().min(1, "Sıra numarası 1'den küçük olamaz"),
   quantity: z.string().min(1, "Miktar girilmesi zorunludur"),
-  lead_time_days: z.coerce
-    .number()
-    .min(0, "Temin süresi 0'dan küçük olamaz")
-    .optional()
-    .nullable(),
   notes: z.string().optional(),
 });
 
@@ -80,7 +75,7 @@ export function AddComponentDialog({
   onOpenChange,
 }: AddComponentDialogProps) {
   const { data: products, isLoading: isLoadingProducts } = useProducts();
-  const { mutate: addComponent, isPending } = useCreateComponent();
+  const { mutate: addComponent, isPending } = useCreateComponent(bomId);
   const [comboboxOpen, setComboboxOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
 
@@ -99,7 +94,6 @@ export function AddComponentDialog({
     defaultValues: {
       sequence_order: 1,
       quantity: "",
-      lead_time_days: null,
       notes: "",
     },
   });
@@ -114,13 +108,12 @@ export function AddComponentDialog({
       sequence_order: values.sequence_order,
       quantity: values.quantity,
       product: parseInt(values.component),
-      lead_time_days: values.lead_time_days ?? null,
       notes: values.notes || null,
     };
 
     addComponent(component, {
       onSuccess: () => {
-        toast.success("Bileşe n başarıyla eklendi.");
+        toast.success("Bileşen başarıyla eklendi.");
         form.reset();
         onOpenChange(false);
       },
@@ -163,10 +156,17 @@ export function AddComponentDialog({
                           )}
                         >
                           {field.value
-                            ? products?.find(
-                                (product) =>
-                                  product.product_code === field.value
-                              )?.product_name
+                            ? `${
+                                products?.find(
+                                  (product) =>
+                                    product.id.toString() === field.value
+                                )?.product_name
+                              } (${
+                                products?.find(
+                                  (product) =>
+                                    product.id.toString() === field.value
+                                )?.product_code
+                              })`
                             : "Ürün seçin"}
                           <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                         </ShadcnButton>
@@ -237,29 +237,6 @@ export function AddComponentDialog({
                   <FormLabel>Miktar</FormLabel>
                   <FormControl>
                     <Input {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name="lead_time_days"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Temin Süresi (Gün)</FormLabel>
-                  <FormControl>
-                    <Input
-                      type="number"
-                      {...field}
-                      value={field.value || ""}
-                      onChange={(e) =>
-                        field.onChange(
-                          e.target.value ? parseInt(e.target.value) : null
-                        )
-                      }
-                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>

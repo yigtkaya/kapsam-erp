@@ -257,202 +257,233 @@ export default function WorkflowProcessDetailPage() {
         </CardHeader>
         <CardContent className="p-0">
           <ScrollArea className="h-[calc(100vh-32rem)]">
-            <div className="divide-y">
-              {sortedProcessConfigs.map((config, index) => (
-                <div key={config.id} className="group">
-                  <div
-                    className={cn(
-                      "flex items-center px-6 py-4 hover:bg-muted/50 cursor-pointer",
-                      expandedProcesses.has(config.id) && "bg-muted/50"
-                    )}
-                    onClick={() => toggleProcess(config.id)}
+            {sortedProcessConfigs.length === 0 ? (
+              <div className="flex flex-col items-center justify-center py-12 px-4">
+                <div className="h-12 w-12 rounded-full bg-muted flex items-center justify-center mb-4">
+                  <Settings2 className="h-6 w-6 text-muted-foreground" />
+                </div>
+                <h3 className="text-lg font-medium text-center mb-2">
+                  Henüz Proses Eklenmemiş
+                </h3>
+                <p className="text-sm text-muted-foreground text-center mb-6">
+                  Bu iş akış kartına henüz proses eklenmemiş. Düzenleme moduna
+                  geçerek yeni prosesler ekleyebilirsiniz.
+                </p>
+                {!isEditMode && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setIsEditMode(true)}
                   >
-                    <div className="flex-shrink-0 w-8 h-8 flex items-center justify-center">
-                      <div className="w-6 h-6 rounded-full bg-primary/10 flex items-center justify-center">
-                        {index + 1}
-                      </div>
-                    </div>
-                    <div className="ml-4 flex-grow">
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <h4 className="font-medium">{config.process_name}</h4>
-                          <p className="text-sm text-muted-foreground">
-                            {config.process_code}
-                          </p>
+                    <Edit className="h-4 w-4 mr-2" />
+                    Düzenlemeye Başla
+                  </Button>
+                )}
+              </div>
+            ) : (
+              <div className="divide-y">
+                {sortedProcessConfigs.map((config, index) => (
+                  <div key={config.id} className="group">
+                    <div
+                      className={cn(
+                        "flex items-center px-6 py-4 hover:bg-muted/50 cursor-pointer",
+                        expandedProcesses.has(config.id) && "bg-muted/50"
+                      )}
+                      onClick={() => toggleProcess(config.id)}
+                    >
+                      <div className="flex-shrink-0 w-8 h-8 flex items-center justify-center">
+                        <div className="w-6 h-6 rounded-full bg-primary/10 flex items-center justify-center">
+                          {index + 1}
                         </div>
-                        <div className="flex items-center space-x-4">
-                          <div className="flex items-center space-x-2 text-sm text-muted-foreground">
-                            {config.machine_time && (
-                              <div className="flex items-center">
-                                <Clock className="h-4 w-4 mr-1" />
-                                <span>{config.machine_time} sn</span>
-                              </div>
-                            )}
-                            {config.axis_count && (
-                              <div className="flex items-center ml-3">
-                                <Settings2 className="h-4 w-4 mr-1" />
-                                <span>{config.axis_count}</span>
-                              </div>
-                            )}
+                      </div>
+                      <div className="ml-4 flex-grow">
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <h4 className="font-medium">
+                              {config.process_name}
+                            </h4>
+                            <p className="text-sm text-muted-foreground">
+                              {config.process_code}
+                            </p>
                           </div>
-                          <div className="flex items-center space-x-2">
-                            {isEditMode && (
-                              <>
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    setProcessToDelete(config.id);
-                                  }}
-                                >
-                                  <Trash2 className="h-4 w-4 text-destructive" />
-                                </Button>
-                              </>
-                            )}
-                            <ChevronDown
-                              className={cn(
-                                "h-5 w-5 text-muted-foreground transition-transform",
-                                expandedProcesses.has(config.id) &&
-                                  "transform rotate-180"
+                          <div className="flex items-center space-x-4">
+                            <div className="flex items-center space-x-2 text-sm text-muted-foreground">
+                              {config.machine_time && (
+                                <div className="flex items-center">
+                                  <Clock className="h-4 w-4 mr-1" />
+                                  <span>{config.machine_time} sn</span>
+                                </div>
                               )}
-                            />
+                              {config.axis_count && (
+                                <div className="flex items-center ml-3">
+                                  <Settings2 className="h-4 w-4 mr-1" />
+                                  <span>{config.axis_count}</span>
+                                </div>
+                              )}
+                            </div>
+                            <div className="flex items-center space-x-2">
+                              {isEditMode && (
+                                <>
+                                  <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      setProcessToDelete(config.id);
+                                    }}
+                                  >
+                                    <Trash2 className="h-4 w-4 text-destructive" />
+                                  </Button>
+                                </>
+                              )}
+                              <ChevronDown
+                                className={cn(
+                                  "h-5 w-5 text-muted-foreground transition-transform",
+                                  expandedProcesses.has(config.id) &&
+                                    "transform rotate-180"
+                                )}
+                              />
+                            </div>
                           </div>
                         </div>
                       </div>
                     </div>
-                  </div>
 
-                  {expandedProcesses.has(config.id) && (
-                    <div className="px-6 py-4 bg-muted/25 space-y-6">
-                      <div className="grid grid-cols-3 gap-6">
-                        <div className="space-y-1">
-                          <label className="text-sm text-muted-foreground">
-                            Stok Kodu
-                          </label>
-                          <p className="font-medium">{config.stock_code}</p>
-                        </div>
-                        <div className="space-y-1">
-                          <label className="text-sm text-muted-foreground">
-                            Sıra No
-                          </label>
-                          <p className="font-medium">{config.sequence_order}</p>
-                        </div>
-                        {config.axis_count && (
+                    {expandedProcesses.has(config.id) && (
+                      <div className="px-6 py-4 bg-muted/25 space-y-6">
+                        <div className="grid grid-cols-3 gap-6">
                           <div className="space-y-1">
                             <label className="text-sm text-muted-foreground">
-                              Eksen Sayısı
+                              Stok Kodu
                             </label>
-                            <p className="font-medium">{config.axis_count}</p>
+                            <p className="font-medium">{config.stock_code}</p>
                           </div>
-                        )}
-                      </div>
-
-                      <div>
-                        <h4 className="text-sm font-medium text-muted-foreground mb-3">
-                          Süre Bilgileri
-                        </h4>
-                        <div className="grid grid-cols-3 gap-6">
-                          {config.machine_time && (
+                          <div className="space-y-1">
+                            <label className="text-sm text-muted-foreground">
+                              Sıra No
+                            </label>
+                            <p className="font-medium">
+                              {config.sequence_order}
+                            </p>
+                          </div>
+                          {config.axis_count && (
                             <div className="space-y-1">
                               <label className="text-sm text-muted-foreground">
-                                Tezgah Süresi
+                                Eksen Sayısı
                               </label>
-                              <p className="font-medium">
-                                {config.machine_time} sn
-                              </p>
-                            </div>
-                          )}
-                          {config.setup_time && (
-                            <div className="space-y-1">
-                              <label className="text-sm text-muted-foreground">
-                                Hazırlık Süresi
-                              </label>
-                              <p className="font-medium">
-                                {config.setup_time} sn
-                              </p>
-                            </div>
-                          )}
-                          {config.number_of_bindings && (
-                            <div className="space-y-1">
-                              <label className="text-sm text-muted-foreground">
-                                Bağlama Sayısı
-                              </label>
-                              <p className="font-medium">
-                                {config.number_of_bindings}
-                              </p>
+                              <p className="font-medium">{config.axis_count}</p>
                             </div>
                           )}
                         </div>
-                      </div>
 
-                      {(config.fixture ||
-                        config.tool ||
-                        config.control_gauge) && (
                         <div>
                           <h4 className="text-sm font-medium text-muted-foreground mb-3">
-                            Ekipman ve Kontrol
+                            Süre Bilgileri
                           </h4>
                           <div className="grid grid-cols-3 gap-6">
-                            {config.fixture && (
+                            {config.machine_time && (
                               <div className="space-y-1">
                                 <label className="text-sm text-muted-foreground">
-                                  Fikstür
-                                </label>
-                                <p className="font-medium">{config.fixture}</p>
-                              </div>
-                            )}
-                            {config.tool && (
-                              <div className="space-y-1">
-                                <label className="text-sm text-muted-foreground">
-                                  Takım
-                                </label>
-                                <p className="font-medium">{config.tool}</p>
-                              </div>
-                            )}
-                            {config.control_gauge && (
-                              <div className="space-y-1">
-                                <label className="text-sm text-muted-foreground">
-                                  Kontrol Mastarı
+                                  Tezgah Süresi
                                 </label>
                                 <p className="font-medium">
-                                  {config.control_gauge}
+                                  {config.machine_time} sn
+                                </p>
+                              </div>
+                            )}
+                            {config.setup_time && (
+                              <div className="space-y-1">
+                                <label className="text-sm text-muted-foreground">
+                                  Hazırlık Süresi
+                                </label>
+                                <p className="font-medium">
+                                  {config.setup_time} sn
+                                </p>
+                              </div>
+                            )}
+                            {config.number_of_bindings && (
+                              <div className="space-y-1">
+                                <label className="text-sm text-muted-foreground">
+                                  Bağlama Sayısı
+                                </label>
+                                <p className="font-medium">
+                                  {config.number_of_bindings}
                                 </p>
                               </div>
                             )}
                           </div>
                         </div>
-                      )}
 
-                      {config.description && (
-                        <div>
-                          <h4 className="text-sm font-medium text-muted-foreground mb-2">
-                            Açıklama
-                          </h4>
-                          <p className="text-sm">{config.description}</p>
-                        </div>
-                      )}
+                        {(config.fixture ||
+                          config.tool ||
+                          config.control_gauge) && (
+                          <div>
+                            <h4 className="text-sm font-medium text-muted-foreground mb-3">
+                              Ekipman ve Kontrol
+                            </h4>
+                            <div className="grid grid-cols-3 gap-6">
+                              {config.fixture && (
+                                <div className="space-y-1">
+                                  <label className="text-sm text-muted-foreground">
+                                    Fikstür
+                                  </label>
+                                  <p className="font-medium">
+                                    {config.fixture}
+                                  </p>
+                                </div>
+                              )}
+                              {config.tool && (
+                                <div className="space-y-1">
+                                  <label className="text-sm text-muted-foreground">
+                                    Takım
+                                  </label>
+                                  <p className="font-medium">{config.tool}</p>
+                                </div>
+                              )}
+                              {config.control_gauge && (
+                                <div className="space-y-1">
+                                  <label className="text-sm text-muted-foreground">
+                                    Kontrol Mastarı
+                                  </label>
+                                  <p className="font-medium">
+                                    {config.control_gauge}
+                                  </p>
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        )}
 
-                      <div className="flex justify-end pt-2">
-                        <div className="flex items-center space-x-2">
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() =>
-                              router.push(
-                                `/workflow-cards/${workflowProcess.id}/config/${config.id}`
-                              )
-                            }
-                          >
-                            Prosese Git
-                          </Button>
+                        {config.description && (
+                          <div>
+                            <h4 className="text-sm font-medium text-muted-foreground mb-2">
+                              Açıklama
+                            </h4>
+                            <p className="text-sm">{config.description}</p>
+                          </div>
+                        )}
+
+                        <div className="flex justify-end pt-2">
+                          <div className="flex items-center space-x-2">
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() =>
+                                router.push(
+                                  `/workflow-cards/${workflowProcess.id}/config/${config.id}`
+                                )
+                              }
+                            >
+                              Prosese Git
+                            </Button>
+                          </div>
                         </div>
                       </div>
-                    </div>
-                  )}
-                </div>
-              ))}
-            </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
           </ScrollArea>
         </CardContent>
       </Card>
