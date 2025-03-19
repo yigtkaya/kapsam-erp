@@ -16,11 +16,12 @@ export interface WorkflowTableRow {
 
 export interface ProcessTableRow {
   id: number;
-  operation_no: number;
+  operation_code: string;
   operation_name: string;
   machine_type: string;
   axis_count: string | null;
   version: string;
+  stock_code: string;
 }
 
 export function useWorkflowTableData() {
@@ -78,11 +79,12 @@ export function useWorkflowTableData() {
           const process = processes.find((p) => p.id === config.process);
           return {
             id: config.id,
-            operation_no: config.sequence_order,
+            operation_code: config.process_code || process?.process_code || "",
             operation_name: process?.process_name || "Unknown Process",
             machine_type: "Not Specified",
             axis_count: config.axis_count || null,
             version: config.version,
+            stock_code: config.stock_code || "",
           };
         });
 

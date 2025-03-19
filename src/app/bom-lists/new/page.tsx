@@ -20,7 +20,6 @@ import { PageHeader } from "@/components/ui/page-header";
 import { useProducts } from "@/hooks/useProducts";
 import { Loader2, Check, ChevronsUpDown } from "lucide-react";
 import { toast } from "sonner";
-import { CreateBOMRequest } from "@/types/manufacture";
 import { cn } from "@/lib/utils";
 import { Button as ShadcnButton } from "@/components/ui/button";
 import {
@@ -37,6 +36,7 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { useState } from "react";
+import { BomRequest } from "@/types/manufacture";
 
 const formSchema = z.object({
   product: z.string().min(1, "Ürün seçilmesi zorunludur"),
@@ -70,7 +70,7 @@ export default function NewBOMPage() {
   });
 
   function onSubmit(values: z.infer<typeof formSchema>) {
-    const bomData: CreateBOMRequest = {
+    const bomData: BomRequest = {
       product: values.product,
       version: values.version,
       is_active: true,

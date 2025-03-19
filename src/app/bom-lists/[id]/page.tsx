@@ -154,7 +154,7 @@ export default function BOMDetailPage() {
               </Badge>
             </div>
 
-            {bom.approved_by && (
+            {/* {bom.approved_by && (
               <div>
                 <h4 className="text-sm font-medium text-muted-foreground">
                   Onaylayan
@@ -163,7 +163,7 @@ export default function BOMDetailPage() {
                   {bom.approved_by.first_name} {bom.approved_by.last_name}
                 </p>
               </div>
-            )}
+            )} */}
 
             {bom.approved_at && (
               <div>

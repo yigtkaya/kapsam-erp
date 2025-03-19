@@ -212,6 +212,7 @@ export function ProcessConfigForm({
           id: configId,
           data: baseData,
         });
+        toast.success("Proses konfigürasyonu başarıyla güncellendi");
       } else {
         console.log("Creating new config");
         const result = await createProcessConfig({
@@ -219,6 +220,7 @@ export function ProcessConfigForm({
           status: ProcessConfigStatus.DRAFT,
         });
         console.log("Create result:", result);
+        toast.success("Proses konfigürasyonu başarıyla oluşturuldu");
       }
       onSuccess();
     } catch (error) {
@@ -246,11 +248,6 @@ export function ProcessConfigForm({
   return (
     <Card>
       <CardHeader>
-        <CardTitle>
-          {isEditing
-            ? "Proses Konfigürasyonu Düzenle"
-            : "Proses Konfigürasyonu Ekle"}
-        </CardTitle>
         <CardDescription>
           {isEditing
             ? "Bu iş akışı prosesi için konfigürasyon detaylarını güncelleyin"
@@ -727,7 +724,7 @@ export function ProcessConfigForm({
               />
             </div>
           </CardContent>
-          <CardFooter className="flex justify-between">
+          <CardFooter className="flex justify-end space-x-2">
             <Button type="button" variant="outline" onClick={onCancel}>
               İptal
             </Button>

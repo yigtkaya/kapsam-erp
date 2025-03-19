@@ -1,9 +1,7 @@
 "use server";
 
 import { Fixture } from "@/types/inventory";
-import { BOM, BomRequest, CreateBOMRequest } from "@/types/manufacture";
-import { revalidatePath } from "next/cache";
-import { cookies, headers } from "next/headers";
+import { cookies } from "next/headers";
 
 const API_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
 

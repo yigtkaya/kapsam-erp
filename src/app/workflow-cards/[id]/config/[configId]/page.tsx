@@ -6,6 +6,22 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { ProcessConfigForm } from "../../../components/process-config-form";
 import { useWorkflow } from "@/app/workflow-cards/hooks/useWorkflow";
 import { useProcessConfig } from "@/app/workflow-cards/hooks/useProcessConfig";
+import { useDeleteProcessConfig } from "@/app/workflow-cards/hooks/useProcessConfig";
+import { Button } from "@/components/ui/button";
+import { Trash2 } from "lucide-react";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
+import { toast } from "sonner";
+import { useState } from "react";
 
 export default function EditProcessConfigPage() {
   const params = useParams();
@@ -13,30 +29,47 @@ export default function EditProcessConfigPage() {
   const workflowId = parseInt(params.id as string);
   const configId =
     params.configId === "new" ? undefined : parseInt(params.configId as string);
-
   const isNewConfig = !configId;
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
 
   const {
-    data: workflowProcess,
-    isLoading: processLoading,
-    error: processError,
+    data: workflow,
+    isLoading: workflowLoading,
+    error: workflowError,
   } = useWorkflow(workflowId);
 
   const {
     data: processConfig,
     isLoading: configLoading,
     error: configError,
-  } = useProcessConfig(configId || 0);
+  } = useProcessConfig(isNewConfig ? 0 : (configId as number));
 
-  const isLoading = processLoading || (!isNewConfig && configLoading);
-  const error = processError || (!isNewConfig && configError);
+  const { mutate: deleteProcessConfig, isPending: isDeleting } =
+    useDeleteProcessConfig();
+
+  const isLoading = workflowLoading || (!isNewConfig && configLoading);
+  const error = workflowError || (!isNewConfig && configError);
 
   const handleSuccess = () => {
-    router.push(`/workflow-cards/${workflowId}`);
+    router.back();
   };
 
   const handleCancel = () => {
-    router.push(`/workflow-cards/${workflowId}`);
+    router.back();
+  };
+
+  const handleDelete = () => {
+    if (configId) {
+      deleteProcessConfig(configId, {
+        onSuccess: () => {
+          toast.success("Proses konfigürasyonu başarıyla silindi");
+          router.back();
+        },
+        onError: (error) => {
+          toast.error(`Proses konfigürasyonu silinemedi: ${error.message}`);
+        },
+      });
+    }
   };
 
   if (isLoading) {
@@ -54,34 +87,79 @@ export default function EditProcessConfigPage() {
     );
   }
 
-  if (error || !workflowProcess) {
+  if (error || !workflow) {
     return (
       <div className="container mx-auto py-4 space-y-6">
         <PageHeader
-          title="Error"
-          description="Failed to load data"
+          title="Hata"
+          description="Veri yüklenemedi"
           showBackButton
           onBack={() => router.push(`/workflow-cards/${workflowId}`)}
         />
-        <div className="bg-red-50 p-4 rounded-md text-red-800">
-          {error instanceof Error ? error.message : "Data not found"}
+        <div className="bg-destructive/10 p-4 rounded-md text-destructive">
+          {error instanceof Error ? error.message : "Veri bulunamadı"}
         </div>
       </div>
     );
   }
 
+  const getDescription = () => {
+    if (isNewConfig) {
+      return `İş Akışı: ${workflow.product_name || workflow.product_code}`;
+    }
+    if (processConfig) {
+      return `İş Akışı: ${
+        workflow.product_name || workflow.product_code
+      } - Proses: ${processConfig.process_code || ""}`;
+    }
+    return "";
+  };
+
   return (
     <div className="container mx-auto py-4 space-y-6">
-      <PageHeader
-        title={
-          isNewConfig
-            ? "Proses Konfigürasyonu Ekle"
-            : "Proses Konfigürasyonu Düzenle"
-        }
-        description={`İş Akışı Prosesi: ${processConfig?.process_code} - ${processConfig?.process_name}`}
-        showBackButton
-        onBack={() => router.push(`/workflow-cards/${workflowId}`)}
-      />
+      <div className="flex justify-between items-start">
+        <PageHeader
+          title={
+            isNewConfig
+              ? "Yeni Proses Konfigürasyonu"
+              : "Proses Konfigürasyonu Düzenle"
+          }
+          description={getDescription()}
+          showBackButton
+        />
+        {!isNewConfig && (
+          <AlertDialog
+            open={isDeleteDialogOpen}
+            onOpenChange={setIsDeleteDialogOpen}
+          >
+            <AlertDialogTrigger asChild>
+              <Button variant="destructive" size="sm">
+                <Trash2 className="h-4 w-4 mr-2" />
+                Sil
+              </Button>
+            </AlertDialogTrigger>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>Proses Konfigürasyonunu Sil</AlertDialogTitle>
+                <AlertDialogDescription>
+                  Bu proses konfigürasyonunu silmek istediğinizden emin misiniz?
+                  Bu işlem geri alınamaz.
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel>İptal</AlertDialogCancel>
+                <AlertDialogAction
+                  onClick={handleDelete}
+                  className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                  disabled={isDeleting}
+                >
+                  {isDeleting ? "Siliniyor..." : "Sil"}
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
+        )}
+      </div>
 
       <ProcessConfigForm
         workflowProcessId={workflowId}

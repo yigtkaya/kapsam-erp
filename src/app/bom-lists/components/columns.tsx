@@ -23,14 +23,14 @@ export const columns: ColumnDef<BOM>[] = [
       </Badge>
     ),
   },
-  {
-    header: "Onaylayan",
-    accessorKey: "approved_by",
-    cell: ({ row }) =>
-      row.original.approved_by
-        ? `${row.original.approved_by.first_name} ${row.original.approved_by.last_name}`
-        : "-",
-  },
+  // {
+  //   header: "Onaylayan",
+  //   accessorKey: "approved_by",
+  //   cell: ({ row }) =>
+  //     row.original.approved_by
+  //       ? `${row.original.approved_by.first_name} ${row.original.approved_by.last_name}`
+  //       : "-",
+  // },
   {
     header: "Onay Tarihi",
     accessorKey: "approved_at",

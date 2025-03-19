@@ -1,5 +1,6 @@
 "use server";
 
+import { BOM, BomRequest } from "@/types/manufacture";
 import { revalidatePath } from "next/cache";
 import { cookies, headers } from "next/headers";
 
@@ -55,7 +56,7 @@ export async function fetchBOMs(): Promise<BOM[]> {
   return await response.json();
 }
 
-export async function createBOM(data: CreateBOMRequest) {
+export async function createBOM(data: BomRequest) {
   const headers = await getAuthHeaders();
 
   console.log(data);

@@ -3,7 +3,6 @@
 import { Metadata } from "next";
 import { PageHeader } from "@/components/ui/page-header";
 import { ProcessForm } from "../../components/process-form";
-import { fetchProcess } from "@/api/manufacturing";
 import { notFound, useParams } from "next/navigation";
 import { useProcess } from "@/hooks/useManufacturing";
 

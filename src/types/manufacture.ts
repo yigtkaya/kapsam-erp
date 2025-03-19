@@ -1,3 +1,6 @@
+import { User } from "./auth";
+import { Product } from "./inventory";
+
 // Enums
 export enum AxisCount {
   NINE_AXIS = "9EKSEN",
@@ -70,6 +73,46 @@ export interface BaseModel {
   id: number;
   created_at: string;
   updated_at: string;
+}
+
+export interface CreateBOMComponentRequest {
+  bom: number;
+  sequence_order: number;
+  quantity: string;
+  product: number;
+  lead_time_days?: number | null;
+  notes?: string | null;
+}
+
+export interface BomRequest {
+  product: string;
+  version: string;
+  is_active: boolean;
+}
+
+export interface BOM extends BaseModel {
+  product: Product;
+  version: string;
+  is_active: boolean;
+  is_approved: boolean;
+  approved_by: User | null;
+  approved_at: string | null;
+  parent_bom: number | null;
+  notes: string | null;
+  components?: BOMComponent[];
+  modified_at?: string;
+}
+
+export interface BOMComponent extends BaseModel {
+  bom: number;
+  sequence_order: number;
+  quantity: string;
+  product?: number | null;
+  product_code?: string;
+  product_name?: string;
+  product_type?: ProductType;
+  lead_time_days: number | null;
+  notes: string | null;
 }
 
 // Main interfaces

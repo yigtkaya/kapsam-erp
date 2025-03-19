@@ -1,5 +1,3 @@
-"use client";
-
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   createBOM,
@@ -8,7 +6,7 @@ import {
   fetchBOMs,
   updateBOM,
 } from "@/api/boms";
-import { BomRequest, CreateBOMRequest } from "@/types/manufacture";
+import { BomRequest } from "@/types/manufacture";
 
 export function useBOMs() {
   return useQuery({
@@ -27,7 +25,7 @@ export function useBOM(id: number) {
 export function useCreateBOM() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (data: CreateBOMRequest) => createBOM(data),
+    mutationFn: (data: BomRequest) => createBOM(data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["boms"] });
     },

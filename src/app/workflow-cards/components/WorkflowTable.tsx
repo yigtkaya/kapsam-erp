@@ -32,6 +32,10 @@ const columns: ColumnDef<WorkflowTableRow>[] = [
     id: "expander",
     header: () => null,
     cell: ({ row }) => {
+      if (!row.original.processes?.length) {
+        return null;
+      }
+
       return (
         <Button
           variant="ghost"
@@ -48,15 +52,15 @@ const columns: ColumnDef<WorkflowTableRow>[] = [
   },
   {
     accessorKey: "product_code",
-    header: "Ürün Kodu",
+    header: "Stok Kodu",
   },
   {
     accessorKey: "product_name",
-    header: "Ürün Adı",
+    header: "Stok Adı",
   },
   {
     accessorKey: "workflow_id",
-    header: "İş Akışı ID",
+    header: "İş Akış Kart No",
   },
   {
     accessorKey: "version",
@@ -85,7 +89,8 @@ const columns: ColumnDef<WorkflowTableRow>[] = [
 
 const processColumns = [
   { id: "id", header: "ID" },
-  { id: "operation_no", header: "Operasyon No" },
+  { id: "operation_code", header: "Operasyon No" },
+  { id: "stock_code", header: "Stok Kodu" },
   { id: "operation_name", header: "Operasyon Adı" },
   { id: "machine_type", header: "Makine Tipi" },
   { id: "version", header: "Versiyon" },
@@ -117,13 +122,19 @@ export function WorkflowTable({ data }: WorkflowTableProps) {
     onRowSelectionChange: setRowSelection,
   });
 
-  const renderProcessCell = (process: ProcessTableRow, columnId: string) => {
+  const renderProcessCell = (
+    process: ProcessTableRow,
+    columnId: string,
+    workflowId: number
+  ) => {
     if (columnId === "actions") {
       return (
         <Button
           variant="outline"
           size="sm"
-          onClick={() => router.push(`/process/${process.id}`)}
+          onClick={() =>
+            router.push(`/workflow-cards/${workflowId}/config/${process.id}`)
+          }
         >
           Prosese Git
         </Button>
@@ -193,7 +204,11 @@ export function WorkflowTable({ data }: WorkflowTableProps) {
                                 <TableRow key={process.id}>
                                   {processColumns.map((column) => (
                                     <TableCell key={column.id}>
-                                      {renderProcessCell(process, column.id)}
+                                      {renderProcessCell(
+                                        process,
+                                        column.id,
+                                        row.original.workflow_id
+                                      )}
                                     </TableCell>
                                   ))}
                                 </TableRow>
