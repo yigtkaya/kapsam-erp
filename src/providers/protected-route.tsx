@@ -1,3 +1,9 @@
+/**
+ * @deprecated This component is deprecated and will be removed.
+ * We are now using Next.js middleware and route groups for authentication.
+ * See middleware.ts and src/app/(protected)/layout.tsx
+ */
+
 "use client";
 
 import { useAuth } from "@/hooks/use-auth";

@@ -217,11 +217,17 @@ export default function SidebarDesktop({
   );
 }
 
-export const hasSidebarAccess = (
-  userRole: UserRole,
-  moduleRoles?: UserRole[]
-) => {
-  if (userRole === "ADMIN") return true;
-  if (!moduleRoles) return false;
-  return moduleRoles.includes(userRole);
-};
+export function hasSidebarAccess(userRole: UserRole, moduleRoles?: UserRole[]) {
+  // If user role is undefined/null, deny access
+  if (!userRole) return false;
+
+  // Check for ADMIN role (case insensitive)
+  if (userRole === "ADMIN" || userRole.toUpperCase() === "ADMIN") return true;
+
+  // If module has no roles, deny access
+  if (!moduleRoles || moduleRoles.length === 0) return false;
+
+  // Case insensitive role check
+  const normalizedUserRole = userRole.toUpperCase();
+  return moduleRoles.some((role) => role.toUpperCase() === normalizedUserRole);
+}

@@ -141,7 +141,7 @@ export async function fetchProduct({ id }: ProductParams): Promise<Product> {
   return data;
 }
 
-export const createProduct = async (product: Product) => {
+export async function createProduct(product: Product){
   const cookieStore = await cookies();
   const rawCSRFCookie = cookieStore.get("csrftoken")?.value || "";
   const sessionid = cookieStore.get("sessionid")?.value;
@@ -193,7 +193,7 @@ export const createProduct = async (product: Product) => {
   };
 };
 
-export const updateProduct = async (product: Product) => {
+export async function updateProduct(product: Product){
   const cookieStore = await cookies();
   const rawCSRFCookie = cookieStore.get("csrftoken")?.value || "";
   const sessionid = cookieStore.get("sessionid")?.value;
@@ -246,10 +246,10 @@ export const updateProduct = async (product: Product) => {
   };
 };
 
-export const createTechnicalDrawing = async (
+export async function createTechnicalDrawing(
   technicalDrawing: TechnicalDrawing,
   product_id: number
-) => {
+){
   const cookieStore = await cookies();
   const rawCSRFCookie = cookieStore.get("csrftoken")?.value || "";
   const sessionid = cookieStore.get("sessionid")?.value;
@@ -298,7 +298,7 @@ export const createTechnicalDrawing = async (
   return data;
 };
 
-export const deleteProduct = async (id: number) => {
+export async function deleteProduct(id: number){
   const cookieStore = await cookies();
   const rawCSRFCookie = cookieStore.get("csrftoken")?.value || "";
   const sessionid = cookieStore.get("sessionid")?.value;

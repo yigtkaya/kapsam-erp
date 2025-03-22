@@ -4,12 +4,12 @@ import {
   fetchRawMaterials,
   fetchRawMaterial,
   fetchUnitOfMeasures,
-} from "@/app/warehouse/raw-materials/api/fetch";
+} from "@/app/(protected)/warehouse/raw-materials/api/fetch";
 import {
   createRawMaterial,
   deleteRawMaterial,
   updateRawMaterial,
-} from "@/app/warehouse/raw-materials/api/post";
+} from "@/app/(protected)/warehouse/raw-materials/api/post";
 
 interface UseRawMaterialsParams {
   category?: string;

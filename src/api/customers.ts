@@ -1,6 +1,7 @@
 "use server";
 
 import { cookies } from "next/headers";
+import { fetchApi } from "./api-helpers";
 
 const API_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
 
@@ -23,13 +24,7 @@ async function getAuthHeaders() {
   };
 }
 
-export const getCustomers = async () => {
-  const response = await fetch(`${API_URL}/api/customers/`, {
-    method: "GET",
-    headers: await getAuthHeaders(),
-  });
-  if (!response.ok) {
-    throw new Error("Failed to fetch customers");
-  }
-  return response.json();
-};
+// Changed from const arrow function to regular async function
+export async function getCustomers() {
+  return fetchApi("/api/customers/");
+}

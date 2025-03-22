@@ -906,7 +906,7 @@ export default function SalesOrderDetailPage() {
 
   const { data: order, isLoading, error } = useSalesOrder(orderId);
   const { mutate: updateOrder, isPending: isUpdating } = useUpdateSalesOrder();
-  const { data: customers = [], isLoading: isLoadingCustomers } =
+  const { data: customers = [] as Customer[], isLoading: isLoadingCustomers } =
     useCustomers();
 
   const form = useForm<z.infer<typeof formSchema>>({

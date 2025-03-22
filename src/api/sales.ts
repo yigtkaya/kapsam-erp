@@ -31,7 +31,7 @@ async function getAuthHeaders() {
   };
 }
 
-export const getSalesOrders = async (params?: Record<string, any>) => {
+export async function getSalesOrders(params?: Record<string, any>) {
   const queryString = params
     ? `?${new URLSearchParams(params).toString()}`
     : "";
@@ -48,48 +48,38 @@ export const getSalesOrders = async (params?: Record<string, any>) => {
   const responseData = await response.json();
   console.log(responseData);
   return responseData;
-};
+}
 
-export const getSalesOrder = async (orderId: string): Promise<SalesOrder> => {
+export async function getSalesOrder(orderId: string): Promise<SalesOrder> {
   const response = await fetch(`${API_URL}/api/sales/orders/${orderId}/`, {
     method: "GET",
     headers: await getAuthHeaders(),
   });
 
-  console.log(response);
-
   if (!response.ok) {
-    console.log(await response.json());
     throw new Error("Failed to fetch sales order");
   }
 
-  const responseData = await response.json();
-  console.log(responseData);
+  return response.json();
+}
 
-  return responseData;
-};
-
-export const createSalesOrder = async (
+export async function createSalesOrder(
   data: CreateSalesOrderRequest
-): Promise<SalesOrder> => {
-  console.log(data);
+): Promise<SalesOrder> {
   const response = await fetch(`${API_URL}/api/sales/orders/`, {
     method: "POST",
     headers: await getAuthHeaders(),
     body: JSON.stringify(data),
   });
 
-  console.log(response);
-  const responseData = await response.json();
   if (!response.ok) {
-    console.log(responseData);
     throw new Error("Failed to create sales order");
   }
 
-  return responseData;
-};
+  return response.json();
+}
 
-export const deleteSalesOrder = async (orderId: string) => {
+export async function deleteSalesOrder(orderId: string) {
   const response = await fetch(`${API_URL}/api/sales/orders/${orderId}/`, {
     method: "DELETE",
     headers: await getAuthHeaders(),
@@ -98,76 +88,45 @@ export const deleteSalesOrder = async (orderId: string) => {
   if (!response.ok) {
     throw new Error("Failed to delete sales order");
   }
+}
 
-  // Don't return anything for 204 responses
-  return;
-};
-
-export const updateSalesOrder = async (
+export async function updateSalesOrder(
   orderId: string,
   data: Partial<{
     status: string;
     customer: number;
   }>
-) => {
-  console.log(data);
+) {
   const response = await fetch(`${API_URL}/api/sales/orders/${orderId}/`, {
     method: "PATCH",
     headers: await getAuthHeaders(),
     body: JSON.stringify(data),
   });
 
-  console.log(response);
-
   if (!response.ok) {
-    console.log(await response.json());
-    console.log(response.statusText);
-    console.log(response.status);
     throw new Error("Failed to update sales order");
   }
 
-  const responseData = await response.json();
-  console.log(responseData);
-  return responseData;
-};
+  return response.json();
+}
 
-export const createShipment = async (data: CreateShipmentRequest) => {
-  console.log("Creating shipment with data:", data);
+export async function createShipment(data: CreateShipmentRequest) {
+  const response = await fetch(`${API_URL}/api/sales/shipments/`, {
+    method: "POST",
+    headers: await getAuthHeaders(),
+    body: JSON.stringify(data),
+  });
 
-  try {
-    const response = await fetch(
-      `${API_URL}/api/sales/orders/${data.order}/shipments/`,
-      {
-        method: "POST",
-        headers: await getAuthHeaders(),
-        body: JSON.stringify(data),
-      }
-    );
-
-    const responseData = await response.json();
-
-    if (!response.ok) {
-      // Throw error with response data for better error handling
-      console.log(responseData);
-      throw {
-        message: "Failed to create shipment",
-        response: {
-          status: response.status,
-          data: responseData,
-        },
-      };
-    }
-
-    return responseData;
-  } catch (error) {
-    console.error("Shipment creation error:", error);
-    throw error;
+  if (!response.ok) {
+    throw new Error("Failed to create shipment");
   }
-};
 
-export const deleteShipment = async (shipmentId: string, order_id: number) => {
+  return response.json();
+}
+
+export async function deleteShipment(shipmentId: string, order_id: number) {
   const response = await fetch(
-    `${API_URL}/api/sales/orders/${order_id}/shipments/${shipmentId}/`,
+    `${API_URL}/api/sales/shipments/${shipmentId}/`,
     {
       method: "DELETE",
       headers: await getAuthHeaders(),
@@ -175,13 +134,9 @@ export const deleteShipment = async (shipmentId: string, order_id: number) => {
   );
 
   if (!response.ok) {
-    const errorData = await response.json().catch(() => null);
-    throw new Error(errorData?.message || "Failed to delete shipment");
+    throw new Error("Failed to delete shipment");
   }
-
-  // Return true for successful deletion (204 No Content)
-  return true;
-};
+}
 
 interface CreateOrderShipmentRequest {
   shipping_date: string;
@@ -209,12 +164,12 @@ interface CreateOrderShipmentResponse {
   shipping_note: string | null;
 }
 
-export const createOrderShipment = async (
+export async function createOrderShipment(
   orderId: string,
   data: CreateOrderShipmentRequest
-): Promise<CreateOrderShipmentResponse> => {
+): Promise<CreateOrderShipmentResponse> {
   const response = await fetch(
-    `${API_URL}/api/sales/orders/${orderId}/create-shipment/`,
+    `${API_URL}/api/sales/orders/${orderId}/shipments/`,
     {
       method: "POST",
       headers: await getAuthHeaders(),
@@ -222,21 +177,17 @@ export const createOrderShipment = async (
     }
   );
 
-  const responseData = await response.json();
-
   if (!response.ok) {
-    console.error("Failed to create shipment:", responseData);
-    throw new Error("Failed to create shipment");
+    throw new Error("Failed to create order shipment");
   }
 
-  return responseData;
-};
+  return response.json();
+}
 
-// Add new sales order item
-export const createSalesOrderItem = async (
+export async function createSalesOrderItem(
   orderId: string,
   data: Omit<SalesOrderItem, "id" | "product_details">
-): Promise<SalesOrderItem> => {
+): Promise<SalesOrderItem> {
   const response = await fetch(
     `${API_URL}/api/sales/orders/${orderId}/items/`,
     {
@@ -246,17 +197,13 @@ export const createSalesOrderItem = async (
     }
   );
 
-  const responseData = await response.json();
-
   if (!response.ok) {
-    console.error("Failed to create sales order item:", responseData);
     throw new Error("Failed to create sales order item");
   }
 
-  return responseData;
-};
+  return response.json();
+}
 
-// Add this type definition at the top of the file, after the imports
 export interface SalesOrderItemUpdate {
   id: number;
   ordered_quantity?: number;
@@ -265,59 +212,37 @@ export interface SalesOrderItemUpdate {
   kapsam_deadline_date?: string;
 }
 
-// Then update the function
-export const updateSaleOrderItems = async (
+export async function updateSaleOrderItems(
   orderId: string,
   data: SalesOrderItemUpdate[]
-) => {
-  // Format the items according to the new API requirements
-  const formattedItems = data.map((item) => ({
-    id: item.id,
-    ordered_quantity: item.ordered_quantity,
-    deadline_date: item.deadline_date,
-    receiving_date: item.receiving_date,
-    kapsam_deadline_date: item.kapsam_deadline_date,
-  }));
-
-  // Remove undefined values from each item
-  const cleanedItems = formattedItems.map((item) =>
-    Object.fromEntries(
-      Object.entries(item).filter(([_, value]) => value !== undefined)
-    )
+) {
+  const response = await fetch(
+    `${API_URL}/api/sales/orders/${orderId}/items/batch-update/`,
+    {
+      method: "PATCH",
+      headers: await getAuthHeaders(),
+      body: JSON.stringify(data),
+    }
   );
 
-  const requestBody = {
-    items: cleanedItems,
-  };
-
-  try {
-    const response = await fetch(
-      `${API_URL}/api/sales/orders/${orderId}/items/batch-update/`,
-      {
-        method: "PATCH",
-        headers: await getAuthHeaders(),
-        body: JSON.stringify(requestBody),
-      }
+  if (!response.ok) {
+    // Log the error response and throw a meaningful error
+    const errorText = await response.text();
+    console.error("Failed to update sale order items:", errorText);
+    throw new Error(
+      `Failed to update sale order items: ${response.status} ${
+        response.statusText
+      }. Details: ${errorText ? errorText : "No error details available"}`
     );
-
-    if (!response.ok) {
-      const errorData = await response.json();
-      console.error("Failed to update sales order items:", errorData);
-      throw new Error(JSON.stringify(errorData));
-    }
-
-    return await response.json();
-  } catch (error) {
-    console.error("Error updating items:", error);
-    throw error;
   }
-};
 
-// Delete sales order item
-export const deleteSalesOrderItem = async (
+  return response.json();
+}
+
+export async function deleteSalesOrderItem(
   orderId: string,
   itemId: number
-): Promise<void> => {
+): Promise<void> {
   const response = await fetch(
     `${API_URL}/api/sales/orders/${orderId}/items/${itemId}/`,
     {
@@ -327,15 +252,15 @@ export const deleteSalesOrderItem = async (
   );
 
   if (!response.ok) {
-    console.error("Failed to delete sales order item");
     throw new Error("Failed to delete sales order item");
   }
-};
+}
 
-export const fetchSalesOrderItems = async (orderId: string) => {
+export async function fetchSalesOrderItems(orderId: string) {
   const response = await fetch(
     `${API_URL}/api/sales/orders/${orderId}/items/`,
     {
+      method: "GET",
       headers: await getAuthHeaders(),
     }
   );
@@ -345,10 +270,9 @@ export const fetchSalesOrderItems = async (orderId: string) => {
   }
 
   return response.json();
-};
+}
 
-// Batch create sales order items
-export const batchCreateSalesOrderItems = async (
+export async function batchCreateSalesOrderItems(
   orderId: string,
   items: Array<
     Omit<
@@ -356,22 +280,19 @@ export const batchCreateSalesOrderItems = async (
       "id" | "product_details" | "order_id" | "fulfilled_quantity"
     >
   >
-): Promise<SalesOrderItem[]> => {
+): Promise<SalesOrderItem[]> {
   const response = await fetch(
     `${API_URL}/api/sales/orders/${orderId}/items/batch-create/`,
     {
       method: "POST",
       headers: await getAuthHeaders(),
-      body: JSON.stringify({ items }),
+      body: JSON.stringify(items),
     }
   );
 
-  const responseData = await response.json();
-
   if (!response.ok) {
-    console.error("Failed to batch create sales order items:", responseData);
-    throw new Error(JSON.stringify(responseData));
+    throw new Error("Failed to batch create sales order items");
   }
 
-  return responseData;
-};
+  return response.json();
+}

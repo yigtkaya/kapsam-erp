@@ -9,7 +9,6 @@ import {
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Trash2 } from "lucide-react";
-import { toast } from "sonner";
 import {
   useUpdateComponent,
   useDeleteComponent,

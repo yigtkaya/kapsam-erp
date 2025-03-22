@@ -251,9 +251,49 @@ export function DashboardModules() {
   const { user } = useAuth();
   const userRole = user?.role as UserRole;
 
+  console.log("DashboardModules - User:", user);
+  console.log("DashboardModules - User Role:", userRole, typeof userRole);
+
+  // Log all the available modules and their required roles before filtering
+  console.log(
+    "DashboardModules - Available modules:",
+    modules.map((m) => ({
+      title: m.title,
+      roles: m.roles,
+    }))
+  );
+
   const filteredModules = modules.filter((module) =>
     hasModuleAccess(userRole, module.roles as UserRole[])
   );
+
+  console.log(
+    "DashboardModules - Filtered Modules Count:",
+    filteredModules.length
+  );
+  console.log("DashboardModules - Filtered Modules:", filteredModules);
+
+  // If no modules are available for this user
+  if (filteredModules.length === 0) {
+    return (
+      <div className="bg-white rounded-lg p-8 shadow-sm">
+        <div className="text-center py-10">
+          <h3 className="text-xl font-medium text-gray-900 mb-4">
+            Erişilebilir modül bulunamadı
+          </h3>
+          <p className="text-gray-600 mb-6">
+            Hesabınıza atanmış herhangi bir modül bulunmamaktadır. Sistem
+            yöneticinizle iletişime geçin.
+          </p>
+          <div className="text-sm text-gray-500">
+            Kullanıcı: {user?.username || "Unknown"}
+            <br />
+            Rol: {userRole || "Rol bulunamadı"}
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -295,7 +335,33 @@ export const hasModuleAccess = (
   userRole: UserRole,
   moduleRoles?: UserRole[]
 ) => {
-  if (userRole === "ADMIN") return true;
-  if (!moduleRoles) return false;
-  return moduleRoles.includes(userRole);
+  console.log("Checking access - User Role:", userRole);
+  console.log("Checking access - Module Roles:", moduleRoles);
+
+  // If the user role is undefined/null, deny access
+  if (!userRole) {
+    console.log("Access denied - No user role");
+    return false;
+  }
+
+  // Check for string equality with "ADMIN" in case the role is coming as a string and not a proper enum
+  if (userRole === "ADMIN" || userRole.toUpperCase() === "ADMIN") {
+    console.log("Access granted - User is ADMIN");
+    return true;
+  }
+
+  // If module has no roles specified or is empty array, nobody has access
+  if (!moduleRoles || moduleRoles.length === 0) {
+    console.log("Access denied - No module roles specified");
+    return false;
+  }
+
+  // Check if user's role is in the module roles (case insensitive)
+  const normalizedUserRole = userRole.toUpperCase();
+  const hasAccess = moduleRoles.some(
+    (role) => role.toUpperCase() === normalizedUserRole
+  );
+
+  console.log("Access result:", hasAccess);
+  return hasAccess;
 };

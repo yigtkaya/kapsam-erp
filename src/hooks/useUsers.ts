@@ -5,7 +5,7 @@ import {
   getUsers,
   updateUser,
   updateUserRole,
-} from "@/app/admin/users/actions";
+} from "@/app/(protected)/admin/users/actions";
 import { User } from "@/types/user";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 

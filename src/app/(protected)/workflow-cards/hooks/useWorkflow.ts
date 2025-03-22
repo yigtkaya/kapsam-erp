@@ -8,7 +8,7 @@ import {
   deleteWorkflow,
   activateWorkflow,
   createNewWorkflowVersion,
-} from "@/app/workflow-cards/api/workflows";
+} from "@/app/(protected)/workflow-cards/api/workflows";
 
 export function useWorkflows() {
   return useQuery<ProductWorkflow[]>({

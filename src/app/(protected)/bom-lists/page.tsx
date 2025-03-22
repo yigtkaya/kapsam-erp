@@ -7,7 +7,7 @@ import Link from "next/link";
 import { useBOMs } from "@/hooks/useBOMs";
 import { useSearchParams, useRouter, usePathname } from "next/navigation";
 import { useCallback, useMemo } from "react";
-import { BOMView } from "@/app/bom-lists/components/bom-view";
+import { BOMView } from "@/app/(protected)/bom-lists/components/bom-view";
 
 const PAGE_SIZE = 50;
 

@@ -4,9 +4,9 @@ import { useParams, useRouter } from "next/navigation";
 import { PageHeader } from "@/components/ui/page-header";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ProcessConfigForm } from "../../../components/process-config-form";
-import { useWorkflow } from "@/app/workflow-cards/hooks/useWorkflow";
-import { useProcessConfig } from "@/app/workflow-cards/hooks/useProcessConfig";
-import { useDeleteProcessConfig } from "@/app/workflow-cards/hooks/useProcessConfig";
+import { useWorkflow } from "@/app/(protected)/workflow-cards/hooks/useWorkflow";
+import { useProcessConfig } from "@/app/(protected)/workflow-cards/hooks/useProcessConfig";
+import { useDeleteProcessConfig } from "@/app/(protected)/workflow-cards/hooks/useProcessConfig";
 import { Button } from "@/components/ui/button";
 import { Trash2 } from "lucide-react";
 import {

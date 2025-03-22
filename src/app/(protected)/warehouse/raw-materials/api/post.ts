@@ -5,7 +5,7 @@ import { cookies } from "next/headers";
 
 const API_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
 
-export const createRawMaterial = async (rawMaterial: RawMaterial) => {
+export async function createRawMaterial(rawMaterial: RawMaterial){
   const cookieStore = await cookies();
   const rawCSRFCookie = cookieStore.get("csrftoken")?.value || "";
   const sessionid = cookieStore.get("sessionid")?.value;
@@ -54,7 +54,7 @@ export const createRawMaterial = async (rawMaterial: RawMaterial) => {
   return data;
 };
 
-export const updateRawMaterial = async (rawMaterial: RawMaterial) => {
+export async function updateRawMaterial(rawMaterial: RawMaterial){
   const cookieStore = await cookies();
   const rawCSRFCookie = cookieStore.get("csrftoken")?.value || "";
   const sessionid = cookieStore.get("sessionid")?.value;
@@ -93,7 +93,7 @@ export const updateRawMaterial = async (rawMaterial: RawMaterial) => {
   return data;
 };
 
-export const deleteRawMaterial = async (id: number) => {
+export async function deleteRawMaterial(id: number){
   const cookieStore = await cookies();
   const rawCSRFCookie = cookieStore.get("csrftoken")?.value || "";
   const sessionid = cookieStore.get("sessionid")?.value;

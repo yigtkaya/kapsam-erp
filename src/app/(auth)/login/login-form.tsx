@@ -22,7 +22,13 @@ export default function LoginForm() {
     setIsLoading(true);
 
     try {
+      console.log("LoginForm - Submitting login form");
       const data = await login(username, password);
+      console.log("LoginForm - Login response:", {
+        success: data.success,
+        hasUser: !!data.user,
+        error: data.error,
+      });
 
       if (data.error) {
         toast.error(data.error);
@@ -33,16 +39,25 @@ export default function LoginForm() {
       toast.success("Başarıyla giriş yapıldı");
 
       // Add a small delay to ensure cookies are properly set
-      await new Promise((resolve) => setTimeout(resolve, 200));
+      await new Promise((resolve) => setTimeout(resolve, 300));
 
       // Force a router refresh to update server state
       router.refresh();
+      console.log("LoginForm - Router refreshed");
 
       // Redirect to callback URL if exists, otherwise go to dashboard
       const params = new URLSearchParams(window.location.search);
       const callbackUrl = params.get("callbackUrl") ?? "/dashboard";
-      window.location.href = callbackUrl;
+      console.log("LoginForm - Redirecting to:", callbackUrl);
+
+      // Try both approaches to ensure the redirect happens
+      router.push(callbackUrl);
+      // As a fallback, also use direct navigation
+      setTimeout(() => {
+        window.location.href = callbackUrl;
+      }, 200);
     } catch (error) {
+      console.error("LoginForm - Login error:", error);
       if (error instanceof Error) {
         toast.error(error.message);
       } else {

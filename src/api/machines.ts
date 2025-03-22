@@ -52,7 +52,7 @@ export async function fetchMachine(id: string): Promise<Machine> {
   return response.json();
 }
 
-export const createMachine = async (machine: Machine) => {
+export async function createMachine(machine: Machine){
   const cookieStore = await cookies();
   const rawCSRFCookie = cookieStore.get("csrftoken")?.value || "";
   const sessionid = cookieStore.get("sessionid")?.value;
@@ -96,7 +96,7 @@ export const createMachine = async (machine: Machine) => {
   };
 };
 
-export const updateMachine = async (machine: Machine) => {
+export async function updateMachine(machine: Machine){
   const cookieStore = await cookies();
   const rawCSRFCookie = cookieStore.get("csrftoken")?.value || "";
   const sessionid = cookieStore.get("sessionid")?.value;
@@ -135,7 +135,7 @@ export const updateMachine = async (machine: Machine) => {
   };
 };
 
-export const deleteMachine = async (id: number) => {
+export async function deleteMachine(id: number){
   const cookieStore = await cookies();
   const rawCSRFCookie = cookieStore.get("csrftoken")?.value || "";
   const sessionid = cookieStore.get("sessionid")?.value;
