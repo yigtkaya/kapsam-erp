@@ -58,6 +58,8 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { CreateProductDialog } from "@/components/dialogs/create-product-dialog";
+import { Product } from "@/types/inventory";
 
 const formSchema = z.object({
   order_number: z.string().min(1, "Sipariş numarası zorunludur"),
@@ -102,6 +104,8 @@ export default function NewSalesOrderPage() {
   }>({});
   const [customerSearchQuery, setCustomerSearchQuery] = useState("");
   const [productSearchQuery, setProductSearchQuery] = useState("");
+  const [newlyCreatedProduct, setNewlyCreatedProduct] =
+    useState<Product | null>(null);
 
   const handleProductOpenChange = (index: number, isOpen: boolean) => {
     setProductOpenStates((prev) => ({ ...prev, [index]: isOpen }));
@@ -173,6 +177,30 @@ export default function NewSalesOrderPage() {
       toast.error("Satış siparişi oluşturulamadı");
     }
   }
+
+  // Handler for when a new product is created
+  const handleProductCreated = (product: Product) => {
+    // Set the newly created product to use in the UI
+    setNewlyCreatedProduct(product);
+
+    // Find the currently active product field
+    const activeFieldIndex = Object.keys(productOpenStates).find(
+      (key) => productOpenStates[Number(key)] === true
+    );
+
+    if (activeFieldIndex) {
+      // Set the value for this field - convert string to number for type safety
+      // Add { shouldValidate: false } to prevent validation errors from showing
+      form.setValue(
+        `items.${Number(activeFieldIndex)}.product` as const,
+        product.id,
+        { shouldValidate: false }
+      );
+
+      // Close the product popover
+      handleProductOpenChange(Number(activeFieldIndex), false);
+    }
+  };
 
   return (
     <div className="min-h-screen bg-gray-50/40">
@@ -340,24 +368,31 @@ export default function NewSalesOrderPage() {
                 <div className="p-6">
                   <div className="flex justify-between items-center mb-4">
                     <h3 className="text-lg font-medium ">Sipariş Kalemleri</h3>
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="sm"
-                      className="mt-2"
-                      onClick={() =>
-                        append({
-                          product: 0,
-                          ordered_quantity: 1,
-                          deadline_date: "",
-                          kapsam_deadline_date: "",
-                          receiving_date: "",
-                        })
-                      }
-                    >
-                      <Plus className="mr-2 h-4 w-4" />
-                      Yeni Kalem Ekle
-                    </Button>
+                    <div className="flex gap-2">
+                      <CreateProductDialog
+                        triggerButtonLabel="Yeni Ürün"
+                        defaultProductType="MONTAGED"
+                        onProductCreated={handleProductCreated}
+                      />
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        className="gap-1"
+                        onClick={() =>
+                          append({
+                            product: 0,
+                            ordered_quantity: 1,
+                            deadline_date: "",
+                            kapsam_deadline_date: "",
+                            receiving_date: "",
+                          })
+                        }
+                      >
+                        <Plus className="h-4 w-4" />
+                        Kalem Ekle
+                      </Button>
+                    </div>
                   </div>
 
                   <Table className="mb-4">
@@ -384,8 +419,9 @@ export default function NewSalesOrderPage() {
                               name={`items.${index}.product`}
                               render={({ field }) => (
                                 <FormItem>
+                                  <FormLabel>Ürün</FormLabel>
                                   <Popover
-                                    open={productOpenStates[index]}
+                                    open={productOpenStates[index] || false}
                                     onOpenChange={(isOpen) =>
                                       handleProductOpenChange(index, isOpen)
                                     }
@@ -402,13 +438,14 @@ export default function NewSalesOrderPage() {
                                               "text-muted-foreground"
                                           )}
                                         >
-                                          {field.value
-                                            ? products?.find(
+                                          {field.value ===
+                                          newlyCreatedProduct?.id
+                                            ? newlyCreatedProduct.product_name
+                                            : products?.find(
                                                 (product) =>
                                                   product.id ===
                                                   Number(field.value)
-                                              )?.product_name
-                                            : "Ürün seçin"}
+                                              )?.product_name || "Ürün seçin"}
                                           <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                                         </Button>
                                       </FormControl>

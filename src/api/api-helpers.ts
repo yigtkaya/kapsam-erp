@@ -25,19 +25,55 @@ type RequestOptions = {
 };
 
 /**
+ * Get authentication headers from cookies
+ */
+import { cookies } from "next/headers";
+
+async function getAuthHeaders(): Promise<Record<string, string>> {
+  const cookieStore = await cookies();
+  const rawCSRFCookie = cookieStore.get("csrftoken")?.value || "";
+  const sessionid = cookieStore.get("sessionid")?.value;
+
+  // Extract the token value from the raw cookie string
+  const tokenMatch = rawCSRFCookie.match(/csrftoken=([^;]+)/);
+  const csrftoken = tokenMatch ? tokenMatch[1] : rawCSRFCookie;
+
+  const headers: Record<string, string> = {
+    "Content-Type": "application/json",
+  };
+
+  // Add CSRF token if available
+  if (csrftoken) {
+    headers["X-CSRFToken"] = csrftoken;
+  }
+
+  // Add session cookie if available
+  if (sessionid) {
+    headers["Cookie"] = `sessionid=${sessionid}${
+      csrftoken ? `; csrftoken=${csrftoken}` : ""
+    }`;
+  }
+
+  return headers;
+}
+
+/**
  * Create standard fetch options for API calls
- * Middleware will handle authentication headers automatically
+ * Now directly adds authentication headers
  */
 export async function createFetchOptions(
   options: RequestOptions = {}
 ): Promise<RequestInit> {
   const { method = "GET", body, headers = {}, cache, next } = options;
 
+  // Get authentication headers
+  const authHeaders = await getAuthHeaders();
+
   return {
     method,
     credentials: "include",
     headers: {
-      "Content-Type": "application/json",
+      ...authHeaders,
       ...headers,
     },
     body: body ? JSON.stringify(body) : undefined,

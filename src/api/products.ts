@@ -141,7 +141,16 @@ export async function fetchProduct({ id }: ProductParams): Promise<Product> {
   return data;
 }
 
-export async function createProduct(product: Product){
+// Define the return type for product creation
+export type ProductResponse = {
+  success: boolean;
+  message: string;
+  data?: Product;
+};
+
+export async function createProduct(
+  product: Product
+): Promise<ProductResponse> {
   const cookieStore = await cookies();
   const rawCSRFCookie = cookieStore.get("csrftoken")?.value || "";
   const sessionid = cookieStore.get("sessionid")?.value;
@@ -191,9 +200,9 @@ export async function createProduct(product: Product){
     message: "Product created successfully",
     data: data,
   };
-};
+}
 
-export async function updateProduct(product: Product){
+export async function updateProduct(product: Product) {
   const cookieStore = await cookies();
   const rawCSRFCookie = cookieStore.get("csrftoken")?.value || "";
   const sessionid = cookieStore.get("sessionid")?.value;
@@ -244,12 +253,12 @@ export async function updateProduct(product: Product){
     message: "Product updated successfully",
     data: data,
   };
-};
+}
 
 export async function createTechnicalDrawing(
   technicalDrawing: TechnicalDrawing,
   product_id: number
-){
+) {
   const cookieStore = await cookies();
   const rawCSRFCookie = cookieStore.get("csrftoken")?.value || "";
   const sessionid = cookieStore.get("sessionid")?.value;
@@ -296,9 +305,9 @@ export async function createTechnicalDrawing(
 
   const data = await response.json();
   return data;
-};
+}
 
-export async function deleteProduct(id: number){
+export async function deleteProduct(id: number) {
   const cookieStore = await cookies();
   const rawCSRFCookie = cookieStore.get("csrftoken")?.value || "";
   const sessionid = cookieStore.get("sessionid")?.value;
@@ -331,4 +340,4 @@ export async function deleteProduct(id: number){
   // Otherwise, attempt to parse the JSON response
   const data = await response.json();
   return data;
-};
+}

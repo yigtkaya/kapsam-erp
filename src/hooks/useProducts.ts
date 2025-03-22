@@ -66,8 +66,16 @@ export function useCreateProduct() {
 
   return useMutation({
     mutationFn: createProduct,
-    onSuccess: () => {
+    onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ["products"] });
+
+      // If the API returns data in a nested structure, extract the product
+      if (data && typeof data === "object" && "data" in data) {
+        return data.data;
+      }
+
+      // Otherwise, return the product directly
+      return data;
     },
   });
 }

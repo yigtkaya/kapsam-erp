@@ -73,7 +73,7 @@ export async function middleware(request: NextRequest) {
   // Clone the request headers for both API and page requests
   const requestHeaders = new Headers(request.headers);
 
-  // Add auth headers to all requests
+  // Enhanced authentication header handling
   if (sessionId && csrfToken) {
     requestHeaders.set("Content-Type", "application/json");
 
@@ -82,19 +82,38 @@ export async function middleware(request: NextRequest) {
       requestHeaders.set("X-CSRFToken", csrfToken.value);
     }
 
-    // Add cookie header with session and CSRF token
-    requestHeaders.set(
-      "Cookie",
-      `sessionid=${sessionId.value}; csrftoken=${csrfToken.value}`
-    );
+    // Ensure we're properly setting the Cookie header
+    // Important: Some backends expect cookies in a specific format
+    let cookieHeader = `sessionid=${sessionId.value}`;
+    if (csrfToken?.value) {
+      cookieHeader += `; csrftoken=${csrfToken.value}`;
+    }
+
+    // Set the Cookie header with proper formatting
+    requestHeaders.set("Cookie", cookieHeader);
+
+    // Additionally set Authorization header if needed by your backend
+    // Uncomment if your backend expects this format
+    // requestHeaders.set("Authorization", `Bearer ${sessionId.value}`);
 
     if (process.env.NODE_ENV === "development") {
       console.log("Middleware - Added auth headers:", {
         method: request.method,
+        path: pathname,
         hasCsrf: !!requestHeaders.get("X-CSRFToken"),
         hasCookie: !!requestHeaders.get("Cookie"),
+        cookieValue: requestHeaders.get("Cookie")?.substring(0, 20) + "...",
       });
     }
+  }
+
+  // For API requests in development mode, log more details
+  if (isApiRequest && process.env.NODE_ENV === "development") {
+    console.log("Middleware - API Request:", {
+      method: request.method,
+      path: pathname,
+      headers: Object.fromEntries([...requestHeaders.entries()]),
+    });
   }
 
   // Return the modified request
