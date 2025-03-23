@@ -5,9 +5,11 @@ import {
   fetchShipments,
   batchUpdateShipments,
   BatchUpdateShipmentRequest,
+  deleteOrderShipment,
+  createOrderShipment,
+  CreateOrderShipmentPayload,
 } from "@/api/shipments";
-import { createShipment, deleteShipment } from "@/api/sales";
-import { CreateShipmentRequest, Shipping } from "@/types/sales";
+import { Shipping } from "@/types/sales";
 
 export function useShipment(shippingNo: string) {
   return useQuery<Shipping>({
@@ -20,64 +22,6 @@ export function useShipments(orderId: string) {
   return useQuery<Shipping[]>({
     queryKey: ["shipments", orderId],
     queryFn: () => fetchShipments(orderId),
-  });
-}
-
-export function useCreateShipment(orderId?: string) {
-  const queryClient = useQueryClient();
-
-  return useMutation<Shipping, Error, CreateShipmentRequest>({
-    mutationFn: async (data: CreateShipmentRequest) => {
-      try {
-        return await createShipment(data);
-      } catch (error) {
-        if (error instanceof Error) {
-          toast.error(error.message);
-        } else {
-          toast.error("Sevkiyat oluşturulurken bir hata oluştu");
-        }
-        throw error;
-      }
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({
-        queryKey: ["sales-orders"],
-        exact: true,
-        refetchType: "active",
-      });
-
-      if (orderId) {
-        queryClient.removeQueries({ queryKey: ["sales-order", orderId] });
-      }
-      toast.success("Sevkiyat başarıyla oluşturuldu");
-    },
-  });
-}
-
-export function useDeleteShipment(orderId: string) {
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: (shipmentId: string) =>
-      deleteShipment(shipmentId, Number(orderId)),
-    onSuccess: () => {
-      // Invalidate the shipments list for this order
-      queryClient.invalidateQueries({ queryKey: ["shipments", orderId] });
-
-      // Invalidate the specific sales order to update its state
-      queryClient.invalidateQueries({ queryKey: ["sales-order", orderId] });
-
-      // Invalidate the general sales orders list
-      queryClient.invalidateQueries({
-        queryKey: ["sales-orders"],
-        refetchType: "active",
-      });
-
-      toast.success("Sevkiyat başarıyla silindi");
-    },
-    onError: () => {
-      toast.error("Sevkiyat silinirken bir hata oluştu");
-    },
   });
 }
 
@@ -101,6 +45,86 @@ export function useBatchUpdateShipments(orderId: string) {
       queryClient.invalidateQueries({ queryKey: ["shipments", orderId] });
       queryClient.invalidateQueries({ queryKey: ["sales-order", orderId] });
       toast.success("Sevkiyatlar başarıyla güncellendi");
+    },
+  });
+}
+
+/**
+ * Hook for deleting a shipment that's associated with a specific order
+ * @param orderId - The ID of the sales order
+ */
+export function useDeleteOrderShipment(orderId: string) {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (shippingNo: string) =>
+      deleteOrderShipment(orderId, shippingNo),
+    onSuccess: () => {
+      // Force refetch the shipments list for this order to ensure latest data
+      queryClient.removeQueries({ queryKey: ["shipments", orderId] });
+      queryClient.fetchQuery({ queryKey: ["shipments", orderId] });
+
+      // Force refetch the specific sales order to update its state
+      queryClient.removeQueries({ queryKey: ["sales-order", orderId] });
+      queryClient.fetchQuery({ queryKey: ["sales-order", orderId] });
+
+      // Force refetch the general sales orders list
+      queryClient.removeQueries({ queryKey: ["sales-orders"] });
+      queryClient.fetchQuery({ queryKey: ["sales-orders"] });
+
+      toast.success("Sevkiyat başarıyla silindi");
+    },
+    onError: (error) => {
+      const errorMessage =
+        error instanceof Error
+          ? error.message
+          : "Sevkiyat silinirken bir hata oluştu";
+      toast.error(errorMessage);
+    },
+  });
+}
+
+/**
+ * Hook for creating a shipment for a specific order
+ * @param orderId - The ID of the sales order
+ */
+export function useCreateOrderShipment(orderId: string) {
+  const queryClient = useQueryClient();
+
+  return useMutation<Shipping, Error, CreateOrderShipmentPayload>({
+    mutationFn: async (data: CreateOrderShipmentPayload) => {
+      try {
+        return await createOrderShipment(orderId, data);
+      } catch (error) {
+        if (error instanceof Error) {
+          toast.error(error.message);
+        } else {
+          toast.error("Sevkiyat oluşturulurken bir hata oluştu");
+        }
+        throw error;
+      }
+    },
+    onSuccess: (data) => {
+      // Force refetch the shipments list for this order to ensure latest data
+      queryClient.removeQueries({ queryKey: ["shipments", orderId] });
+      queryClient.fetchQuery({ queryKey: ["shipments", orderId] });
+
+      // Force refetch the specific sales order to update its state
+      queryClient.removeQueries({ queryKey: ["sales-order", orderId] });
+      queryClient.fetchQuery({ queryKey: ["sales-order", orderId] });
+
+      // Force refetch the general sales orders list
+      queryClient.removeQueries({ queryKey: ["sales-orders"] });
+      queryClient.fetchQuery({ queryKey: ["sales-orders"] });
+
+      toast.success("Sevkiyat başarıyla oluşturuldu");
+    },
+    onError: (error) => {
+      const errorMessage =
+        error instanceof Error
+          ? error.message
+          : "Sevkiyat oluşturulurken bir hata oluştu";
+      toast.error(errorMessage);
     },
   });
 }

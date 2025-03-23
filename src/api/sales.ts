@@ -7,87 +7,28 @@ import {
   SalesOrderItem,
   SalesOrderStatus,
 } from "@/types/sales";
-
-import { cookies } from "next/headers";
-
-const API_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
-
-// Helper function to get cookies and headers
-async function getAuthHeaders() {
-  const cookieStore = await cookies();
-  const rawCSRFCookie = cookieStore.get("csrftoken")?.value || "";
-  const sessionid = cookieStore.get("sessionid")?.value;
-  // Extract the token value from the raw cookie string.
-  // This regex looks for `csrftoken=` followed by a group of non-semicolon characters.
-  const tokenMatch = rawCSRFCookie.match(/csrftoken=([^;]+)/);
-  const csrftoken = tokenMatch ? tokenMatch[1] : rawCSRFCookie;
-
-  return {
-    "Content-Type": "application/json",
-    "X-CSRFToken": csrftoken || "",
-    Cookie: `sessionid=${sessionid}${
-      csrftoken ? `; csrftoken=${csrftoken}` : ""
-    }`,
-  };
-}
+import { fetchApi, postApi, updateApi, deleteApi } from "./api-helpers";
 
 export async function getSalesOrders(params?: Record<string, any>) {
   const queryString = params
     ? `?${new URLSearchParams(params).toString()}`
     : "";
 
-  const response = await fetch(`${API_URL}/api/sales/orders/${queryString}`, {
-    method: "GET",
-    headers: await getAuthHeaders(),
-  });
-
-  if (!response.ok) {
-    throw new Error("Failed to fetch sales orders");
-  }
-
-  const responseData = await response.json();
-  console.log(responseData);
-  return responseData;
+  return fetchApi<SalesOrder[]>(`/api/sales/orders/${queryString}`);
 }
 
 export async function getSalesOrder(orderId: string): Promise<SalesOrder> {
-  const response = await fetch(`${API_URL}/api/sales/orders/${orderId}/`, {
-    method: "GET",
-    headers: await getAuthHeaders(),
-  });
-
-  if (!response.ok) {
-    throw new Error("Failed to fetch sales order");
-  }
-
-  return response.json();
+  return fetchApi<SalesOrder>(`/api/sales/orders/${orderId}/`);
 }
 
 export async function createSalesOrder(
   data: CreateSalesOrderRequest
 ): Promise<SalesOrder> {
-  const response = await fetch(`${API_URL}/api/sales/orders/`, {
-    method: "POST",
-    headers: await getAuthHeaders(),
-    body: JSON.stringify(data),
-  });
-
-  if (!response.ok) {
-    throw new Error("Failed to create sales order");
-  }
-
-  return response.json();
+  return postApi<SalesOrder>("/api/sales/orders/", data);
 }
 
 export async function deleteSalesOrder(orderId: string) {
-  const response = await fetch(`${API_URL}/api/sales/orders/${orderId}/`, {
-    method: "DELETE",
-    headers: await getAuthHeaders(),
-  });
-
-  if (!response.ok) {
-    throw new Error("Failed to delete sales order");
-  }
+  return deleteApi(`/api/sales/orders/${orderId}/`);
 }
 
 export async function updateSalesOrder(
@@ -97,45 +38,19 @@ export async function updateSalesOrder(
     customer: number;
   }>
 ) {
-  const response = await fetch(`${API_URL}/api/sales/orders/${orderId}/`, {
-    method: "PATCH",
-    headers: await getAuthHeaders(),
-    body: JSON.stringify(data),
-  });
-
-  if (!response.ok) {
-    throw new Error("Failed to update sales order");
-  }
-
-  return response.json();
+  return updateApi<SalesOrder>(`/api/sales/orders/${orderId}/`, data);
 }
 
 export async function createShipment(data: CreateShipmentRequest) {
-  const response = await fetch(`${API_URL}/api/sales/shipments/`, {
-    method: "POST",
-    headers: await getAuthHeaders(),
-    body: JSON.stringify(data),
-  });
-
-  if (!response.ok) {
-    throw new Error("Failed to create shipment");
-  }
-
-  return response.json();
+  return postApi<any>("/api/sales/shipments/", data);
 }
 
-export async function deleteShipment(shipmentId: string, order_id: number) {
-  const response = await fetch(
-    `${API_URL}/api/sales/shipments/${shipmentId}/`,
-    {
-      method: "DELETE",
-      headers: await getAuthHeaders(),
-    }
-  );
-
-  if (!response.ok) {
-    throw new Error("Failed to delete shipment");
-  }
+/**
+ * Delete a shipment by its ID (not associated with a specific order)
+ * @param shipmentId - The ID of the shipment to delete
+ */
+export async function deleteShipment(shipmentId: string): Promise<void> {
+  return deleteApi(`/api/sales/shipments/${shipmentId}/`);
 }
 
 interface CreateOrderShipmentRequest {
@@ -168,40 +83,17 @@ export async function createOrderShipment(
   orderId: string,
   data: CreateOrderShipmentRequest
 ): Promise<CreateOrderShipmentResponse> {
-  const response = await fetch(
-    `${API_URL}/api/sales/orders/${orderId}/shipments/`,
-    {
-      method: "POST",
-      headers: await getAuthHeaders(),
-      body: JSON.stringify(data),
-    }
+  return postApi<CreateOrderShipmentResponse>(
+    `/api/sales/orders/${orderId}/shipments/`,
+    data
   );
-
-  if (!response.ok) {
-    throw new Error("Failed to create order shipment");
-  }
-
-  return response.json();
 }
 
 export async function createSalesOrderItem(
   orderId: string,
   data: Omit<SalesOrderItem, "id" | "product_details">
 ): Promise<SalesOrderItem> {
-  const response = await fetch(
-    `${API_URL}/api/sales/orders/${orderId}/items/`,
-    {
-      method: "POST",
-      headers: await getAuthHeaders(),
-      body: JSON.stringify(data),
-    }
-  );
-
-  if (!response.ok) {
-    throw new Error("Failed to create sales order item");
-  }
-
-  return response.json();
+  return postApi<SalesOrderItem>(`/api/sales/orders/${orderId}/items/`, data);
 }
 
 export interface SalesOrderItemUpdate {
@@ -216,60 +108,21 @@ export async function updateSaleOrderItems(
   orderId: string,
   data: SalesOrderItemUpdate[]
 ) {
-  const response = await fetch(
-    `${API_URL}/api/sales/orders/${orderId}/items/batch-update/`,
-    {
-      method: "PATCH",
-      headers: await getAuthHeaders(),
-      body: JSON.stringify(data),
-    }
+  return updateApi<SalesOrderItem[]>(
+    `/api/sales/orders/${orderId}/items/batch-update/`,
+    data
   );
-
-  if (!response.ok) {
-    // Log the error response and throw a meaningful error
-    const errorText = await response.text();
-    console.error("Failed to update sale order items:", errorText);
-    throw new Error(
-      `Failed to update sale order items: ${response.status} ${
-        response.statusText
-      }. Details: ${errorText ? errorText : "No error details available"}`
-    );
-  }
-
-  return response.json();
 }
 
 export async function deleteSalesOrderItem(
   orderId: string,
   itemId: number
 ): Promise<void> {
-  const response = await fetch(
-    `${API_URL}/api/sales/orders/${orderId}/items/${itemId}/`,
-    {
-      method: "DELETE",
-      headers: await getAuthHeaders(),
-    }
-  );
-
-  if (!response.ok) {
-    throw new Error("Failed to delete sales order item");
-  }
+  return deleteApi(`/api/sales/orders/${orderId}/items/${itemId}/`);
 }
 
 export async function fetchSalesOrderItems(orderId: string) {
-  const response = await fetch(
-    `${API_URL}/api/sales/orders/${orderId}/items/`,
-    {
-      method: "GET",
-      headers: await getAuthHeaders(),
-    }
-  );
-
-  if (!response.ok) {
-    throw new Error("Failed to fetch sales order items");
-  }
-
-  return response.json();
+  return fetchApi<SalesOrderItem[]>(`/api/sales/orders/${orderId}/items/`);
 }
 
 export async function batchCreateSalesOrderItems(
@@ -281,18 +134,8 @@ export async function batchCreateSalesOrderItems(
     >
   >
 ): Promise<SalesOrderItem[]> {
-  const response = await fetch(
-    `${API_URL}/api/sales/orders/${orderId}/items/batch-create/`,
-    {
-      method: "POST",
-      headers: await getAuthHeaders(),
-      body: JSON.stringify(items),
-    }
+  return postApi<SalesOrderItem[]>(
+    `/api/sales/orders/${orderId}/items/batch-create/`,
+    items
   );
-
-  if (!response.ok) {
-    throw new Error("Failed to batch create sales order items");
-  }
-
-  return response.json();
 }

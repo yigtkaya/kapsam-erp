@@ -47,9 +47,7 @@ export default function NewProcessProductPage() {
         return;
       } else {
         const error = await response.data;
-        toast.error("Ürün oluşturulamadı", {
-          description: error,
-        });
+        toast.error("Ürün oluşturulamadı");
       }
     } catch (error) {
       toast.error("Form gönderilirken hata oluştu", {

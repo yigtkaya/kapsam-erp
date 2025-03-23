@@ -17,7 +17,7 @@ export function useSalesOrders() {
       if (Array.isArray(response)) {
         return response;
       }
-      return response.results || [];
+      return response || [];
     },
     staleTime: 30 * 1000, // 30 seconds
     gcTime: 5 * 60 * 1000, // 5 minutes

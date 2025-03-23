@@ -16,7 +16,6 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { useCreateShipment } from "../../hooks/useShipments";
 import { PageHeader } from "@/components/ui/page-header";
 import { useSalesOrder } from "../../hooks/useSalesOrders";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -34,6 +33,7 @@ import { Loader2, Package2, AlertCircle } from "lucide-react";
 import { toast } from "sonner";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Separator } from "@/components/ui/separator";
+import { useCreateOrderShipment } from "../../hooks/useShipments";
 
 // Import these components manually until we can install them properly
 const RadioGroup = ({ value, onValueChange, className, children }: any) => (
@@ -81,7 +81,8 @@ export default function CreateShipmentPage() {
   const router = useRouter();
   const orderId = params.id as string;
   const { data: order, isLoading } = useSalesOrder(orderId);
-  const { mutate: createShipment, isPending: isCreating } = useCreateShipment();
+  const { mutate: createShipment, isPending: isCreating } =
+    useCreateOrderShipment(orderId);
   const [selectedItem, setSelectedItem] = useState<SalesOrderItem | null>(null);
 
   const form = useForm<z.infer<typeof formSchema>>({

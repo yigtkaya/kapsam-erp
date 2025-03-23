@@ -49,7 +49,8 @@ export default function NewMontagedProductPage() {
       } else {
         const error = await response.data;
         toast.error("Ürün oluşturulamadı", {
-          description: error,
+          description:
+            typeof error === "string" ? error : JSON.stringify(error),
         });
       }
     } catch (error) {

@@ -93,7 +93,10 @@ export async function fetchApi<T>(
   const fetchOptions = await createFetchOptions(options);
   const response = await fetch(`${apiUrl}${endpoint}`, fetchOptions);
 
+  console.log(response);
+
   if (!response.ok) {
+    console.log(response.json());
     // Try to get error message from response
     let errorMessage: string;
     try {
@@ -107,6 +110,12 @@ export async function fetchApi<T>(
     throw new Error(errorMessage);
   }
 
+  // For 204 No Content responses, return null as the response
+  if (response.status === 204) {
+    return null as T;
+  }
+
+  // For other successful responses, try to parse as JSON
   return await response.json();
 }
 

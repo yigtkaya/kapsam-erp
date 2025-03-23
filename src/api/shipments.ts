@@ -1,72 +1,14 @@
 "use server";
 
 import { Shipping, CreateShipmentRequest } from "@/types/sales";
-import { cookies } from "next/headers";
-
-const API_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
-
-// Helper function to get cookies and headers
-export async function getAuthHeaders() {
-  const cookieStore = await cookies();
-  const rawCSRFCookie = cookieStore.get("csrftoken")?.value || "";
-  const sessionid = cookieStore.get("sessionid")?.value;
-  const tokenMatch = rawCSRFCookie.match(/csrftoken=([^;]+)/);
-  const csrftoken = tokenMatch ? tokenMatch[1] : rawCSRFCookie;
-
-  return {
-    "Content-Type": "application/json",
-    "X-CSRFToken": csrftoken || "",
-    Cookie: `sessionid=${sessionid}${
-      csrftoken ? `; csrftoken=${csrftoken}` : ""
-    }`,
-  };
-}
-
-export async function createShipment(
-  data: CreateShipmentRequest
-): Promise<Shipping> {
-  const response = await fetch(`${API_URL}/api/sales/shipments/`, {
-    method: "POST",
-    headers: await getAuthHeaders(),
-    body: JSON.stringify(data),
-  });
-
-  if (!response.ok) {
-    const errorData = await response.json().catch(() => null);
-    throw new Error(errorData?.message || "Failed to create shipment");
-  }
-
-  return response.json();
-}
+import { fetchApi, postApi, updateApi, deleteApi } from "./api-helpers";
 
 export async function fetchShipment(shippingNo: string): Promise<Shipping> {
-  const response = await fetch(
-    `${API_URL}/api/sales/shipments/${shippingNo}/`,
-    {
-      headers: await getAuthHeaders(),
-    }
-  );
-
-  if (!response.ok) {
-    throw new Error("Failed to fetch shipment");
-  }
-
-  return response.json();
+  return fetchApi<Shipping>(`/api/sales/shipments/${shippingNo}/`);
 }
 
 export async function fetchShipments(orderId: string): Promise<Shipping[]> {
-  const response = await fetch(
-    `${API_URL}/api/sales/orders/${orderId}/shipments/`,
-    {
-      headers: await getAuthHeaders(),
-    }
-  );
-
-  if (!response.ok) {
-    throw new Error("Failed to fetch shipments");
-  }
-
-  return response.json();
+  return fetchApi<Shipping[]>(`/api/sales/orders/${orderId}/shipments/`);
 }
 
 export interface BatchUpdateShipmentRequest {
@@ -82,21 +24,47 @@ export async function batchUpdateShipments(
   orderId: string,
   data: BatchUpdateShipmentRequest
 ): Promise<Shipping[]> {
-  console.log(data);
-  const response = await fetch(
-    `${API_URL}/api/sales/orders/${orderId}/shipments/batch-update/`,
-    {
-      method: "PATCH",
-      headers: await getAuthHeaders(),
-      body: JSON.stringify(data),
-    }
+  return updateApi<Shipping[]>(
+    `/api/sales/orders/${orderId}/shipments/batch-update/`,
+    data
   );
+}
 
-  if (!response.ok) {
-    console.log(response);
-    console.log(await response.json());
-    throw new Error("Failed to update shipments");
-  }
+/**
+ * Interface for creating a shipment using the create-shipment endpoint
+ */
+export interface CreateOrderShipmentPayload {
+  shipping_no: string;
+  shipping_date: string;
+  order_item: number;
+  quantity: number;
+  package_number?: number;
+  shipping_note?: string;
+}
 
-  return response.json();
+/**
+ * Create a shipment for a specific order
+ * @param orderId - The ID of the sales order
+ * @param data - The shipment data
+ */
+export async function createOrderShipment(
+  orderId: string,
+  data: CreateOrderShipmentPayload
+): Promise<Shipping> {
+  return postApi<Shipping>(
+    `/api/sales/orders/${orderId}/create-shipment/`,
+    data
+  );
+}
+
+/**
+ * Delete a specific shipment from a sales order
+ * @param orderId - The ID of the sales order
+ * @param shippingNo - The shipping number to delete
+ */
+export async function deleteOrderShipment(
+  orderId: string,
+  shippingNo: string
+): Promise<void> {
+  return deleteApi(`/api/sales/orders/${orderId}/shipments/${shippingNo}/`);
 }

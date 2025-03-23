@@ -102,7 +102,8 @@ export default function NewStandardPartPage() {
       } else {
         const error = await response.data;
         toast.error("Standart parça oluşturulamadı", {
-          description: error,
+          description:
+            typeof error === "string" ? error : JSON.stringify(error),
         });
       }
     } catch (error) {

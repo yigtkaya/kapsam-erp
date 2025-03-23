@@ -47,10 +47,8 @@ export default function NewMontagedProductPage() {
         router.back();
         return;
       } else {
-        const error = await response.data;
-        toast.error("Ürün oluşturulamadı", {
-          description: error,
-        });
+        const error = response.data;
+        toast.error("Ürün oluşturulamadı");
       }
     } catch (error) {
       toast.error("Form gönderilirken hata oluştu", {
