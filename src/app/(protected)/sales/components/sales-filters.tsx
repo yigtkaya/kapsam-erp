@@ -11,19 +11,25 @@ import {
 } from "@/components/ui/select";
 import { SlidersHorizontal } from "lucide-react";
 
-export function SalesFilters() {
+interface SalesFiltersProps {
+  statusFilter: string;
+  onStatusChange: (value: string) => void;
+}
+
+export function SalesFilters({
+  statusFilter,
+  onStatusChange,
+}: SalesFiltersProps) {
   return (
     <div className="flex flex-wrap items-center gap-2">
-      <Select defaultValue="all">
+      <Select value={statusFilter} onValueChange={onStatusChange}>
         <SelectTrigger className="h-8 w-[150px]">
           <SelectValue placeholder="Status" />
         </SelectTrigger>
         <SelectContent>
           <SelectItem value="all">Bütün Durumlar</SelectItem>
-          <SelectItem value="pending">Bekliyor</SelectItem>
-          <SelectItem value="in_progress">Devam Ediyor</SelectItem>
-          <SelectItem value="completed">Tamamlandı</SelectItem>
-          <SelectItem value="cancelled">İptal Edildi</SelectItem>
+          <SelectItem value="OPEN">Bekliyor</SelectItem>
+          <SelectItem value="CLOSED">Tamamlandı</SelectItem>
         </SelectContent>
       </Select>
       <Select defaultValue="all">

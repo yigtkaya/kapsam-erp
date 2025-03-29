@@ -134,8 +134,9 @@ export async function batchCreateSalesOrderItems(
     >
   >
 ): Promise<SalesOrderItem[]> {
+  console.log(items);
   return postApi<SalesOrderItem[]>(
     `/api/sales/orders/${orderId}/items/batch-create/`,
-    items
+    { items }
   );
 }

@@ -12,7 +12,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { SalesFilters } from "./sales-filters";
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { useSalesOrders } from "../hooks/useSalesOrders";
 
 interface SalesViewProps {
@@ -32,18 +32,27 @@ function processOrders(
   query: string,
   sort: string,
   page: number,
-  pageSize: number
+  pageSize: number,
+  statusFilter: string = "all"
 ) {
   if (!orders) return { currentItems: [], totalPages: 0 };
 
   // First, filter the orders
   let filtered = orders.filter((order) => {
     const searchLower = query.toLowerCase();
-    return (
+    const matchesSearch =
       order.order_number.toLowerCase().includes(searchLower) ||
-      order.customer_name.toLowerCase().includes(searchLower) ||
-      false
-    );
+      order.customer_name.toLowerCase().includes(searchLower);
+
+    // Apply status filter if not set to "all"
+    const matchesStatus =
+      statusFilter === "all" ||
+      (statusFilter === "OPEN" && order.status === "OPEN") ||
+      (statusFilter === "CLOSED" && order.status === "CLOSED") ||
+      (statusFilter === "pending" && order.status === "OPEN") ||
+      (statusFilter === "completed" && order.status === "CLOSED");
+
+    return matchesSearch && matchesStatus;
   });
 
   // Then, sort the filtered results
@@ -91,12 +100,21 @@ export function SalesView({
 }: SalesViewProps) {
   // Fetch data
   const { data: salesOrders = [] } = useSalesOrders();
+  // Add state for status filter
+  const [statusFilter, setStatusFilter] = useState("all");
 
   // Process orders with memoization
   const { currentItems, totalPages } = useMemo(
     () =>
-      processOrders(salesOrders, searchQuery, sortBy, currentPage, pageSize),
-    [salesOrders, searchQuery, sortBy, currentPage, pageSize]
+      processOrders(
+        salesOrders,
+        searchQuery,
+        sortBy,
+        currentPage,
+        pageSize,
+        statusFilter
+      ),
+    [salesOrders, searchQuery, sortBy, currentPage, pageSize, statusFilter]
   );
 
   return (
@@ -123,7 +141,10 @@ export function SalesView({
         </Select>
       </div>
 
-      <SalesFilters />
+      <SalesFilters
+        statusFilter={statusFilter}
+        onStatusChange={setStatusFilter}
+      />
 
       <DataTable
         data={currentItems.flatMap((item) => item.items)}

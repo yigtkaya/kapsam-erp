@@ -96,7 +96,7 @@ export async function fetchApi<T>(
   console.log(response);
 
   if (!response.ok) {
-    console.log(response.json());
+    console.log(await response.json());
     // Try to get error message from response
     let errorMessage: string;
     try {

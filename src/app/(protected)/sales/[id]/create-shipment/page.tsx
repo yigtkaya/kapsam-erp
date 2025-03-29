@@ -34,6 +34,7 @@ import { toast } from "sonner";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Separator } from "@/components/ui/separator";
 import { useCreateOrderShipment } from "../../hooks/useShipments";
+import { Badge } from "@/components/ui/badge";
 
 // Import these components manually until we can install them properly
 const RadioGroup = ({ value, onValueChange, className, children }: any) => (
@@ -210,9 +211,6 @@ export default function CreateShipmentPage() {
                         <FormControl>
                           <Input {...field} />
                         </FormControl>
-                        <FormDescription>
-                          Otomatik oluşturulmuştur, değiştirebilirsiniz
-                        </FormDescription>
                         <FormMessage />
                       </FormItem>
                     )}
@@ -237,71 +235,120 @@ export default function CreateShipmentPage() {
 
                 <div>
                   <h3 className="text-sm font-medium mb-4">Ürün Seçimi</h3>
-                  <RadioGroup
-                    value={selectedItem?.id?.toString()}
-                    onValueChange={(value: string) => {
-                      const item = availableItems.find(
-                        (i: SalesOrderItem) => i.id?.toString() === value
-                      );
-                      if (item) handleItemSelect(item);
-                    }}
-                    className="space-y-4"
-                  >
-                    {availableItems.map((item: SalesOrderItem) => {
-                      const remainingQuantity =
-                        item.ordered_quantity - (item.fulfilled_quantity || 0);
-                      return (
-                        <div
-                          key={item.id}
-                          className={`flex items-center space-x-4 rounded-lg border p-4 ${
-                            selectedItem?.id === item.id
-                              ? "border-primary bg-primary/5"
-                              : ""
-                          }`}
-                        >
-                          <RadioGroupItem
-                            value={item.id?.toString() || ""}
-                            checked={selectedItem?.id === item.id}
-                            onChange={() => handleItemSelect(item)}
-                          />
-                          <Label
-                            className="flex-1"
-                            htmlFor={item.id?.toString()}
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead className="w-10"></TableHead>
+                        <TableHead>Ürün</TableHead>
+                        <TableHead className="text-right">
+                          Sipariş Miktarı
+                        </TableHead>
+                        <TableHead className="text-right">Tamamlanan</TableHead>
+                        <TableHead className="text-right">Kalan</TableHead>
+                        <TableHead className="text-right">Stok</TableHead>
+                        <TableHead className="text-right">
+                          Sipariş Alınan Tarih
+                        </TableHead>
+                        <TableHead className="text-right">
+                          Sipariş Teslim Tarihi
+                        </TableHead>
+                        <TableHead className="text-right">
+                          Kapsam Son Teslim Tarihi
+                        </TableHead>
+                        <TableHead className="text-center">Durum</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {availableItems.map((item: SalesOrderItem) => {
+                        const remainingQuantity =
+                          item.ordered_quantity -
+                          (item.fulfilled_quantity || 0);
+                        const currentStock =
+                          item.product_details?.current_stock || 0;
+                        const hasEnoughStock =
+                          currentStock >= remainingQuantity;
+
+                        return (
+                          <TableRow
+                            key={item.id}
+                            className={
+                              selectedItem?.id === item.id
+                                ? "bg-primary/5 border-primary"
+                                : ""
+                            }
+                            onClick={() => handleItemSelect(item)}
                           >
-                            <div className="flex flex-col space-y-1">
-                              <div className="flex justify-between">
+                            <TableCell>
+                              <RadioGroupItem
+                                value={item.id?.toString() || ""}
+                                checked={selectedItem?.id === item.id}
+                                onChange={() => handleItemSelect(item)}
+                              />
+                            </TableCell>
+                            <TableCell>
+                              <div className="flex flex-col">
                                 <span className="font-medium">
-                                  {item.product_details?.product_name}
+                                  {item.product_details?.product_name ||
+                                    "Unknown Product"}
                                 </span>
-                                <span className="text-muted-foreground">
-                                  Kalan: {remainingQuantity}
+                                <span className="text-sm text-muted-foreground">
+                                  {item.product_details?.product_code ||
+                                    "No Code"}
                                 </span>
                               </div>
-                              <div className="flex justify-between text-sm">
-                                <span className="text-muted-foreground">
-                                  Stok:{" "}
-                                  {item.product_details?.current_stock || 0}
-                                </span>
-                                <span
-                                  className={`${
-                                    (item.product_details?.current_stock || 0) <
-                                    remainingQuantity
-                                      ? "text-red-500"
-                                      : "text-green-500"
-                                  }`}
+                            </TableCell>
+                            <TableCell className="text-right">
+                              {item.ordered_quantity}
+                            </TableCell>
+                            <TableCell className="text-right">
+                              {item.fulfilled_quantity || 0}
+                            </TableCell>
+                            <TableCell className="text-right">
+                              {remainingQuantity}
+                            </TableCell>
+                            <TableCell className="text-right">
+                              {currentStock}
+                            </TableCell>
+                            <TableCell className="text-right">
+                              {item.receiving_date
+                                ? new Date(
+                                    item.receiving_date
+                                  ).toLocaleDateString("tr-TR")
+                                : "-"}
+                            </TableCell>
+                            <TableCell className="text-right">
+                              {item.deadline_date
+                                ? new Date(
+                                    item.deadline_date
+                                  ).toLocaleDateString("tr-TR")
+                                : "-"}
+                            </TableCell>
+                            <TableCell className="text-right">
+                              {item.kapsam_deadline_date
+                                ? new Date(
+                                    item.kapsam_deadline_date
+                                  ).toLocaleDateString("tr-TR")
+                                : "-"}
+                            </TableCell>
+                            <TableCell className="text-center">
+                              {hasEnoughStock ? (
+                                <Badge
+                                  variant="outline"
+                                  className="text-green-600 border-green-600 bg-green-50"
                                 >
-                                  {(item.product_details?.current_stock || 0) <
-                                  remainingQuantity
-                                    ? "Stok Yetersiz"
-                                    : "Stok Yeterli"}
-                                </span>
-                              </div>
-                            </div>
-                          </Label>
-                        </div>
-                      );
-                    })}
-                  </RadioGroup>
+                                  Stok Yeterli
+                                </Badge>
+                              ) : (
+                                <Badge variant="destructive">
+                                  Stok Yetersiz
+                                </Badge>
+                              )}
+                            </TableCell>
+                          </TableRow>
+                        );
+                      })}
+                    </TableBody>
+                  </Table>
                 </div>
 
                 {selectedItem && (
