@@ -20,6 +20,25 @@ You can start editing the page by modifying `app/page.tsx`. The page auto-update
 
 This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
 
+## Design Rules
+
+### Buttons
+
+- **Primary Actions**: Use the `primary-blue` variant for main action buttons (e.g., create, add, save)
+
+  ```tsx
+  <Button variant="primary-blue">
+    <Plus className="h-4 w-4" />
+    Add New Item
+  </Button>
+  ```
+
+- **Secondary Actions**: Use the default or `secondary` variant for less important actions
+- **Destructive Actions**: Use the `destructive` variant for delete/remove actions
+- **Outline Actions**: Use the `outline` variant for cancel/back actions
+
+All action buttons should have a consistent height and padding as defined by the button's size variants.
+
 ## Learn More
 
 To learn more about Next.js, take a look at the following resources:

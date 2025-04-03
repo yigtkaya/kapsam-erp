@@ -3,18 +3,54 @@
 import { ColumnDef } from "@tanstack/react-table";
 import { SalesOrderItem } from "@/types/sales";
 import { format } from "date-fns";
+import { ArrowDown, ArrowUp, ArrowUpDown } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 export const columns: ColumnDef<SalesOrderItem>[] = [
   {
-    accessorKey: "sales_order",
-    header: () => <div className="text-center">Sipariş No</div>,
+    accessorKey: "order_number",
+    header: ({ column }) => {
+      return (
+        <Button
+          variant="ghost"
+          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+          className="w-full font-semibold text-gray-800"
+        >
+          Sipariş No (Kalem Bazlı)
+          {column.getIsSorted() === "asc" ? (
+            <ArrowUp className="ml-2 h-4 w-4" />
+          ) : column.getIsSorted() === "desc" ? (
+            <ArrowDown className="ml-2 h-4 w-4" />
+          ) : (
+            <ArrowUpDown className="ml-2 h-4 w-4 opacity-50" />
+          )}
+        </Button>
+      );
+    },
     cell: ({ row }) => (
       <div className="text-center">{row.original.order_number}</div>
     ),
   },
   {
     accessorKey: "product_details.product_code",
-    header: () => <div className="text-center">Ürün Kodu</div>,
+    header: ({ column }) => {
+      return (
+        <Button
+          variant="ghost"
+          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+          className="w-full font-semibold text-gray-800"
+        >
+          Ürün Kodu
+          {column.getIsSorted() === "asc" ? (
+            <ArrowUp className="ml-2 h-4 w-4" />
+          ) : column.getIsSorted() === "desc" ? (
+            <ArrowDown className="ml-2 h-4 w-4" />
+          ) : (
+            <ArrowUpDown className="ml-2 h-4 w-4 opacity-50" />
+          )}
+        </Button>
+      );
+    },
     cell: ({ row }) => (
       <div className="text-center">
         {row.original.product_details?.product_code}
@@ -23,7 +59,24 @@ export const columns: ColumnDef<SalesOrderItem>[] = [
   },
   {
     accessorKey: "product_details.product_name",
-    header: () => <div className="text-center">Ürün Adı</div>,
+    header: ({ column }) => {
+      return (
+        <Button
+          variant="ghost"
+          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+          className="w-full font-semibold text-gray-800"
+        >
+          Ürün Adı
+          {column.getIsSorted() === "asc" ? (
+            <ArrowUp className="ml-2 h-4 w-4" />
+          ) : column.getIsSorted() === "desc" ? (
+            <ArrowDown className="ml-2 h-4 w-4" />
+          ) : (
+            <ArrowUpDown className="ml-2 h-4 w-4 opacity-50" />
+          )}
+        </Button>
+      );
+    },
     cell: ({ row }) => (
       <div className="text-center">
         {row.original.product_details?.product_name}
@@ -32,7 +85,24 @@ export const columns: ColumnDef<SalesOrderItem>[] = [
   },
   {
     accessorKey: "deadline_date",
-    header: () => <div className="text-center">Son Teslim Tarihi</div>,
+    header: ({ column }) => {
+      return (
+        <Button
+          variant="ghost"
+          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+          className="w-full font-semibold text-gray-800"
+        >
+          Son Teslim Tarihi
+          {column.getIsSorted() === "asc" ? (
+            <ArrowUp className="ml-2 h-4 w-4" />
+          ) : column.getIsSorted() === "desc" ? (
+            <ArrowDown className="ml-2 h-4 w-4" />
+          ) : (
+            <ArrowUpDown className="ml-2 h-4 w-4 opacity-50" />
+          )}
+        </Button>
+      );
+    },
     cell: ({ row }) => {
       const date = row.original.deadline_date;
       return (
@@ -44,7 +114,24 @@ export const columns: ColumnDef<SalesOrderItem>[] = [
   },
   {
     accessorKey: "kapsam_deadline_date",
-    header: () => <div className="text-center">Kapsam Son Teslim Tarihi</div>,
+    header: ({ column }) => {
+      return (
+        <Button
+          variant="ghost"
+          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+          className="w-full font-semibold text-gray-800"
+        >
+          Kapsam Son Teslim Tarihi
+          {column.getIsSorted() === "asc" ? (
+            <ArrowUp className="ml-2 h-4 w-4" />
+          ) : column.getIsSorted() === "desc" ? (
+            <ArrowDown className="ml-2 h-4 w-4" />
+          ) : (
+            <ArrowUpDown className="ml-2 h-4 w-4 opacity-50" />
+          )}
+        </Button>
+      );
+    },
     cell: ({ row }) => {
       const date = row.original.kapsam_deadline_date;
       return (
@@ -56,21 +143,72 @@ export const columns: ColumnDef<SalesOrderItem>[] = [
   },
   {
     accessorKey: "ordered_quantity",
-    header: () => <div className="text-center">Sipariş Miktarı</div>,
+    header: ({ column }) => {
+      return (
+        <Button
+          variant="ghost"
+          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+          className="w-full font-semibold text-gray-800"
+        >
+          Sipariş Miktarı
+          {column.getIsSorted() === "asc" ? (
+            <ArrowUp className="ml-2 h-4 w-4" />
+          ) : column.getIsSorted() === "desc" ? (
+            <ArrowDown className="ml-2 h-4 w-4" />
+          ) : (
+            <ArrowUpDown className="ml-2 h-4 w-4 opacity-50" />
+          )}
+        </Button>
+      );
+    },
     cell: ({ row }) => (
       <div className="text-center">{row.original.ordered_quantity}</div>
     ),
   },
   {
     accessorKey: "fulfilled_quantity",
-    header: () => <div className="text-center">Teslim Edilen Miktar</div>,
+    header: ({ column }) => {
+      return (
+        <Button
+          variant="ghost"
+          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+          className="w-full font-semibold text-gray-800"
+        >
+          Teslim Edilen Miktar
+          {column.getIsSorted() === "asc" ? (
+            <ArrowUp className="ml-2 h-4 w-4" />
+          ) : column.getIsSorted() === "desc" ? (
+            <ArrowDown className="ml-2 h-4 w-4" />
+          ) : (
+            <ArrowUpDown className="ml-2 h-4 w-4 opacity-50" />
+          )}
+        </Button>
+      );
+    },
     cell: ({ row }) => (
       <div className="text-center">{row.original.fulfilled_quantity}</div>
     ),
   },
   {
     id: "remaining_quantity",
-    header: () => <div className="text-center">Kalan Miktar</div>,
+    header: ({ column }) => {
+      return (
+        <Button
+          variant="ghost"
+          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+          className="w-full font-semibold text-gray-800"
+        >
+          Kalan Miktar
+          {column.getIsSorted() === "asc" ? (
+            <ArrowUp className="ml-2 h-4 w-4" />
+          ) : column.getIsSorted() === "desc" ? (
+            <ArrowDown className="ml-2 h-4 w-4" />
+          ) : (
+            <ArrowUpDown className="ml-2 h-4 w-4 opacity-50" />
+          )}
+        </Button>
+      );
+    },
     cell: ({ row }) => (
       <div className="text-center">
         {row.original.ordered_quantity - row.original.fulfilled_quantity}

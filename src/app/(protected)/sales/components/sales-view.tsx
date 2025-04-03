@@ -11,8 +11,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { SalesFilters } from "./sales-filters";
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect, useRef } from "react";
 import { useSalesOrders } from "../hooks/useSalesOrders";
 
 interface SalesViewProps {
@@ -30,7 +29,6 @@ interface SalesViewProps {
 function processOrders(
   orders: SalesOrder[],
   query: string,
-  sort: string,
   page: number,
   pageSize: number,
   statusFilter: string = "all"
@@ -55,37 +53,13 @@ function processOrders(
     return matchesSearch && matchesStatus;
   });
 
-  // Then, sort the filtered results
-  const sorted = filtered.sort((a, b) => {
-    switch (sort) {
-      case "order_number_asc":
-        return a.order_number.localeCompare(b.order_number);
-      case "order_number_desc":
-        return b.order_number.localeCompare(a.order_number);
-      case "customer_asc":
-        return a.customer_name.localeCompare(b.customer_name);
-      case "customer_desc":
-        return b.customer_name.localeCompare(a.customer_name);
-      case "date_asc":
-        return (
-          new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
-        );
-      case "date_desc":
-        return (
-          new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
-        );
-      default:
-        return 0;
-    }
-  });
-
   // Calculate pagination
   const start = page * pageSize;
   const end = start + pageSize;
-  const currentItems = sorted.slice(start, end);
-  const totalPages = Math.ceil(sorted.length / pageSize);
+  const currentItems = filtered.slice(start, end);
+  const totalPages = Math.ceil(filtered.length / pageSize);
 
-  return { currentItems, totalPages };
+  return { currentItems, totalPages, allItems: filtered };
 }
 
 export function SalesView({
@@ -102,49 +76,65 @@ export function SalesView({
   const { data: salesOrders = [] } = useSalesOrders();
   // Add state for status filter
   const [statusFilter, setStatusFilter] = useState("all");
+  const isInitialRender = useRef(true);
 
-  // Process orders with memoization
-  const { currentItems, totalPages } = useMemo(
+  // Process orders with memoization - but don't apply sorting here anymore
+  const { currentItems, totalPages, allItems } = useMemo(
     () =>
       processOrders(
         salesOrders,
         searchQuery,
-        sortBy,
         currentPage,
         pageSize,
         statusFilter
       ),
-    [salesOrders, searchQuery, sortBy, currentPage, pageSize, statusFilter]
+    [salesOrders, searchQuery, currentPage, pageSize, statusFilter]
   );
+
+  // Debounced URL update for sorting
+  useEffect(() => {
+    if (isInitialRender.current) {
+      isInitialRender.current = false;
+      return;
+    }
+
+    const updateTimeout = setTimeout(() => {
+      // This will only update the URL, not trigger a data fetch
+      if (sortBy) {
+        onSortChange(sortBy);
+      }
+    }, 300); // Wait for 300ms of inactivity before updating URL
+
+    return () => clearTimeout(updateTimeout);
+  }, [sortBy, onSortChange]);
+
+  const handleStatusChange = (value: string) => {
+    setStatusFilter(value);
+    // Reset to page 0 when filter changes
+    onPageChange(0);
+  };
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center gap-4">
+      <div className="flex flex-wrap items-center gap-4">
         <Input
           placeholder="Sipariş numarası veya müşteri ara..."
           value={searchQuery}
           onChange={(e) => onSearchChange(e.target.value)}
           className="max-w-sm"
         />
-        <Select value={sortBy} onValueChange={onSortChange}>
+
+        <Select value={statusFilter} onValueChange={handleStatusChange}>
           <SelectTrigger className="max-w-[200px]">
-            <SelectValue placeholder="Sıralama" />
+            <SelectValue placeholder="Durum" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="order_number_asc">Sipariş No (A-Z)</SelectItem>
-            <SelectItem value="order_number_desc">Sipariş No (Z-A)</SelectItem>
-            <SelectItem value="customer_asc">Müşteri (A-Z)</SelectItem>
-            <SelectItem value="customer_desc">Müşteri (Z-A)</SelectItem>
-            <SelectItem value="date_asc">Tarih (Eski-Yeni)</SelectItem>
-            <SelectItem value="date_desc">Tarih (Yeni-Eski)</SelectItem>
+            <SelectItem value="all">Bütün Durumlar</SelectItem>
+            <SelectItem value="OPEN">Bekliyor</SelectItem>
+            <SelectItem value="CLOSED">Tamamlandı</SelectItem>
           </SelectContent>
         </Select>
       </div>
-
-      <SalesFilters
-        statusFilter={statusFilter}
-        onStatusChange={setStatusFilter}
-      />
 
       <DataTable
         data={currentItems.flatMap((item) => item.items)}
@@ -153,6 +143,7 @@ export function SalesView({
         currentPage={currentPage}
         pageCount={totalPages}
         onPageChange={onPageChange}
+        onSortChange={onSortChange}
       />
     </div>
   );

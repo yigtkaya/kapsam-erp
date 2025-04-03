@@ -7,6 +7,8 @@ import {
   getCoreRowModel,
   useReactTable,
   getExpandedRowModel,
+  getSortedRowModel,
+  SortingState,
 } from "@tanstack/react-table";
 import {
   Table,
@@ -19,6 +21,7 @@ import {
 import { DataTablePagination } from "./data-table-pagination";
 import { DataTableRowActions } from "./data-table-row-actions";
 import { useRouter } from "next/navigation";
+import { useState, useEffect } from "react";
 import type { SalesOrderItem } from "@/types/sales";
 
 interface DataTableProps {
@@ -28,6 +31,7 @@ interface DataTableProps {
   currentPage: number;
   pageCount: number;
   onPageChange: (page: number) => void;
+  onSortChange?: (sortKey: string) => void;
 }
 
 export function DataTable({
@@ -37,25 +41,47 @@ export function DataTable({
   currentPage,
   pageCount,
   onPageChange,
+  onSortChange,
 }: DataTableProps) {
   const router = useRouter();
+  const [sorting, setSorting] = useState<SortingState>([]);
+
+  // Initialize with URL sort state if available
+  useEffect(() => {
+    if (onSortChange && sorting.length > 0) {
+      const sortKey = `${sorting[0].id}_${sorting[0].desc ? "desc" : "asc"}`;
+      onSortChange(sortKey);
+    }
+  }, []); // Run only once on mount
+
   const table = useReactTable({
     data,
     columns,
     getCoreRowModel: getCoreRowModel(),
+    getSortedRowModel: getSortedRowModel(),
     manualPagination: true,
     pageCount,
+    onSortingChange: setSorting, // Only update local state for smoother UI
+    state: {
+      sorting,
+    },
   });
 
   if (isLoading) {
     return (
       <div className="rounded-md border">
         <Table>
-          <TableHeader>
+          <TableHeader className="bg-gray-100">
             {table.getHeaderGroups().map((headerGroup) => (
-              <TableRow key={headerGroup.id}>
+              <TableRow
+                key={headerGroup.id}
+                className="border-b border-gray-200"
+              >
                 {headerGroup.headers.map((header) => (
-                  <TableHead key={header.id}>
+                  <TableHead
+                    key={header.id}
+                    className="font-semibold text-gray-800 bg-gray-100 py-3"
+                  >
                     {header.isPlaceholder
                       ? null
                       : flexRender(
@@ -69,10 +95,10 @@ export function DataTable({
           </TableHeader>
           <TableBody>
             {Array.from({ length: 5 }).map((_, rowIndex) => (
-              <TableRow key={rowIndex}>
+              <TableRow key={rowIndex} className="h-16">
                 {columns.map((_, colIndex) => (
                   <TableCell key={colIndex}>
-                    <div className="h-4 w-full animate-pulse rounded bg-muted" />
+                    <div className="h-8 w-full animate-pulse rounded bg-muted" />
                   </TableCell>
                 ))}
               </TableRow>
@@ -87,11 +113,17 @@ export function DataTable({
     <div className="space-y-4">
       <div className="rounded-md border">
         <Table>
-          <TableHeader>
+          <TableHeader className="bg-gray-100">
             {table.getHeaderGroups().map((headerGroup) => (
-              <TableRow key={headerGroup.id}>
+              <TableRow
+                key={headerGroup.id}
+                className="border-b border-gray-200"
+              >
                 {headerGroup.headers.map((header) => (
-                  <TableHead key={header.id}>
+                  <TableHead
+                    key={header.id}
+                    className="font-semibold text-gray-800 bg-gray-100 py-3"
+                  >
                     {header.isPlaceholder
                       ? null
                       : flexRender(
@@ -108,11 +140,14 @@ export function DataTable({
               table.getRowModel().rows.map((row) => (
                 <TableRow
                   key={row.id}
-                  className="group cursor-pointer transition-colors hover:bg-muted/50"
+                  className="group cursor-pointer transition-all duration-200 hover:bg-muted/50"
                   onClick={() => router.push(`/sales/${row.original.order_id}`)}
                 >
                   {row.getVisibleCells().map((cell) => (
-                    <TableCell key={cell.id}>
+                    <TableCell
+                      key={cell.id}
+                      className="transition-all duration-200"
+                    >
                       {flexRender(
                         cell.column.columnDef.cell,
                         cell.getContext()

@@ -36,9 +36,11 @@ export function PageHeader({
           </Button>
         )}
         <div className="space-y-1">
-          <h2 className="text-2xl font-semibold tracking-tight">{title}</h2>
+          <h2 className="text-2xl font-semibold tracking-tight text-gray-800">
+            {title}
+          </h2>
           {description && (
-            <p className="text-sm text-muted-foreground">{description}</p>
+            <p className="text-sm text-gray-600">{description}</p>
           )}
         </div>
       </div>
