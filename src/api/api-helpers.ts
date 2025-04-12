@@ -14,7 +14,7 @@ export async function getApiUrl(): Promise<string> {
   return API_URL || "";
 }
 
-type RequestOptions = {
+export type RequestOptions = {
   method?: "GET" | "POST" | "PUT" | "PATCH" | "DELETE";
   body?: any;
   headers?: Record<string, string>;
@@ -22,7 +22,11 @@ type RequestOptions = {
   next?: {
     revalidate?: number | false;
   };
+  skipErrorHandling?: boolean;
 };
+
+// Import the ApiError class from the errors file
+import { ApiError } from "./errors";
 
 /**
  * Get authentication headers from cookies
@@ -83,6 +87,41 @@ export async function createFetchOptions(
 }
 
 /**
+ * Parse API error response
+ */
+async function parseErrorResponse(response: Response): Promise<string> {
+  try {
+    const contentType = response.headers.get("content-type");
+    if (contentType && contentType.includes("application/json")) {
+      const errorData = await response.json();
+
+      // Handle various error formats
+      if (errorData.message) return errorData.message;
+      if (errorData.detail) return errorData.detail;
+      if (errorData.error) return errorData.error;
+
+      // Handle field-specific validation errors
+      if (errorData.errors && typeof errorData.errors === "object") {
+        const errorMessages = Object.entries(errorData.errors)
+          .map(
+            ([field, messages]) =>
+              `${field}: ${
+                Array.isArray(messages) ? messages.join(", ") : messages
+              }`
+          )
+          .join("; ");
+        return errorMessages || `Error ${response.status}`;
+      }
+
+      return JSON.stringify(errorData);
+    }
+    return `Error: ${response.status} ${response.statusText}`;
+  } catch (e) {
+    return `Error: ${response.status} ${response.statusText}`;
+  }
+}
+
+/**
  * Fetch data from API with error handling
  */
 export async function fetchApi<T>(
@@ -93,21 +132,9 @@ export async function fetchApi<T>(
   const fetchOptions = await createFetchOptions(options);
   const response = await fetch(`${apiUrl}${endpoint}`, fetchOptions);
 
-  console.log(response);
-
-  if (!response.ok) {
-    console.log(await response.json());
-    // Try to get error message from response
-    let errorMessage: string;
-    try {
-      const errorData = await response.json();
-      errorMessage =
-        errorData.message || errorData.detail || `Error: ${response.status}`;
-    } catch (e) {
-      errorMessage = `Error: ${response.status}`;
-    }
-
-    throw new Error(errorMessage);
+  if (!response.ok && !options.skipErrorHandling) {
+    const errorMessage = await parseErrorResponse(response);
+    throw new ApiError(errorMessage, response.status);
   }
 
   // For 204 No Content responses, return null as the response
@@ -115,12 +142,15 @@ export async function fetchApi<T>(
     return null as T;
   }
 
-  const data = await response.json();
+  // Check if the response is JSON
+  const contentType = response.headers.get("content-type");
+  if (contentType && contentType.includes("application/json")) {
+    const data = await response.json();
+    return data;
+  }
 
-  console.log(data);
-
-  // For other successful responses, try to parse as JSON
-  return data;
+  // Handle non-JSON responses
+  return null as T;
 }
 
 /**
@@ -156,11 +186,11 @@ export async function updateApi<T>(
 /**
  * Delete data on API with error handling
  */
-export async function deleteApi(
+export async function deleteApi<T = void>(
   endpoint: string,
   options: RequestOptions = {}
-): Promise<void> {
-  return fetchApi<void>(endpoint, {
+): Promise<T> {
+  return fetchApi<T>(endpoint, {
     method: "DELETE",
     ...options,
   });
