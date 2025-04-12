@@ -16,7 +16,7 @@ export const columns: ColumnDef<SalesOrderItem>[] = [
           onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
           className="w-full font-semibold text-gray-800"
         >
-          Sipariş No (Kalem Bazlı)
+          Sipariş No
           {column.getIsSorted() === "asc" ? (
             <ArrowUp className="ml-2 h-4 w-4" />
           ) : column.getIsSorted() === "desc" ? (

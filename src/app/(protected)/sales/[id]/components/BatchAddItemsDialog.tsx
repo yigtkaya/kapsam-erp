@@ -164,8 +164,8 @@ export function BatchAddItemsDialog({
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button variant="outline" className="gap-2">
-          <PlusCircle className="h-4 w-4" />
+        <Button variant="secondary" size="sm" className="h-9 px-3 gap-2">
+          <PlusCircle className="h-3.5 w-3.5" />
           Toplu Kalem Ekle
         </Button>
       </DialogTrigger>

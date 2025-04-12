@@ -8,7 +8,13 @@ import {
 } from "next/navigation";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  CardFooter,
+} from "@/components/ui/card";
 import {
   Table,
   TableBody,
@@ -85,10 +91,11 @@ function ShipmentsTable({ orderId }: { orderId: string }) {
   const { mutate: deleteShipment, isPending: isDeleting } =
     useDeleteOrderShipment(orderId);
   const [isEditing, setIsEditing] = useState(false);
-  const [isShipmentsCollapsed, setIsShipmentsCollapsed] = useState(false);
+  const [isCollapsed, setIsCollapsed] = useState(false);
   const [deletingShipmentId, setDeletingShipmentId] = useState<string | null>(
     null
   );
+
   type ShipmentField =
     | "shipping_no"
     | "shipping_date"
@@ -217,103 +224,145 @@ function ShipmentsTable({ orderId }: { orderId: string }) {
   };
 
   if (isLoading) {
-    return <div>Loading...</div>;
+    return (
+      <div className="flex justify-center items-center py-8">
+        <div className="flex flex-col items-center space-y-2">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+          <p className="text-sm text-muted-foreground">
+            Sevkiyatlar yükleniyor...
+          </p>
+        </div>
+      </div>
+    );
   }
 
   return (
-    <Card className="md:col-span-2">
-      <CardHeader className="flex flex-row items-center justify-between">
+    <div className="space-y-4">
+      <div className="flex justify-between items-center">
         <div className="flex items-center gap-2">
+          <h3 className="text-lg font-medium">Sevkiyatlar</h3>
+          <Badge variant="outline" className="ml-2">
+            {shipments.length}
+          </Badge>
           <Button
             variant="ghost"
             size="icon"
-            onClick={() => setIsShipmentsCollapsed(!isShipmentsCollapsed)}
-            className="h-8 w-8"
+            onClick={() => setIsCollapsed(!isCollapsed)}
+            className="h-8 w-8 ml-2"
           >
-            {isShipmentsCollapsed ? (
+            {isCollapsed ? (
               <ChevronDown className="h-4 w-4" />
             ) : (
               <ChevronUp className="h-4 w-4" />
             )}
           </Button>
-          <CardTitle>Sevkiyatlar</CardTitle>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex gap-2">
           {isEditing ? (
             <>
               <Button
                 variant="outline"
                 onClick={handleCancelEdit}
                 disabled={isUpdating}
+                size="sm"
               >
                 İptal
               </Button>
               <Button
                 onClick={handleSaveChanges}
-                disabled={
-                  isUpdating || Object.keys(shipmentChanges).length === 0
-                }
+                disabled={isUpdating}
+                size="sm"
               >
                 {isUpdating ? "Kaydediliyor..." : "Kaydet"}
               </Button>
             </>
           ) : (
-            <Button
-              variant="outline"
-              className="gap-2"
-              onClick={() => setIsEditing(true)}
-            >
-              <Pencil className="h-4 w-4" />
-              Düzenle
-            </Button>
+            <div className="flex gap-2">
+              <Button
+                variant="secondary"
+                onClick={() => setIsEditing(true)}
+                disabled={shipments.length === 0}
+                size="sm"
+                className="h-9 px-3"
+              >
+                <Pencil className="h-3.5 w-3.5 mr-1.5" />
+                Düzenle
+              </Button>
+              <Button
+                variant="secondary"
+                asChild
+                size="sm"
+                className="h-9 px-3"
+              >
+                <Link href={`/sales/${orderId}/create-shipment`}>
+                  <Truck className="h-3.5 w-3.5 mr-1.5" />
+                  Yeni Sevkiyat
+                </Link>
+              </Button>
+            </div>
           )}
         </div>
-      </CardHeader>
-      {!isShipmentsCollapsed && (
-        <CardContent className="p-0">
+      </div>
+
+      {!isCollapsed && (
+        <>
           {shipments.length === 0 ? (
-            <div className="flex flex-col items-center justify-center py-10 text-center">
-              <div className="rounded-full bg-muted p-6 mb-4">
-                <Truck className="h-10 w-10 text-muted-foreground" />
+            <div className="text-center py-8 border rounded-md bg-gray-50">
+              <div className="flex flex-col items-center space-y-2">
+                <Truck className="h-8 w-8 text-muted-foreground" />
+                <p className="text-muted-foreground">
+                  Henüz sevkiyat bulunmuyor
+                </p>
+                <Button variant="outline" asChild size="sm" className="mt-2">
+                  <Link href={`/sales/${orderId}/create-shipment`}>
+                    <PlusCircle className="h-3.5 w-3.5 mr-1.5" />
+                    Yeni Sevkiyat Oluştur
+                  </Link>
+                </Button>
               </div>
-              <p className="text-muted-foreground">
-                Henüz sevkiyat bulunmamaktadır
-              </p>
             </div>
           ) : (
-            <div className="w-full overflow-auto">
-              {isEditing ? (
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Tarih</TableHead>
-                      <TableHead className="text-right">Miktar</TableHead>
-                      <TableHead className="text-right">Paket</TableHead>
-                      <TableHead>Not</TableHead>
-                      <TableHead className="w-[100px]"></TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {shipments.map((shipment) => (
-                      <TableRow
-                        key={shipment.shipping_no}
-                        className="hover:bg-muted/50"
-                      >
-                        <TableCell>
+            <div className="rounded-md border overflow-hidden bg-white">
+              <Table>
+                <TableHeader className="bg-muted/50">
+                  <TableRow>
+                    <TableHead className="w-[180px]">Sevkiyat No</TableHead>
+                    <TableHead className="w-[150px]">Tarih</TableHead>
+                    <TableHead className="w-[120px]">Miktar</TableHead>
+                    <TableHead className="w-[120px]">Paket No</TableHead>
+                    <TableHead>Not</TableHead>
+                    <TableHead className="w-[100px] text-right">
+                      İşlemler
+                    </TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {shipments.map((shipment) => (
+                    <TableRow key={shipment.shipping_no}>
+                      <TableCell>
+                        {isEditing ? (
+                          <Input
+                            value={getCurrentValue(shipment, "shipping_no")}
+                            onChange={(e) =>
+                              handleShipmentFieldChange(
+                                shipment.shipping_no,
+                                "shipping_no",
+                                e.target.value
+                              )
+                            }
+                            className="h-8 text-sm"
+                          />
+                        ) : (
+                          <div className="font-medium">
+                            {shipment.shipping_no}
+                          </div>
+                        )}
+                      </TableCell>
+                      <TableCell>
+                        {isEditing ? (
                           <Input
                             type="date"
-                            value={
-                              (shipmentChanges[shipment.shipping_no]
-                                ?.shipping_date
-                                ? new Date(
-                                    shipmentChanges[shipment.shipping_no]
-                                      .shipping_date as string
-                                  )
-                                : new Date(shipment.shipping_date)
-                              )
-                                .toISOString()
-                                .split("T")[0]
-                            }
+                            value={getCurrentValue(shipment, "shipping_date")}
                             onChange={(e) =>
                               handleShipmentFieldChange(
                                 shipment.shipping_no,
@@ -321,10 +370,14 @@ function ShipmentsTable({ orderId }: { orderId: string }) {
                                 e.target.value
                               )
                             }
-                            className="w-full"
+                            className="h-8 text-sm"
                           />
-                        </TableCell>
-                        <TableCell className="text-right">
+                        ) : (
+                          format(new Date(shipment.shipping_date), "dd/MM/yyyy")
+                        )}
+                      </TableCell>
+                      <TableCell>
+                        {isEditing ? (
                           <Input
                             type="number"
                             value={getCurrentValue(shipment, "quantity")}
@@ -332,13 +385,18 @@ function ShipmentsTable({ orderId }: { orderId: string }) {
                               handleShipmentFieldChange(
                                 shipment.shipping_no,
                                 "quantity",
-                                Number(e.target.value)
+                                parseInt(e.target.value)
                               )
                             }
-                            className="w-full text-right"
+                            className="h-8 text-sm"
+                            min={1}
                           />
-                        </TableCell>
-                        <TableCell className="text-right">
+                        ) : (
+                          shipment.quantity
+                        )}
+                      </TableCell>
+                      <TableCell>
+                        {isEditing ? (
                           <Input
                             type="number"
                             value={getCurrentValue(shipment, "package_number")}
@@ -346,13 +404,18 @@ function ShipmentsTable({ orderId }: { orderId: string }) {
                               handleShipmentFieldChange(
                                 shipment.shipping_no,
                                 "package_number",
-                                Number(e.target.value)
+                                parseInt(e.target.value)
                               )
                             }
-                            className="w-full text-right"
+                            className="h-8 text-sm"
+                            min={1}
                           />
-                        </TableCell>
-                        <TableCell>
+                        ) : (
+                          shipment.package_number
+                        )}
+                      </TableCell>
+                      <TableCell>
+                        {isEditing ? (
                           <Input
                             value={getCurrentValue(shipment, "shipping_note")}
                             onChange={(e) =>
@@ -362,56 +425,23 @@ function ShipmentsTable({ orderId }: { orderId: string }) {
                                 e.target.value
                               )
                             }
-                            className="w-full"
+                            className="h-8 text-sm"
+                            placeholder="Sevkiyat notu"
                           />
-                        </TableCell>
-                        <TableCell></TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              ) : (
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead className="w-[120px]">Sevkiyat No</TableHead>
-                      <TableHead>Tarih</TableHead>
-                      <TableHead className="text-right">Miktar</TableHead>
-                      <TableHead className="text-right">Paket</TableHead>
-                      <TableHead>Not</TableHead>
-                      <TableHead className="w-[100px]"></TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {shipments.map((shipment) => (
-                      <TableRow
-                        key={shipment.shipping_no}
-                        className="hover:bg-muted/50"
-                      >
-                        <TableCell className="font-medium">
-                          #{shipment.shipping_no}
-                        </TableCell>
-                        <TableCell>
-                          {new Date(shipment.shipping_date).toLocaleDateString(
-                            "tr-TR"
-                          )}
-                        </TableCell>
-                        <TableCell className="text-right">
-                          {shipment.quantity}
-                        </TableCell>
-                        <TableCell className="text-right">
-                          {shipment.package_number}
-                        </TableCell>
-                        <TableCell className="max-w-[200px] truncate">
-                          {shipment.shipping_note || "-"}
-                        </TableCell>
-                        <TableCell>
+                        ) : (
+                          <span className="text-muted-foreground text-sm">
+                            {shipment.shipping_note || "-"}
+                          </span>
+                        )}
+                      </TableCell>
+                      <TableCell className="text-right">
+                        {!isEditing && (
                           <AlertDialog>
                             <AlertDialogTrigger asChild>
                               <Button
                                 variant="ghost"
                                 size="icon"
-                                className="hover:bg-destructive/10 hover:text-destructive"
+                                className="h-8 w-8 text-destructive hover:text-destructive hover:bg-destructive/10"
                               >
                                 <Trash2 className="h-4 w-4" />
                               </Button>
@@ -422,9 +452,8 @@ function ShipmentsTable({ orderId }: { orderId: string }) {
                                   Sevkiyatı Sil
                                 </AlertDialogTitle>
                                 <AlertDialogDescription>
-                                  #{shipment.shipping_no} numaralı sevkiyatı
-                                  silmek istediğinize emin misiniz? Bu işlem
-                                  geri alınamaz.
+                                  Bu sevkiyatı silmek istediğinizden emin
+                                  misiniz? Bu işlem geri alınamaz.
                                 </AlertDialogDescription>
                               </AlertDialogHeader>
                               <AlertDialogFooter>
@@ -433,31 +462,26 @@ function ShipmentsTable({ orderId }: { orderId: string }) {
                                   onClick={() =>
                                     handleDeleteShipment(shipment.shipping_no)
                                   }
-                                  className="bg-destructive hover:bg-destructive/90"
-                                  disabled={
-                                    isDeleting &&
-                                    deletingShipmentId === shipment.shipping_no
-                                  }
+                                  className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
                                 >
-                                  {isDeleting &&
-                                  deletingShipmentId === shipment.shipping_no
+                                  {deletingShipmentId === shipment.shipping_no
                                     ? "Siliniyor..."
                                     : "Sil"}
                                 </AlertDialogAction>
                               </AlertDialogFooter>
                             </AlertDialogContent>
                           </AlertDialog>
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              )}
+                        )}
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
             </div>
           )}
-        </CardContent>
+        </>
       )}
-    </Card>
+    </div>
   );
 }
 
@@ -466,19 +490,14 @@ function calculateTotalQuantity(shipments: Shipping[]): number {
 }
 
 function OrderItemsTable({ orderId }: { orderId: string }) {
-  const searchParams = useSearchParams();
-  const router = useRouter();
   const { data: orderItems = [], isLoading } = useSalesOrderItems(orderId);
-  const { data: shipments = [], isLoading: isShipmentsLoading } =
-    useShipments(orderId);
+  const [isEditing, setIsEditing] = useState(false);
+  const [isCollapsed, setIsCollapsed] = useState(false);
   const { mutate: updateItems, isPending: isUpdating } =
     useUpdateSalesOrderItems(orderId);
-  const [isEditing, setIsEditing] = useState(false);
-  const [isOrderItemsCollapsed, setIsOrderItemsCollapsed] = useState(false);
-  const [itemChanges, setItemChanges] = useState<{
-    [key: number]: Partial<SalesOrderItem>;
-  }>({});
-  const { data: order } = useSalesOrder(orderId);
+  const [itemChanges, setItemChanges] = useState<
+    Record<number, Partial<SalesOrderItem>>
+  >({});
 
   const handleItemFieldChange = (
     itemId: number,
@@ -496,98 +515,58 @@ function OrderItemsTable({ orderId }: { orderId: string }) {
 
   const handleSaveChanges = async () => {
     try {
-      // Format the updated items to match the expected API structure
-      const updatedItems: SalesOrderItemUpdate[] = Object.entries(
-        itemChanges
-      ).map(([itemId, changes]) => {
-        const itemId_num = parseInt(itemId);
-        const originalItem = orderItems.find((item) => item.id === itemId_num);
+      const items = Object.entries(itemChanges).map(([itemId, changes]) => {
+        const item = orderItems.find(
+          (item) => item.id === parseInt(itemId, 10)
+        );
 
-        if (!originalItem) {
-          throw new Error(`Item with ID ${itemId} not found`);
+        if (!item) {
+          throw new Error(`Item ${itemId} not found`);
         }
 
-        // Format dates to YYYY-MM-DD format
         const formatDate = (
           dateValue: string | null | undefined
         ): string | undefined => {
           if (!dateValue) return undefined;
-          // If it's already in YYYY-MM-DD format, return as is
-          if (/^\d{4}-\d{2}-\d{2}$/.test(dateValue)) return dateValue;
-          // Otherwise, convert to YYYY-MM-DD
-          return new Date(dateValue).toISOString().split("T")[0];
+          try {
+            return new Date(dateValue).toISOString().split("T")[0];
+          } catch (e) {
+            return undefined;
+          }
         };
 
-        // Create a simplified item object with only the fields that changed
-        const item: SalesOrderItemUpdate = {
-          id: itemId_num,
-          ordered_quantity: changes.ordered_quantity,
-          deadline_date:
-            changes.deadline_date !== undefined
-              ? formatDate(changes.deadline_date)
-              : undefined,
-          receiving_date:
-            changes.receiving_date !== undefined
-              ? formatDate(changes.receiving_date)
-              : undefined,
-          kapsam_deadline_date:
-            changes.kapsam_deadline_date !== undefined
-              ? formatDate(changes.kapsam_deadline_date)
-              : undefined,
+        const updatedItem: SalesOrderItemUpdate = {
+          id: parseInt(itemId, 10),
+          ...(changes.ordered_quantity && {
+            ordered_quantity: Number(changes.ordered_quantity),
+          }),
+          ...(changes.deadline_date && {
+            deadline_date: formatDate(changes.deadline_date as string),
+          }),
+          ...(changes.kapsam_deadline_date && {
+            kapsam_deadline_date: formatDate(
+              changes.kapsam_deadline_date as string
+            ),
+          }),
+          ...(changes.receiving_date && {
+            receiving_date: formatDate(changes.receiving_date as string),
+          }),
         };
 
-        return item;
+        return updatedItem;
       });
 
-      if (updatedItems.length === 0) {
+      if (items.length === 0) {
         toast.info("Değişiklik yapılmadı");
         return;
       }
 
-      // Log the request body for debugging
-      console.log("Updating items:", updatedItems);
-
-      updateItems(updatedItems);
-      toast.success("Değişiklikler kaydedildi");
+      updateItems(items);
       setItemChanges({});
       setIsEditing(false);
     } catch (error) {
-      let errorMessage = "Değişiklikler kaydedilemedi";
-
-      // Try to parse the error message if it's a JSON string
-      if (error instanceof Error && error.message) {
-        try {
-          const parsedError = JSON.parse(error.message);
-          if (parsedError.detail) {
-            errorMessage = parsedError.detail;
-          } else if (parsedError.items) {
-            // Handle item-specific errors
-            const itemErrors = Object.entries(parsedError.items)
-              .map(([index, errors]: [string, any]) => {
-                const itemIndex = parseInt(index);
-                // Get the item IDs for error reporting
-                const itemIds = Object.entries(itemChanges).map(([id]) =>
-                  parseInt(id)
-                );
-                const itemId =
-                  itemIndex < itemIds.length ? itemIds[itemIndex] : "unknown";
-                const errorMessages = Object.values(errors).flat().join(", ");
-                return `Ürün #${itemId}: ${errorMessages}`;
-              })
-              .join("; ");
-
-            if (itemErrors) {
-              errorMessage = itemErrors;
-            }
-          }
-        } catch (e) {
-          // If parsing fails, use the original error message
-          console.error("Sipariş Kalemleri Güncellenirken Hata Oluştu", e);
-        }
-      }
-
-      toast.error(errorMessage);
-      console.error("Sipariş Kalemleri Güncellenirken Hata Oluştu", error);
+      console.error("Failed to update items:", error);
+      toast.error("Kalemler güncellenirken bir hata oluştu");
     }
   };
 
@@ -596,27 +575,39 @@ function OrderItemsTable({ orderId }: { orderId: string }) {
     setIsEditing(false);
   };
 
-  if (isLoading || isShipmentsLoading) {
-    return <div>Loading...</div>;
+  if (isLoading) {
+    return (
+      <div className="flex justify-center items-center py-8">
+        <div className="flex flex-col items-center space-y-2">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+          <p className="text-sm text-muted-foreground">
+            Kalemler yükleniyor...
+          </p>
+        </div>
+      </div>
+    );
   }
 
   return (
-    <Card className="md:col-span-2">
-      <CardHeader className="flex flex-row items-center justify-between">
+    <div className="space-y-4">
+      <div className="flex justify-between items-center">
         <div className="flex items-center gap-2">
+          <h3 className="text-lg font-medium">Sipariş Kalemleri</h3>
+          <Badge variant="outline" className="ml-2">
+            {orderItems.length}
+          </Badge>
           <Button
             variant="ghost"
             size="icon"
-            onClick={() => setIsOrderItemsCollapsed(!isOrderItemsCollapsed)}
-            className="h-8 w-8"
+            onClick={() => setIsCollapsed(!isCollapsed)}
+            className="h-8 w-8 ml-2"
           >
-            {isOrderItemsCollapsed ? (
+            {isCollapsed ? (
               <ChevronDown className="h-4 w-4" />
             ) : (
               <ChevronUp className="h-4 w-4" />
             )}
           </Button>
-          <CardTitle>Sipariş Kalemleri</CardTitle>
         </div>
         <div className="flex items-center gap-2">
           {isEditing ? (
@@ -625,346 +616,496 @@ function OrderItemsTable({ orderId }: { orderId: string }) {
                 variant="outline"
                 onClick={handleCancelEdit}
                 disabled={isUpdating}
+                size="sm"
               >
                 İptal
               </Button>
               <Button
                 onClick={handleSaveChanges}
-                disabled={isUpdating || Object.keys(itemChanges).length === 0}
+                disabled={isUpdating}
+                size="sm"
               >
                 {isUpdating ? "Kaydediliyor..." : "Kaydet"}
               </Button>
             </>
           ) : (
-            <>
-              {order && (
-                <BatchAddItemsDialog
-                  orderId={orderId}
-                  orderNumber={order.order_number}
-                />
-              )}
+            <div className="flex gap-2">
               <Button
-                variant="outline"
-                className="gap-2"
+                variant="secondary"
                 onClick={() => setIsEditing(true)}
+                disabled={orderItems.length === 0}
+                size="sm"
+                className="h-9 px-3"
               >
-                <Pencil className="h-4 w-4" />
+                <Pencil className="h-3.5 w-3.5 mr-1.5" />
                 Düzenle
               </Button>
-            </>
+              <div className="h-9">
+                <BatchAddItemsDialog
+                  orderId={orderId}
+                  orderNumber={orderItems[0]?.order_number || ""}
+                />
+              </div>
+            </div>
           )}
         </div>
-      </CardHeader>
-      {!isOrderItemsCollapsed && (
-        <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Ürün</TableHead>
-                <TableHead className="text-right">Sipariş Miktarı</TableHead>
-                <TableHead className="text-right">Tamamlanan</TableHead>
-                <TableHead className="text-right">Kalan</TableHead>
-                <TableHead className="text-right">Stok</TableHead>
-                <TableHead className="text-right">
-                  Sipariş Alınan Tarih
-                </TableHead>
-                <TableHead className="text-right">
-                  Sipariş Teslim Tarihi
-                </TableHead>
-                <TableHead className="text-right">
-                  Kapsam Son Teslim Tarihi
-                </TableHead>
-                <TableHead className="text-center">Durum</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {orderItems.map((item: SalesOrderItem) => {
-                const shippedQuantity = shipments.reduce(
-                  (acc: number, shipment: Shipping) =>
-                    shipment.order_item === item.id
-                      ? acc + shipment.quantity
-                      : acc,
-                  0
-                );
+      </div>
 
-                const remainingQuantity =
-                  item.ordered_quantity - item.fulfilled_quantity;
-                const currentStock = item.product_details?.current_stock || 0;
-                const hasEnoughStock = currentStock >= remainingQuantity;
-
-                return (
-                  <TableRow key={item.id}>
-                    <TableCell>
-                      <div className="flex flex-col">
-                        <span className="font-medium">
-                          {item.product_details?.product_name ||
-                            "Unknown Product"}
-                        </span>
-                        <span className="text-sm text-muted-foreground">
-                          {item.product_details?.product_code || "No Code"}
-                        </span>
-                      </div>
-                    </TableCell>
-                    <TableCell className="text-right">
-                      {isEditing ? (
-                        <Input
-                          type="number"
-                          defaultValue={item.ordered_quantity}
-                          value={
-                            itemChanges[item.id]?.ordered_quantity !== undefined
-                              ? itemChanges[item.id].ordered_quantity
-                              : item.ordered_quantity
-                          }
-                          min={1}
-                          className="w-24 text-right"
-                          onChange={(e) =>
-                            handleItemFieldChange(
-                              item.id,
-                              "ordered_quantity",
-                              parseInt(e.target.value)
-                            )
-                          }
-                        />
-                      ) : (
-                        item.ordered_quantity
-                      )}
-                    </TableCell>
-                    <TableCell className="text-right">
-                      {item.fulfilled_quantity}
-                    </TableCell>
-                    <TableCell className="text-right">
-                      {item.ordered_quantity - item.fulfilled_quantity}
-                    </TableCell>
-                    <TableCell className="text-right">{currentStock}</TableCell>
-                    <TableCell className="text-right">
-                      {isEditing ? (
-                        <Input
-                          type="date"
-                          value={
-                            itemChanges[item.id]?.receiving_date
-                              ? new Date(
-                                  itemChanges[item.id].receiving_date as string
-                                )
-                                  .toISOString()
-                                  .split("T")[0]
-                              : item.receiving_date
-                              ? new Date(item.receiving_date)
-                                  .toISOString()
-                                  .split("T")[0]
-                              : ""
-                          }
-                          className="w-32"
-                          onChange={(e) =>
-                            handleItemFieldChange(
-                              item.id,
-                              "receiving_date",
-                              e.target.value
-                            )
-                          }
-                        />
-                      ) : item.receiving_date ? (
-                        format(new Date(item.receiving_date), "dd.MM.yyyy")
-                      ) : (
-                        "-"
-                      )}
-                    </TableCell>
-                    <TableCell className="text-right">
-                      {isEditing ? (
-                        <Input
-                          type="date"
-                          value={
-                            itemChanges[item.id]?.deadline_date
-                              ? new Date(
-                                  itemChanges[item.id].deadline_date as string
-                                )
-                                  .toISOString()
-                                  .split("T")[0]
-                              : item.deadline_date
-                              ? new Date(item.deadline_date)
-                                  .toISOString()
-                                  .split("T")[0]
-                              : ""
-                          }
-                          className="w-32"
-                          onChange={(e) =>
-                            handleItemFieldChange(
-                              item.id,
-                              "deadline_date",
-                              e.target.value
-                            )
-                          }
-                        />
-                      ) : item.deadline_date ? (
-                        format(new Date(item.deadline_date), "dd.MM.yyyy")
-                      ) : (
-                        "-"
-                      )}
-                    </TableCell>
-                    <TableCell className="text-right">
-                      {isEditing ? (
-                        <Input
-                          type="date"
-                          value={
-                            itemChanges[item.id]?.kapsam_deadline_date
-                              ? new Date(
-                                  itemChanges[item.id]
-                                    .kapsam_deadline_date as string
-                                )
-                                  .toISOString()
-                                  .split("T")[0]
-                              : item.kapsam_deadline_date
-                              ? new Date(item.kapsam_deadline_date)
-                                  .toISOString()
-                                  .split("T")[0]
-                              : ""
-                          }
-                          className="w-32"
-                          onChange={(e) =>
-                            handleItemFieldChange(
-                              item.id,
-                              "kapsam_deadline_date",
-                              e.target.value
-                            )
-                          }
-                        />
-                      ) : item.kapsam_deadline_date ? (
-                        format(
-                          new Date(item.kapsam_deadline_date),
-                          "dd.MM.yyyy"
-                        )
-                      ) : (
-                        "-"
-                      )}
-                    </TableCell>
-                    <TableCell className="text-center">
-                      {item.ordered_quantity === item.fulfilled_quantity ? (
-                        <Badge
-                          variant="outline"
-                          className="text-blue-600 text-center border-blue-600 bg-blue-50"
-                        >
-                          Tamamlandı
-                        </Badge>
-                      ) : hasEnoughStock ? (
-                        <Badge
-                          variant="outline"
-                          className="text-green-600 border-green-600 bg-green-50"
-                        >
-                          Stok Yeterli
-                        </Badge>
-                      ) : (
-                        <div className="flex justify-center items-center gap-2">
-                          <Badge variant="destructive">Stok Yetersiz</Badge>
-                          <Button
-                            size="sm"
-                            className="h-8 bg-green-600 hover:bg-green-700 text-white"
-                            asChild
-                          >
-                            <Link href={`/production/plan/${item.id}`}>
-                              <PlusCircle className="h-4 w-4" />
-                              Üretim Planla
-                            </Link>
-                          </Button>
-                        </div>
-                      )}
-                    </TableCell>
+      {!isCollapsed && (
+        <>
+          {orderItems.length === 0 ? (
+            <div className="text-center py-8 border rounded-md bg-gray-50">
+              <div className="flex flex-col items-center space-y-2">
+                <PlusCircle className="h-8 w-8 text-muted-foreground" />
+                <p className="text-muted-foreground">Henüz kalem bulunmuyor</p>
+                <BatchAddItemsDialog orderId={orderId} orderNumber={""} />
+              </div>
+            </div>
+          ) : (
+            <div className="rounded-md border overflow-hidden bg-white">
+              <Table>
+                <TableHeader className="bg-muted/50">
+                  <TableRow>
+                    <TableHead className="w-[300px]">Ürün</TableHead>
+                    <TableHead className="w-[100px]">Miktar</TableHead>
+                    <TableHead className="w-[100px]">Teslim</TableHead>
+                    <TableHead className="w-[130px]">Alım Tarihi</TableHead>
+                    <TableHead className="w-[130px]">Termin Tarihi</TableHead>
+                    <TableHead className="w-[130px]">Kapsam Tarihi</TableHead>
+                    <TableHead className="w-[80px]">İlerleme</TableHead>
                   </TableRow>
-                );
-              })}
-            </TableBody>
-          </Table>
-        </CardContent>
+                </TableHeader>
+                <TableBody>
+                  {orderItems.map((item) => {
+                    const fulfillmentPercentage =
+                      item.ordered_quantity > 0
+                        ? Math.round(
+                            (item.fulfilled_quantity / item.ordered_quantity) *
+                              100
+                          )
+                        : 0;
+
+                    return (
+                      <TableRow key={item.id}>
+                        <TableCell>
+                          <div className="space-y-1">
+                            <div className="font-medium">
+                              {item.product_details?.product_name ||
+                                "Ürün bulunamadı"}
+                            </div>
+                            <div className="text-xs text-muted-foreground">
+                              {item.product_details?.product_code || ""}
+                            </div>
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          {isEditing ? (
+                            <Input
+                              type="number"
+                              value={
+                                itemChanges[item.id]?.ordered_quantity !==
+                                undefined
+                                  ? itemChanges[item.id].ordered_quantity
+                                  : item.ordered_quantity
+                              }
+                              onChange={(e) =>
+                                handleItemFieldChange(
+                                  item.id,
+                                  "ordered_quantity",
+                                  parseInt(e.target.value)
+                                )
+                              }
+                              className="h-8 text-sm"
+                              min={1}
+                            />
+                          ) : (
+                            <div className="font-medium">
+                              {item.ordered_quantity}
+                            </div>
+                          )}
+                        </TableCell>
+                        <TableCell>
+                          <div
+                            className={`font-medium ${
+                              item.fulfilled_quantity >= item.ordered_quantity
+                                ? "text-green-600"
+                                : item.fulfilled_quantity > 0
+                                ? "text-amber-600"
+                                : "text-gray-500"
+                            }`}
+                          >
+                            {item.fulfilled_quantity}
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          {isEditing ? (
+                            <Input
+                              type="date"
+                              value={
+                                itemChanges[item.id]?.receiving_date !==
+                                undefined
+                                  ? (itemChanges[item.id]
+                                      .receiving_date as string)
+                                  : item.receiving_date
+                                  ? new Date(item.receiving_date)
+                                      .toISOString()
+                                      .split("T")[0]
+                                  : ""
+                              }
+                              onChange={(e) =>
+                                handleItemFieldChange(
+                                  item.id,
+                                  "receiving_date",
+                                  e.target.value
+                                )
+                              }
+                              className="h-8 text-sm"
+                            />
+                          ) : item.receiving_date ? (
+                            format(new Date(item.receiving_date), "dd/MM/yyyy")
+                          ) : (
+                            "-"
+                          )}
+                        </TableCell>
+                        <TableCell>
+                          {isEditing ? (
+                            <Input
+                              type="date"
+                              value={
+                                itemChanges[item.id]?.deadline_date !==
+                                undefined
+                                  ? (itemChanges[item.id]
+                                      .deadline_date as string)
+                                  : new Date(item.deadline_date)
+                                      .toISOString()
+                                      .split("T")[0]
+                              }
+                              onChange={(e) =>
+                                handleItemFieldChange(
+                                  item.id,
+                                  "deadline_date",
+                                  e.target.value
+                                )
+                              }
+                              className="h-8 text-sm"
+                            />
+                          ) : (
+                            format(new Date(item.deadline_date), "dd/MM/yyyy")
+                          )}
+                        </TableCell>
+                        <TableCell>
+                          {isEditing ? (
+                            <Input
+                              type="date"
+                              value={
+                                itemChanges[item.id]?.kapsam_deadline_date !==
+                                undefined
+                                  ? (itemChanges[item.id]
+                                      .kapsam_deadline_date as string)
+                                  : item.kapsam_deadline_date
+                                  ? new Date(item.kapsam_deadline_date)
+                                      .toISOString()
+                                      .split("T")[0]
+                                  : ""
+                              }
+                              onChange={(e) =>
+                                handleItemFieldChange(
+                                  item.id,
+                                  "kapsam_deadline_date",
+                                  e.target.value
+                                )
+                              }
+                              className="h-8 text-sm"
+                            />
+                          ) : item.kapsam_deadline_date ? (
+                            format(
+                              new Date(item.kapsam_deadline_date),
+                              "dd/MM/yyyy"
+                            )
+                          ) : (
+                            "-"
+                          )}
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex items-center gap-2">
+                            <div className="relative w-full h-2 bg-muted overflow-hidden rounded-full">
+                              <div
+                                className={`absolute h-full left-0 ${
+                                  fulfillmentPercentage === 100
+                                    ? "bg-green-500"
+                                    : fulfillmentPercentage > 0
+                                    ? "bg-amber-500"
+                                    : "bg-gray-300"
+                                }`}
+                                style={{ width: `${fulfillmentPercentage}%` }}
+                              />
+                            </div>
+                            <span className="text-xs w-7 text-muted-foreground">
+                              {fulfillmentPercentage}%
+                            </span>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })}
+                </TableBody>
+              </Table>
+            </div>
+          )}
+        </>
       )}
-    </Card>
+    </div>
   );
 }
 
 function OrderStatistics({ orderId }: { orderId: string }) {
-  const { data: orderItems = [], isLoading: isOrderItemsLoading } =
-    useSalesOrderItems(orderId);
-  const { data: shipments = [], isLoading: isShipmentsLoading } =
-    useShipments(orderId);
+  const { data: salesOrder, isLoading } = useSalesOrder(orderId);
+  const { data: shipments = [] } = useShipments(orderId);
 
-  if (isOrderItemsLoading || isShipmentsLoading) {
-    return <div>Loading...</div>;
+  if (isLoading || !salesOrder) {
+    return (
+      <div className="flex items-center justify-center py-8">
+        <div className="flex flex-col items-center gap-2">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+          <p className="text-sm text-muted-foreground">
+            İstatistikler yükleniyor...
+          </p>
+        </div>
+      </div>
+    );
   }
 
-  const totalOrderQuantity = orderItems.reduce(
-    (acc: number, item: SalesOrderItem) => acc + item.ordered_quantity,
+  const totalOrderedQuantity = salesOrder.items.reduce(
+    (acc, item) => acc + item.ordered_quantity,
+    0
+  );
+
+  const totalFulfilledQuantity = salesOrder.items.reduce(
+    (acc, item) => acc + item.fulfilled_quantity,
     0
   );
 
   const totalShippedQuantity = calculateTotalQuantity(shipments);
-  const completionPercentage = Math.round(
-    (totalShippedQuantity / totalOrderQuantity) * 100
+
+  const completionPercentage =
+    totalOrderedQuantity > 0
+      ? Math.round((totalFulfilledQuantity / totalOrderedQuantity) * 100)
+      : 0;
+
+  const shippingPercentage =
+    totalOrderedQuantity > 0
+      ? Math.round((totalShippedQuantity / totalOrderedQuantity) * 100)
+      : 0;
+
+  // Group items by deadline status
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  const itemsByDeadlineStatus = salesOrder.items.reduce(
+    (acc, item) => {
+      const deadlineDate = new Date(item.deadline_date);
+      deadlineDate.setHours(0, 0, 0, 0);
+
+      const daysDiff = Math.ceil(
+        (deadlineDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24)
+      );
+
+      if (item.fulfilled_quantity >= item.ordered_quantity) {
+        acc.completed++;
+      } else if (daysDiff < 0) {
+        acc.overdue++;
+      } else if (daysDiff <= 7) {
+        acc.dueThisWeek++;
+      } else if (daysDiff <= 30) {
+        acc.dueThisMonth++;
+      } else {
+        acc.dueLater++;
+      }
+
+      return acc;
+    },
+    {
+      completed: 0,
+      overdue: 0,
+      dueThisWeek: 0,
+      dueThisMonth: 0,
+      dueLater: 0,
+    }
   );
 
   return (
-    <Card>
-      <CardHeader className="flex flex-row items-center justify-between">
-        <CardTitle>Sipariş İstatistikleri</CardTitle>
-      </CardHeader>
-      <CardContent>
-        <div className="space-y-4">
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <p className="text-sm font-medium text-muted-foreground">
-                Toplam Ürün
-              </p>
-              <p className="text-2xl font-bold">{totalOrderQuantity}</p>
-            </div>
-            <div className="space-y-2">
-              <p className="text-sm font-medium text-muted-foreground">
-                Sevk Edilen
-              </p>
-              <p className="text-2xl font-bold">{totalShippedQuantity}</p>
-            </div>
-            <div className="space-y-2">
-              <p className="text-sm font-medium text-muted-foreground">
-                Kalan Miktar
-              </p>
-              <p className="text-2xl font-bold">
-                {totalOrderQuantity - totalShippedQuantity}
-              </p>
-            </div>
-            <div className="space-y-2">
-              <p className="text-sm font-medium text-muted-foreground">
-                Son Sevkiyat
-              </p>
-              <p className="text-2xl font-bold">
-                {shipments.length > 0
-                  ? new Date(
-                      shipments[shipments.length - 1].shipping_date
-                    ).toLocaleDateString("tr-TR")
-                  : "-"}
-              </p>
-            </div>
+    <>
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        {/* Tamamlama Oranı */}
+        <div className="bg-white border rounded-lg p-4">
+          <span className="text-sm font-medium text-muted-foreground">
+            Tamamlama Oranı
+          </span>
+          <div className="mt-2 flex items-baseline">
+            <span className="text-2xl font-semibold">
+              {completionPercentage}%
+            </span>
+            <span className="ml-2 text-sm text-muted-foreground">
+              ({totalFulfilledQuantity}/{totalOrderedQuantity})
+            </span>
           </div>
-
-          <div className="space-y-2">
-            <div className="flex justify-between text-sm">
-              <span className="text-muted-foreground">Tamamlanma Oranı</span>
-              <span className="font-medium">{completionPercentage}%</span>
-            </div>
-            <Progress value={completionPercentage} />
+          <div className="mt-3 relative h-2 w-full bg-muted rounded-full overflow-hidden">
+            <div
+              className={`absolute h-full left-0 ${
+                completionPercentage === 100
+                  ? "bg-green-500"
+                  : completionPercentage > 75
+                  ? "bg-emerald-500"
+                  : completionPercentage > 50
+                  ? "bg-amber-500"
+                  : completionPercentage > 25
+                  ? "bg-orange-500"
+                  : "bg-red-500"
+              }`}
+              style={{ width: `${completionPercentage}%` }}
+            />
           </div>
         </div>
-      </CardContent>
-    </Card>
+
+        {/* Sevkiyat Oranı */}
+        <div className="bg-white border rounded-lg p-4">
+          <span className="text-sm font-medium text-muted-foreground">
+            Sevkiyat Oranı
+          </span>
+          <div className="mt-2 flex items-baseline">
+            <span className="text-2xl font-semibold">
+              {shippingPercentage}%
+            </span>
+            <span className="ml-2 text-sm text-muted-foreground">
+              ({totalShippedQuantity}/{totalOrderedQuantity})
+            </span>
+          </div>
+          <div className="mt-3 relative h-2 w-full bg-muted rounded-full overflow-hidden">
+            <div
+              className={`absolute h-full left-0 ${
+                shippingPercentage === 100
+                  ? "bg-green-500"
+                  : shippingPercentage > 75
+                  ? "bg-emerald-500"
+                  : shippingPercentage > 50
+                  ? "bg-amber-500"
+                  : shippingPercentage > 25
+                  ? "bg-orange-500"
+                  : "bg-red-500"
+              }`}
+              style={{ width: `${shippingPercentage}%` }}
+            />
+          </div>
+        </div>
+
+        {/* Toplam Kalemler */}
+        <div className="bg-white border rounded-lg p-4">
+          <span className="text-sm font-medium text-muted-foreground">
+            Toplam Kalemler
+          </span>
+          <div className="mt-2 flex items-baseline">
+            <span className="text-2xl font-semibold">
+              {salesOrder.items.length}
+            </span>
+            <span className="ml-2 text-sm text-muted-foreground">kalem</span>
+          </div>
+          <div className="mt-2 grid grid-cols-2 gap-2 text-xs">
+            <div className="flex items-center">
+              <div className="w-2 h-2 rounded-full bg-green-500 mr-1.5"></div>
+              <span>Tamamlanan: {itemsByDeadlineStatus.completed}</span>
+            </div>
+            <div className="flex items-center">
+              <div className="w-2 h-2 rounded-full bg-red-500 mr-1.5"></div>
+              <span>Gecikmiş: {itemsByDeadlineStatus.overdue}</span>
+            </div>
+            <div className="flex items-center">
+              <div className="w-2 h-2 rounded-full bg-amber-500 mr-1.5"></div>
+              <span>Bu Hafta: {itemsByDeadlineStatus.dueThisWeek}</span>
+            </div>
+            <div className="flex items-center">
+              <div className="w-2 h-2 rounded-full bg-blue-500 mr-1.5"></div>
+              <span>Bu Ay: {itemsByDeadlineStatus.dueThisMonth}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Kalem Bazında İlerleme */}
+      {salesOrder.items.length > 0 && (
+        <div className="mt-6">
+          <div className="flex justify-between items-center mb-3">
+            <h3 className="text-base font-medium">Kalem Bazında İlerleme</h3>
+          </div>
+          <div className="bg-white border rounded-lg p-4">
+            <div className="space-y-4">
+              {salesOrder.items.map((item) => {
+                const itemProgress =
+                  item.ordered_quantity > 0
+                    ? Math.round(
+                        (item.fulfilled_quantity / item.ordered_quantity) * 100
+                      )
+                    : 0;
+
+                return (
+                  <div key={item.id} className="space-y-2">
+                    <div className="flex justify-between text-sm">
+                      <span className="font-medium truncate max-w-[250px]">
+                        {item.product_details?.product_name ||
+                          "Ürün bulunamadı"}
+                      </span>
+                      <span className="text-muted-foreground text-xs">
+                        {item.fulfilled_quantity}/{item.ordered_quantity} (
+                        {itemProgress}%)
+                      </span>
+                    </div>
+                    <div className="relative h-1.5 w-full bg-muted rounded-full overflow-hidden">
+                      <div
+                        className={`absolute h-full left-0 ${
+                          itemProgress === 100
+                            ? "bg-green-500"
+                            : itemProgress > 0
+                            ? "bg-amber-500"
+                            : "bg-gray-300"
+                        }`}
+                        style={{ width: `${itemProgress}%` }}
+                      />
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+      )}
+    </>
   );
 }
 
 export default function SalesOrderDetailPage() {
   const params = useParams();
   const router = useRouter();
-  const orderId = params?.id as string;
-  const [isEditing, setIsEditing] = useState(false);
+  const searchParams = useSearchParams();
+  const id = params.id as string;
+  const { data: salesOrder, isLoading: isOrderLoading } = useSalesOrder(id);
+  const { data: shipments = [] } = useShipments(id);
+  const [expandedSections, setExpandedSections] = useState<{
+    orderDetails: boolean;
+    orderItems: boolean;
+    shipments: boolean;
+  }>({
+    orderDetails: true,
+    orderItems: true,
+    shipments: true,
+  });
+  const [activeTab, setActiveTab] = useState<
+    "overview" | "items" | "shipments" | "statistics"
+  >("overview");
+  const [isEditingOrder, setIsEditingOrder] = useState(false);
+  const { mutate: updateSalesOrder, isPending: isOrderUpdating } =
+    useUpdateSalesOrder();
+  const { data: customers = [] } = useCustomers();
 
-  const { data: order, isLoading, error } = useSalesOrder(orderId);
-  const { mutate: updateOrder, isPending: isUpdating } = useUpdateSalesOrder();
-  const { data: customers = [] as Customer[], isLoading: isLoadingCustomers } =
-    useCustomers();
-
-  const form = useForm<z.infer<typeof formSchema>>({
+  const form = useForm({
     resolver: zodResolver(formSchema),
     defaultValues: {
       status: "",
@@ -973,262 +1114,406 @@ export default function SalesOrderDetailPage() {
   });
 
   useEffect(() => {
-    if (order) {
+    if (salesOrder) {
       form.reset({
-        status: order.status,
-        customer: order.customer,
+        status: salesOrder.status,
+        customer: salesOrder.customer,
       });
     }
-  }, [order, form]);
-
-  // Return 404 if no orderId is provided
-  if (!orderId) {
-    notFound();
-  }
+  }, [salesOrder, form]);
 
   const handleSaveChanges = async () => {
+    const values = form.getValues();
     try {
-      const values = form.getValues();
-      updateOrder({
-        id: orderId,
+      updateSalesOrder({
+        id,
         data: {
           status: values.status,
-          customer: Number(values.customer),
+          customer: values.customer,
         },
       });
-      toast.success("Sipariş başarıyla güncellendi");
-      setIsEditing(false);
+      setIsEditingOrder(false);
+      toast.success("Order updated successfully");
     } catch (error) {
-      toast.error("Sipariş güncellenirken bir hata oluştu");
-      console.error("Sipariş Güncellenirken Hata Oluştu", error);
+      console.error("Error updating order:", error);
+      toast.error("Failed to update order");
     }
   };
 
   const handleCancelEdit = () => {
-    if (order) {
+    if (salesOrder) {
       form.reset({
-        status: order.status,
-        customer: order.customer,
+        status: salesOrder.status,
+        customer: salesOrder.customer,
       });
     }
-    setIsEditing(false);
+    setIsEditingOrder(false);
   };
 
-  // Show loading state
-  if (isLoading) {
+  if (isOrderLoading) {
     return (
-      <div className="flex items-center justify-center h-screen">
+      <div className="flex items-center justify-center h-96">
         <div className="flex flex-col items-center gap-2">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900" />
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
           <p className="text-sm text-muted-foreground">
-            Sipariş detayları yükleniyor...
+            Loading order details...
           </p>
         </div>
       </div>
     );
   }
 
-  // Show error state
-  if (error) {
-    return (
-      <div className="flex items-center justify-center h-screen">
-        <div className="flex flex-col items-center gap-2">
-          <p className="text-sm text-red-500">Sipariş detayları yüklenemedi</p>
-          <Button variant="outline" asChild>
-            <Link href="/sales">Siparişler</Link>
-          </Button>
-        </div>
-      </div>
-    );
+  if (!salesOrder) {
+    return notFound();
   }
 
-  // Return 404 if no order is found
-  if (!order) {
-    notFound();
-  }
+  const toggleSection = (section: keyof typeof expandedSections) => {
+    setExpandedSections((prev) => ({
+      ...prev,
+      [section]: !prev[section],
+    }));
+  };
 
-  const totalOrderQuantity = order.items.reduce(
-    (acc: number, item: SalesOrderItem) => acc + item.ordered_quantity,
-    0
-  );
-
-  const totalShippedQuantity = calculateTotalQuantity(order.shipments);
-  const completionPercentage = Math.round(
-    (totalShippedQuantity / totalOrderQuantity) * 100
-  );
+  const getStatusBadgeColor = (status: string) => {
+    switch (status) {
+      case "OPEN":
+        return "bg-amber-100 text-amber-800 border-amber-200 hover:bg-amber-200";
+      case "CLOSED":
+        return "bg-green-100 text-green-800 border-green-200 hover:bg-green-200";
+      default:
+        return "bg-gray-100 text-gray-800 border-gray-200 hover:bg-gray-200";
+    }
+  };
 
   return (
-    <div className="container mx-auto py-6 px-4 max-w-7xl">
-      {/* Header */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between mb-8 gap-4">
-        <PageHeader
-          title={`Sipariş #${order.order_number}`}
-          description={order.customer_name}
-          showBackButton
-          onBack={() => router.replace("/sales")}
-        />
-        <div className="flex gap-3">
-          {!isEditing ? (
-            <Button asChild className="gap-2">
-              <Link href={`/sales/${orderId}/create-shipment`}>
-                <Truck className="h-4 w-4" />
-                Yeni Sevkiyat
-              </Link>
-            </Button>
-          ) : null}
+    <div className="overflow-x-hidden">
+      <div className="mx-auto py-4 space-y-6 px-4">
+        <div className="flex flex-col gap-6">
+          {/* Header Section */}
+          <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4 mb-2">
+            <PageHeader
+              title={`Sipariş #${salesOrder.order_number}`}
+              description={`${salesOrder.customer_name} - ${format(
+                new Date(salesOrder.created_at),
+                "dd/MM/yyyy"
+              )}`}
+              showBackButton
+              onBack={() => router.push("/sales")}
+            />
 
-          {!isEditing ? (
-            <>
+            <div className="flex items-center gap-2 self-end lg:self-auto">
+              {/* <Badge
+                className={`px-3 py-1 text-xs font-medium rounded-full border ${getStatusBadgeColor(
+                  salesOrder.status
+                )}`}
+              >
+                {salesOrder.status === "OPEN" ? "Bekliyor" : "Tamamlandı"}
+              </Badge>
+
+              <Link href={`/sales/${id}/create-shipment`}>
+                <Button variant="outline" className="gap-2">
+                <Truck className="h-4 w-4" />
+                  Sevkiyat Oluştur
+            </Button>
+              </Link> */}
+
               <Button
-                onClick={() => setIsEditing(true)}
-                variant="outline"
-                className="gap-2"
+                variant={isEditingOrder ? "secondary" : "outline"}
+                size="icon"
+                onClick={() => setIsEditingOrder(!isEditingOrder)}
               >
                 <Pencil className="h-4 w-4" />
-                Düzenle
               </Button>
-            </>
-          ) : (
-            <div className="flex gap-2">
-              <Button variant="outline" onClick={handleCancelEdit}>
-                İptal
-              </Button>
-              <Button onClick={handleSaveChanges}>Kaydet</Button>
             </div>
-          )}
-        </div>
-      </div>
+          </div>
 
-      {/* Main Content */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {/* Order Details Card */}
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle>Sipariş Detayları</CardTitle>
-            {!isEditing && (
-              <Badge
-                variant="outline"
-                className={cn(
-                  "uppercase bg-green-50 text-green-700 border-green-200",
-                  order.status === "CLOSED" &&
-                    "bg-rose-50 text-rose-700 border-rose-200"
-                )}
+          {/* Tabs Navigation */}
+          <div className="border-b">
+            <div className="flex space-x-2">
+              <Button
+                variant="ghost"
+                className={`px-3 rounded-none ${
+                  activeTab === "overview" ? "border-b-2 border-primary" : ""
+                }`}
+                onClick={() => setActiveTab("overview")}
               >
-                {order.status_display}
-              </Badge>
-            )}
-          </CardHeader>
-          <CardContent>
-            {!isEditing ? (
-              <div className="grid grid-cols-2 gap-6">
-                <div className="space-y-4">
-                  <div>
-                    <p className="text-sm font-medium text-muted-foreground">
-                      Müşteri
-                    </p>
-                    <p className="text-sm">{order.customer_name}</p>
+                Genel Bakış
+              </Button>
+              <Button
+                variant="ghost"
+                className={`px-3 rounded-none ${
+                  activeTab === "items" ? "border-b-2 border-primary" : ""
+                }`}
+                onClick={() => setActiveTab("items")}
+              >
+                Sipariş Kalemleri
+              </Button>
+              <Button
+                variant="ghost"
+                className={`px-3 rounded-none ${
+                  activeTab === "shipments" ? "border-b-2 border-primary" : ""
+                }`}
+                onClick={() => setActiveTab("shipments")}
+              >
+                Sevkiyatlar
+              </Button>
+              <Button
+                variant="ghost"
+                className={`px-3 rounded-none ${
+                  activeTab === "statistics" ? "border-b-2 border-primary" : ""
+                }`}
+                onClick={() => setActiveTab("statistics")}
+              >
+                İstatistikler
+              </Button>
+            </div>
+          </div>
+
+          {/* Tab Content */}
+          <div className="space-y-6">
+            {/* Overview Tab */}
+            {activeTab === "overview" && (
+              <div className="space-y-6">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                  <div className="bg-white rounded-lg border shadow-sm p-4">
+                    <h3 className="text-base font-medium mb-4">
+                      Sipariş Özeti
+                    </h3>
+                    <div className="space-y-3">
+                      <div className="flex justify-between items-center text-sm">
+                        <span className="text-muted-foreground">
+                          Sipariş No
+                        </span>
+                        <span className="font-medium">
+                          {salesOrder.order_number}
+                        </span>
+                      </div>
+                      <div className="flex justify-between items-center text-sm">
+                        <span className="text-muted-foreground">Müşteri</span>
+                        <span className="font-medium">
+                          {salesOrder.customer_name}
+                        </span>
+                      </div>
+                      <div className="flex justify-between items-center text-sm">
+                        <span className="text-muted-foreground">
+                          Oluşturulma Tarihi
+                        </span>
+                        <span className="font-medium">
+                          {format(
+                            new Date(salesOrder.created_at),
+                            "dd/MM/yyyy"
+                          )}
+                        </span>
+                      </div>
+                      <div className="flex justify-between items-center text-sm">
+                        <span className="text-muted-foreground">Durum</span>
+                        <Badge
+                          className={`${getStatusBadgeColor(
+                            salesOrder.status
+                          )}`}
+                        >
+                          {salesOrder.status === "OPEN"
+                            ? "Bekliyor"
+                            : "Tamamlandı"}
+                        </Badge>
+                      </div>
+                      {salesOrder.approved_by && (
+                        <div className="flex justify-between items-center text-sm">
+                          <span className="text-muted-foreground">
+                            Onaylayan
+                          </span>
+                          <span className="font-medium">
+                            {salesOrder.approved_by}
+                          </span>
+                        </div>
+                      )}
+                    </div>
                   </div>
 
-                  <div>
-                    <p className="text-sm font-medium text-muted-foreground">
-                      Müşteri Cari Kodu
-                    </p>
-                    <p className="text-sm">
-                      {order.items[0].product_details?.multicode ?? "-"}
-                    </p>
-                  </div>
-                </div>
-                <div className="space-y-4">
-                  <div>
-                    <p className="text-sm font-medium text-muted-foreground">
-                      Son Sevkiyat
-                    </p>
-                    <p className="text-sm">
-                      {order.shipments.length > 0
-                        ? new Date(
-                            order.shipments[
-                              order.shipments.length - 1
-                            ].shipping_date
-                          ).toLocaleDateString("tr-TR")
-                        : "-"}
-                    </p>
+                  <div className="md:col-span-2">
+                    <h3 className="text-base font-medium mb-4">
+                      Özet İstatistikler
+                    </h3>
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                      {/* Tamamlama Oranı */}
+                      <div className="bg-white border rounded-lg p-4">
+                        <span className="text-sm font-medium text-muted-foreground">
+                          Tamamlama Oranı
+                        </span>
+                        <div className="mt-2 flex items-baseline">
+                          <span className="text-2xl font-semibold">
+                            {salesOrder.items && salesOrder.items.length > 0
+                              ? Math.round(
+                                  (salesOrder.items.reduce(
+                                    (acc, item) =>
+                                      acc + (item.fulfilled_quantity || 0),
+                                    0
+                                  ) /
+                                    salesOrder.items.reduce(
+                                      (acc, item) =>
+                                        acc + (item.ordered_quantity || 0),
+                                      0
+                                    )) *
+                                    100
+                                )
+                              : 0}
+                            %
+                          </span>
+                        </div>
+                      </div>
+
+                      {/* Sevkiyat Oranı */}
+                      <div className="bg-white border rounded-lg p-4">
+                        <span className="text-sm font-medium text-muted-foreground">
+                          Sevkiyat Oranı
+                        </span>
+                        <div className="mt-2 flex items-baseline">
+                          <span className="text-2xl font-semibold">
+                            {salesOrder.items && salesOrder.items.length > 0
+                              ? Math.round(
+                                  (calculateTotalQuantity(shipments || []) /
+                                    salesOrder.items.reduce(
+                                      (acc, item) =>
+                                        acc + (item.ordered_quantity || 0),
+                                      0
+                                    )) *
+                                    100
+                                )
+                              : 0}
+                            %
+                          </span>
+                        </div>
+                      </div>
+
+                      {/* Toplam Kalemler */}
+                      <div className="bg-white border rounded-lg p-4">
+                        <span className="text-sm font-medium text-muted-foreground">
+                          Toplam Kalemler
+                        </span>
+                        <div className="mt-2 flex items-baseline">
+                          <span className="text-2xl font-semibold">
+                            {salesOrder.items?.length || 0}
+                          </span>
+                          <span className="ml-2 text-sm text-muted-foreground">
+                            kalem
+                          </span>
+                        </div>
+                      </div>
+                    </div>
                   </div>
                 </div>
               </div>
-            ) : (
-              <Form {...form}>
-                <form className="space-y-4">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <FormField
-                      control={form.control}
-                      name="status"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Durum</FormLabel>
-                          <Select
-                            disabled={!isEditing}
-                            onValueChange={field.onChange}
-                            defaultValue={field.value}
-                          >
-                            <SelectTrigger>
-                              <SelectValue placeholder="Durum seçiniz" />
-                            </SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="OPEN">Açık</SelectItem>
-                              <SelectItem value="CLOSED">Kapalı</SelectItem>
-                              <SelectItem value="CANCELLED">
-                                İptal Edildi
-                              </SelectItem>
-                            </SelectContent>
-                          </Select>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    <FormField
-                      control={form.control}
-                      name="customer"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Müşteri</FormLabel>
-                          <Select
-                            disabled={!isEditing || isLoadingCustomers}
-                            onValueChange={field.onChange}
-                            defaultValue={field.value.toString()}
-                          >
-                            <SelectTrigger>
-                              <SelectValue placeholder="Müşteri seçiniz" />
-                            </SelectTrigger>
-                            <SelectContent>
-                              {customers.map((customer: Customer) => (
-                                <SelectItem
-                                  key={customer.id}
-                                  value={customer.id.toString()}
-                                >
-                                  {customer.name}
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                  </div>
-                </form>
-              </Form>
             )}
-          </CardContent>
-        </Card>
 
-        {/* Order Statistics */}
-        <OrderStatistics orderId={order.id} />
+            {/* Items Tab */}
+            {activeTab === "items" && <OrderItemsTable orderId={id} />}
 
-        {/* Order Items Table */}
-        <OrderItemsTable orderId={order.id} />
+            {/* Shipments Tab */}
+            {activeTab === "shipments" && <ShipmentsTable orderId={id} />}
 
-        {/* Shipments Card */}
-        <ShipmentsTable orderId={order.id} />
+            {/* Statistics Tab */}
+            {activeTab === "statistics" && (
+              <div className="space-y-6">
+                <h3 className="text-base font-medium mb-4">
+                  Detaylı İstatistikler
+                </h3>
+                <OrderStatistics orderId={id} />
+              </div>
+            )}
+          </div>
+
+          {/* Order Edit Form */}
+          {isEditingOrder && (
+            <div className="mb-6 bg-white rounded-lg border shadow-sm">
+              <div className="p-4 border-b">
+                <h3 className="text-base font-medium">
+                  Sipariş Detaylarını Düzenle
+                </h3>
+              </div>
+              <div className="p-4">
+                <Form {...form}>
+                  <form className="space-y-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <FormField
+                        control={form.control}
+                        name="customer"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Müşteri</FormLabel>
+                            <Select
+                              value={field.value.toString()}
+                              onValueChange={(value) =>
+                                field.onChange(Number(value))
+                              }
+                              disabled={isOrderUpdating}
+                            >
+                              <SelectTrigger>
+                                <SelectValue placeholder="Müşteri Seçin" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                {customers.map((customer: Customer) => (
+                                  <SelectItem
+                                    key={customer.id}
+                                    value={customer.id.toString()}
+                                  >
+                                    {customer.name}
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+
+                      <FormField
+                        control={form.control}
+                        name="status"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Durum</FormLabel>
+                            <Select
+                              value={field.value}
+                              onValueChange={field.onChange}
+                              disabled={isOrderUpdating}
+                            >
+                              <SelectTrigger>
+                                <SelectValue placeholder="Durum Seçin" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="OPEN">Bekliyor</SelectItem>
+                                <SelectItem value="CLOSED">
+                                  Tamamlandı
+                                </SelectItem>
+                              </SelectContent>
+                            </Select>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    </div>
+                  </form>
+                </Form>
+              </div>
+              <div className="p-4 border-t flex justify-end gap-2">
+                <Button
+                  variant="outline"
+                  onClick={handleCancelEdit}
+                  disabled={isOrderUpdating}
+                >
+                  İptal
+                </Button>
+                <Button
+                  variant="primary-blue"
+                  onClick={handleSaveChanges}
+                  disabled={isOrderUpdating}
+                >
+                  {isOrderUpdating ? "Kaydediliyor..." : "Kaydet"}
+                </Button>
+              </div>
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );

@@ -9,9 +9,9 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { MoreHorizontal, Pencil, Trash, Check, X } from "lucide-react";
+import { MoreHorizontal, Pencil, Trash } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useDeleteSalesOrder, useSalesOrders } from "../hooks/useSalesOrders";
+import { useDeleteSalesOrder } from "../hooks/useSalesOrders";
 import { SalesOrder } from "@/types/sales";
 import {
   AlertDialog,

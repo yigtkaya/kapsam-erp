@@ -115,8 +115,12 @@ export async function fetchApi<T>(
     return null as T;
   }
 
+  const data = await response.json();
+
+  console.log(data);
+
   // For other successful responses, try to parse as JSON
-  return await response.json();
+  return data;
 }
 
 /**

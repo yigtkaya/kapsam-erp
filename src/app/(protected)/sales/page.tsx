@@ -145,6 +145,36 @@ export default function SalesPage() {
             pageSize={PAGE_SIZE}
           />
         </Suspense>
+
+        {/* Example of how to use the useCreateOrderShipment hook 
+        
+        Usage:
+
+        import { useCreateOrderShipment } from './hooks/useShipments';
+        
+        // Inside a component where orderId is available
+        const { mutate: createShipment, isLoading } = useCreateOrderShipment("ORDER-123");
+        
+        // Later, when you need to create a shipment:
+        const handleCreateShipment = () => {
+          createShipment({
+            shipping_no: "SHIP-001",
+            shipping_date: "2023-03-15",
+            order_item: 123,
+            quantity: 10,
+            package_number: 1,
+            shipping_note: "Handle with care"
+          });
+        };
+        
+        // In your JSX:
+        <Button 
+          onClick={handleCreateShipment} 
+          disabled={isLoading}
+        >
+          {isLoading ? "Creating..." : "Create Shipment"}
+        </Button>
+        */}
       </div>
     </div>
   );

@@ -76,6 +76,7 @@ export function SalesView({
   const { data: salesOrders = [] } = useSalesOrders();
   // Add state for status filter
   const [statusFilter, setStatusFilter] = useState("all");
+  const [dateFilter, setDateFilter] = useState("all");
   const isInitialRender = useRef(true);
 
   // Process orders with memoization - but don't apply sorting here anymore
@@ -132,6 +133,20 @@ export function SalesView({
             <SelectItem value="all">Bütün Durumlar</SelectItem>
             <SelectItem value="OPEN">Bekliyor</SelectItem>
             <SelectItem value="CLOSED">Tamamlandı</SelectItem>
+          </SelectContent>
+        </Select>
+
+        <Select value={dateFilter} onValueChange={setDateFilter}>
+          <SelectTrigger className="max-w-[200px]">
+            <SelectValue placeholder="Tarih Aralığı" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">Tüm Zamanlar</SelectItem>
+            <SelectItem value="today">Bugün</SelectItem>
+            <SelectItem value="last_7_days">Son 7 Gün</SelectItem>
+            <SelectItem value="last_30_days">Son 30 Gün</SelectItem>
+            <SelectItem value="this_month">Bu Ay</SelectItem>
+            <SelectItem value="last_month">Geçen Ay</SelectItem>
           </SelectContent>
         </Select>
       </div>
