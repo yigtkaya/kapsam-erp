@@ -1,14 +1,13 @@
 "use client";
 
-import { SalesOrder } from "@/types/sales";
 import {
   ColumnDef,
   flexRender,
   getCoreRowModel,
   useReactTable,
-  getExpandedRowModel,
   getSortedRowModel,
   SortingState,
+  OnChangeFn,
 } from "@tanstack/react-table";
 import {
   Table,
@@ -19,9 +18,8 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { DataTablePagination } from "./data-table-pagination";
-import { DataTableRowActions } from "./data-table-row-actions";
 import { useRouter } from "next/navigation";
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import type { SalesOrderItem } from "@/types/sales";
 
 interface DataTableProps {
@@ -46,13 +44,25 @@ export function DataTable({
   const router = useRouter();
   const [sorting, setSorting] = useState<SortingState>([]);
 
-  // Initialize with URL sort state if available
-  useEffect(() => {
-    if (onSortChange && sorting.length > 0) {
-      const sortKey = `${sorting[0].id}_${sorting[0].desc ? "desc" : "asc"}`;
+  // Custom sorting handler that also notifies parent component
+  const handleSortingChange: OnChangeFn<SortingState> = (updaterOrValue) => {
+    // First, update the local state
+    setSorting(updaterOrValue);
+
+    // Then determine the new sorting state to notify parent
+    const newSorting =
+      typeof updaterOrValue === "function"
+        ? updaterOrValue(sorting)
+        : updaterOrValue;
+
+    // Only notify parent if there's a sort to report
+    if (newSorting.length > 0 && onSortChange) {
+      const sortKey = `${newSorting[0].id}_${
+        newSorting[0].desc ? "desc" : "asc"
+      }`;
       onSortChange(sortKey);
     }
-  }, []); // Run only once on mount
+  };
 
   const table = useReactTable({
     data,
@@ -61,7 +71,7 @@ export function DataTable({
     getSortedRowModel: getSortedRowModel(),
     manualPagination: true,
     pageCount,
-    onSortingChange: setSorting, // Only update local state for smoother UI
+    onSortingChange: handleSortingChange,
     state: {
       sorting,
     },
@@ -141,7 +151,11 @@ export function DataTable({
                 <TableRow
                   key={row.id}
                   className="group cursor-pointer transition-all duration-200 hover:bg-muted/50"
-                  onClick={() => router.push(`/sales/${row.original.order_id}`)}
+                  onClick={() =>
+                    router.push(`/sales/${row.original.order_id}`, {
+                      scroll: false,
+                    })
+                  }
                 >
                   {row.getVisibleCells().map((cell) => (
                     <TableCell

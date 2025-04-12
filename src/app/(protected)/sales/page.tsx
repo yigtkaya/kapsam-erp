@@ -5,13 +5,7 @@ import { PageHeader } from "@/components/ui/page-header";
 import { Plus } from "lucide-react";
 import Link from "next/link";
 import { useSearchParams, useRouter, usePathname } from "next/navigation";
-import {
-  Suspense,
-  useCallback,
-  useTransition,
-  useState,
-  useEffect,
-} from "react";
+import { Suspense, useCallback, useTransition, useState, useRef } from "react";
 import { SalesView } from "./components/sales-view";
 
 const PAGE_SIZE = 50;
@@ -21,8 +15,9 @@ export default function SalesPage() {
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const [isPending, startTransition] = useTransition();
+  const isInitialMount = useRef(true);
 
-  // Local state to prevent UI jitter
+  // Local state initialized from URL params only on initial load
   const [localQuery, setLocalQuery] = useState(searchParams.get("q") || "");
   const [localSortBy, setLocalSortBy] = useState(
     searchParams.get("sort") || "order_number_asc"
@@ -31,89 +26,19 @@ export default function SalesPage() {
     parseInt(searchParams.get("page") || "0")
   );
 
-  // Get values from URL or use defaults
-  const query = searchParams.get("q") || "";
-  const sort = searchParams.get("sort") || "order_number_asc";
-  const page = parseInt(searchParams.get("page") || "0");
+  // Update handlers keep state only locally, without URL updates
+  const handleSearchChange = useCallback((value: string) => {
+    setLocalQuery(value);
+    setLocalPage(0);
+  }, []);
 
-  // Sync URL params to local state on initial load and URL changes
-  useEffect(() => {
-    setLocalQuery(query);
-    setLocalSortBy(sort);
-    setLocalPage(page);
-  }, [query, sort, page]);
+  const handleSortChange = useCallback((value: string) => {
+    setLocalSortBy(value);
+  }, []);
 
-  // Create URL update function
-  const createQueryString = useCallback(
-    (params: Record<string, string>) => {
-      const newSearchParams = new URLSearchParams(searchParams.toString());
-
-      Object.entries(params).forEach(([key, value]) => {
-        if (value === null || value === "") {
-          newSearchParams.delete(key);
-        } else {
-          newSearchParams.set(key, value);
-        }
-      });
-
-      return newSearchParams.toString();
-    },
-    [searchParams]
-  );
-
-  // Update URL handlers with transitions
-  const handleSearchChange = useCallback(
-    (value: string) => {
-      // Update local state immediately
-      setLocalQuery(value);
-      setLocalPage(0);
-
-      // Debounce URL update for smoother UI
-      startTransition(() => {
-        router.push(
-          `${pathname}?${createQueryString({
-            q: value,
-            page: "0", // Reset page when search changes
-          })}`
-        );
-      });
-    },
-    [router, pathname, createQueryString]
-  );
-
-  const handleSortChange = useCallback(
-    (value: string) => {
-      // Update local state immediately
-      setLocalSortBy(value);
-
-      // Update URL
-      startTransition(() => {
-        router.push(
-          `${pathname}?${createQueryString({
-            sort: value,
-          })}`
-        );
-      });
-    },
-    [router, pathname, createQueryString]
-  );
-
-  const handlePageChange = useCallback(
-    (value: number) => {
-      // Update local state immediately
-      setLocalPage(value);
-
-      // Update URL
-      startTransition(() => {
-        router.push(
-          `${pathname}?${createQueryString({
-            page: value.toString(),
-          })}`
-        );
-      });
-    },
-    [router, pathname, createQueryString]
-  );
+  const handlePageChange = useCallback((value: number) => {
+    setLocalPage(value);
+  }, []);
 
   return (
     <div className="overflow-x-hidden">

@@ -44,21 +44,35 @@ These are guidelines for developing features in the Kapsam ERP frontend applicat
    - Implement loading states during submissions
    - Disable form controls during submission
 
-2. **Toast Messages**:
+2. **Input and Select Styling**:
+
+   - Use consistent styling for all form controls
+   - Apply the following classes to Input components:
+     ```
+     className="h-10 border border-input rounded-md focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+     ```
+   - Apply the following classes to SelectTrigger components:
+     ```
+     className="h-10 border border-input rounded-md focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+     ```
+   - Add width constraints as needed (e.g., max-w-sm, max-w-[200px], w-full)
+   - Maintain consistent height (h-10) across all form inputs
+
+3. **Toast Messages**:
 
    - Use toast messages for all user notifications
    - Display success messages from API responses
    - Display error messages from API responses
    - Keep messages concise and actionable
 
-3. **Layout Consistency**:
+4. **Layout Consistency**:
 
    - Maintain consistent spacing and layout
    - Use the defined color palette
    - Ensure all UI elements are responsive
    - Follow the established component patterns
 
-4. **Accessibility**:
+5. **Accessibility**:
    - Ensure all interactive elements are keyboard accessible
    - Use ARIA attributes appropriately
    - Maintain sufficient color contrast

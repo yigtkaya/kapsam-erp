@@ -13,6 +13,13 @@ import {
 } from "@/components/ui/select";
 import { useMemo, useState, useEffect, useRef } from "react";
 import { useSalesOrders } from "../hooks/useSalesOrders";
+import {
+  startOfDay,
+  subDays,
+  startOfMonth,
+  endOfMonth,
+  isWithinInterval,
+} from "date-fns";
 
 interface SalesViewProps {
   searchQuery: string;
@@ -31,9 +38,18 @@ function processOrders(
   query: string,
   page: number,
   pageSize: number,
-  statusFilter: string = "all"
+  statusFilter: string = "all",
+  dateFilter: string = "all"
 ) {
-  if (!orders) return { currentItems: [], totalPages: 0 };
+  if (!orders) return { currentItems: [], totalPages: 0, allItems: [] };
+
+  // Calculate date ranges for filtering
+  const today = startOfDay(new Date());
+  const last7Days = subDays(today, 7);
+  const last30Days = subDays(today, 30);
+  const thisMonthStart = startOfMonth(today);
+  const lastMonthStart = startOfMonth(subDays(thisMonthStart, 1));
+  const lastMonthEnd = endOfMonth(lastMonthStart);
 
   // First, filter the orders
   let filtered = orders.filter((order) => {
@@ -50,7 +66,36 @@ function processOrders(
       (statusFilter === "pending" && order.status === "OPEN") ||
       (statusFilter === "completed" && order.status === "CLOSED");
 
-    return matchesSearch && matchesStatus;
+    // Apply date filter
+    let matchesDate = true;
+    if (dateFilter !== "all" && order.created_at) {
+      const orderDate = new Date(order.created_at);
+
+      switch (dateFilter) {
+        case "today":
+          matchesDate = orderDate >= today;
+          break;
+        case "last_7_days":
+          matchesDate = orderDate >= last7Days;
+          break;
+        case "last_30_days":
+          matchesDate = orderDate >= last30Days;
+          break;
+        case "this_month":
+          matchesDate = orderDate >= thisMonthStart;
+          break;
+        case "last_month":
+          matchesDate = isWithinInterval(orderDate, {
+            start: lastMonthStart,
+            end: lastMonthEnd,
+          });
+          break;
+        default:
+          matchesDate = true;
+      }
+    }
+
+    return matchesSearch && matchesStatus && matchesDate;
   });
 
   // Calculate pagination
@@ -77,9 +122,9 @@ export function SalesView({
   // Add state for status filter
   const [statusFilter, setStatusFilter] = useState("all");
   const [dateFilter, setDateFilter] = useState("all");
-  const isInitialRender = useRef(true);
+  const debounceTimer = useRef<NodeJS.Timeout | null>(null);
 
-  // Process orders with memoization - but don't apply sorting here anymore
+  // Process orders with memoization
   const { currentItems, totalPages, allItems } = useMemo(
     () =>
       processOrders(
@@ -87,32 +132,31 @@ export function SalesView({
         searchQuery,
         currentPage,
         pageSize,
-        statusFilter
+        statusFilter,
+        dateFilter
       ),
-    [salesOrders, searchQuery, currentPage, pageSize, statusFilter]
+    [salesOrders, searchQuery, currentPage, pageSize, statusFilter, dateFilter]
   );
-
-  // Debounced URL update for sorting
-  useEffect(() => {
-    if (isInitialRender.current) {
-      isInitialRender.current = false;
-      return;
-    }
-
-    const updateTimeout = setTimeout(() => {
-      // This will only update the URL, not trigger a data fetch
-      if (sortBy) {
-        onSortChange(sortBy);
-      }
-    }, 300); // Wait for 300ms of inactivity before updating URL
-
-    return () => clearTimeout(updateTimeout);
-  }, [sortBy, onSortChange]);
 
   const handleStatusChange = (value: string) => {
     setStatusFilter(value);
-    // Reset to page 0 when filter changes
-    onPageChange(0);
+    resetToFirstPage();
+  };
+
+  const handleDateFilterChange = (value: string) => {
+    setDateFilter(value);
+    resetToFirstPage();
+  };
+
+  // Reset to page 0 when filters change
+  const resetToFirstPage = () => {
+    if (debounceTimer.current) {
+      clearTimeout(debounceTimer.current);
+    }
+
+    debounceTimer.current = setTimeout(() => {
+      onPageChange(0);
+    }, 100);
   };
 
   return (
@@ -122,11 +166,11 @@ export function SalesView({
           placeholder="Sipariş numarası veya müşteri ara..."
           value={searchQuery}
           onChange={(e) => onSearchChange(e.target.value)}
-          className="max-w-sm"
+          className="max-w-sm h-10 border border-input rounded-md focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
         />
 
         <Select value={statusFilter} onValueChange={handleStatusChange}>
-          <SelectTrigger className="max-w-[200px]">
+          <SelectTrigger className="max-w-[200px] h-10 border border-input rounded-md focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring">
             <SelectValue placeholder="Durum" />
           </SelectTrigger>
           <SelectContent>
@@ -136,8 +180,8 @@ export function SalesView({
           </SelectContent>
         </Select>
 
-        <Select value={dateFilter} onValueChange={setDateFilter}>
-          <SelectTrigger className="max-w-[200px]">
+        <Select value={dateFilter} onValueChange={handleDateFilterChange}>
+          <SelectTrigger className="max-w-[200px] h-10 border border-input rounded-md focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring">
             <SelectValue placeholder="Tarih Aralığı" />
           </SelectTrigger>
           <SelectContent>
