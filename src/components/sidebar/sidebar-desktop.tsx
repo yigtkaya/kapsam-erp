@@ -63,7 +63,7 @@ export default function SidebarDesktop({
   return (
     <aside
       className={cn(
-        "hidden lg:flex flex-col fixed left-0 top-0 h-screen bg-white border-r z-50 transition-all duration-300",
+        "hidden lg:flex flex-col fixed left-0 top-0 h-screen bg-white border-r z-40 transition-all duration-300",
         isExpanded ? "w-64" : "w-16",
         className
       )}
@@ -74,29 +74,22 @@ export default function SidebarDesktop({
       }}
     >
       <div className="flex flex-col h-full">
-        {/* Logo Section */}
-        <div className="p-4 border-b border-gray-200 flex justify-center items-center">
-          {isExpanded ? (
-            <div className="w-full flex justify-center">
-              <Image
-                src="/logo.jpg"
-                alt="Logo"
-                width={150}
-                height={40}
-                className="object-contain"
-              />
-            </div>
-          ) : (
-            <div className="w-8 h-8">
-              <Image
-                src="/logo.jpg"
-                alt="Logo"
-                width={32}
-                height={32}
-                className="object-contain"
-              />
-            </div>
-          )}
+        {/* Logo Section - Fixed height prevents jumping */}
+        <div className="p-4 pt-5 border-b border-gray-200 flex justify-center items-center h-[72px]">
+          <div
+            className={cn(
+              "relative transition-all duration-300",
+              isExpanded ? "w-40 h-10" : "w-8 h-8"
+            )}
+          >
+            <Image
+              src="/logo.jpg"
+              alt="Logo"
+              fill
+              className="object-contain"
+              priority
+            />
+          </div>
         </div>
 
         {/* Navigation Links */}

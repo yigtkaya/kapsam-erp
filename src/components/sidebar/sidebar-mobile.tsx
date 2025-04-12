@@ -40,14 +40,14 @@ export default function SidebarMobile({ items, userRole }: SidebarMobileProps) {
       <SheetContent side="left" className="p-0">
         <div className="flex flex-col h-full">
           {/* Logo */}
-          <div className="p-4 border-b border-gray-200">
-            <div className="flex justify-center">
+          <div className="p-4 border-b border-gray-200 flex justify-center items-center h-[72px]">
+            <div className="relative w-40 h-10">
               <Image
                 src="/logo.jpg"
                 alt="Logo"
-                width={150}
-                height={40}
+                fill
                 className="object-contain"
+                priority
               />
             </div>
           </div>

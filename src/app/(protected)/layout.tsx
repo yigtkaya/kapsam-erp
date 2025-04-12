@@ -55,11 +55,10 @@ function ProtectedContent({ children }: { children: React.ReactNode }) {
   }
 
   return (
-    <div className="flex w-full">
+    <div className="flex w-full min-h-screen bg-gray-50">
       <Sidebar className="hidden lg:flex" />
       <div className="flex-1 lg:pl-16">
-        <UnifiedHeader />
-        <main className="pt-24 px-8 pb-8">{children}</main>
+        <main className="pt-6 px-4 md:px-8 pb-8">{children}</main>
       </div>
     </div>
   );
