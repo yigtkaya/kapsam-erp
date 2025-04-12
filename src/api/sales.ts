@@ -5,7 +5,6 @@ import {
   CreateShipmentRequest,
   SalesOrder,
   SalesOrderItem,
-  SalesOrderStatus,
 } from "@/types/sales";
 import { fetchApi, postApi, updateApi, deleteApi } from "./api-helpers";
 

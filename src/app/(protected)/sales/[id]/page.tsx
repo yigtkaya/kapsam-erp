@@ -30,6 +30,7 @@ import {
   Trash2,
   ChevronUp,
   ChevronDown,
+  ChevronLeft,
 } from "lucide-react";
 import Link from "next/link";
 import { SalesOrder, SalesOrderItem, Shipping } from "@/types/sales";
@@ -78,6 +79,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
+import OrderTracker from "./components/OrderTracker";
 
 const formSchema = z.object({
   status: z.string().min(1, "Status is required"),
@@ -1088,22 +1090,18 @@ export default function SalesOrderDetailPage() {
   const id = params.id as string;
   const { data: salesOrder, isLoading: isOrderLoading } = useSalesOrder(id);
   const { data: shipments = [] } = useShipments(id);
-  const [expandedSections, setExpandedSections] = useState<{
-    orderDetails: boolean;
-    orderItems: boolean;
-    shipments: boolean;
-  }>({
-    orderDetails: true,
-    orderItems: true,
-    shipments: true,
-  });
-  const [activeTab, setActiveTab] = useState<
-    "overview" | "items" | "shipments" | "statistics"
-  >("overview");
+  const { data: orderItems = [], isLoading: isItemsLoading } =
+    useSalesOrderItems(id);
   const [isEditingOrder, setIsEditingOrder] = useState(false);
+  const [isEditingItems, setIsEditingItems] = useState(false);
+  const [isEditingShipments, setIsEditingShipments] = useState(false);
+  const [isBatchAddingItems, setIsBatchAddingItems] = useState(false);
   const { mutate: updateSalesOrder, isPending: isOrderUpdating } =
     useUpdateSalesOrder();
   const { data: customers = [] } = useCustomers();
+  const { mutate: deleteShipment, isPending: isDeleting } =
+    useDeleteOrderShipment(id);
+  const { mutate: batchUpdateShipments } = useBatchUpdateShipments(id);
 
   const form = useForm({
     resolver: zodResolver(formSchema),
@@ -1133,10 +1131,10 @@ export default function SalesOrderDetailPage() {
         },
       });
       setIsEditingOrder(false);
-      toast.success("Order updated successfully");
+      toast.success("Sipariş başarıyla güncellendi");
     } catch (error) {
       console.error("Error updating order:", error);
-      toast.error("Failed to update order");
+      toast.error("Sipariş güncellenirken bir hata oluştu");
     }
   };
 
@@ -1150,13 +1148,23 @@ export default function SalesOrderDetailPage() {
     setIsEditingOrder(false);
   };
 
-  if (isOrderLoading) {
+  const handleDeleteShipment = async (shippingNo: string) => {
+    try {
+      deleteShipment(shippingNo);
+      toast.success(`Sevkiyat #${shippingNo} başarıyla silindi`);
+    } catch (error) {
+      console.error("Sevkiyat Silinirken Hata Oluştu", error);
+      toast.error("Sevkiyat silinirken bir hata oluştu");
+    }
+  };
+
+  if (isOrderLoading || isItemsLoading) {
     return (
       <div className="flex items-center justify-center h-96">
         <div className="flex flex-col items-center gap-2">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
           <p className="text-sm text-muted-foreground">
-            Loading order details...
+            Sipariş detayları yükleniyor...
           </p>
         </div>
       </div>
@@ -1167,354 +1175,129 @@ export default function SalesOrderDetailPage() {
     return notFound();
   }
 
-  const toggleSection = (section: keyof typeof expandedSections) => {
-    setExpandedSections((prev) => ({
-      ...prev,
-      [section]: !prev[section],
-    }));
-  };
-
-  const getStatusBadgeColor = (status: string) => {
-    switch (status) {
-      case "OPEN":
-        return "bg-amber-100 text-amber-800 border-amber-200 hover:bg-amber-200";
-      case "CLOSED":
-        return "bg-green-100 text-green-800 border-green-200 hover:bg-green-200";
-      default:
-        return "bg-gray-100 text-gray-800 border-gray-200 hover:bg-gray-200";
-    }
-  };
-
-  return (
-    <div className="overflow-x-hidden">
-      <div className="mx-auto py-4 space-y-6 px-4">
-        <div className="flex flex-col gap-6">
-          {/* Header Section */}
-          <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4 mb-2">
-            <PageHeader
-              title={`Sipariş #${salesOrder.order_number}`}
-              description={`${salesOrder.customer_name} - ${format(
-                new Date(salesOrder.created_at),
-                "dd/MM/yyyy"
-              )}`}
-              showBackButton
-              onBack={() => router.push("/sales")}
-            />
-
-            <div className="flex items-center gap-2 self-end lg:self-auto">
-              {/* <Badge
-                className={`px-3 py-1 text-xs font-medium rounded-full border ${getStatusBadgeColor(
-                  salesOrder.status
-                )}`}
-              >
-                {salesOrder.status === "OPEN" ? "Bekliyor" : "Tamamlandı"}
-              </Badge>
-
-              <Link href={`/sales/${id}/create-shipment`}>
-                <Button variant="outline" className="gap-2">
-                <Truck className="h-4 w-4" />
-                  Sevkiyat Oluştur
-            </Button>
-              </Link> */}
-
-              <Button
-                variant={isEditingOrder ? "secondary" : "outline"}
-                size="icon"
-                onClick={() => setIsEditingOrder(!isEditingOrder)}
-              >
-                <Pencil className="h-4 w-4" />
-              </Button>
-            </div>
+  // Render edit order form when editing
+  if (isEditingOrder) {
+    return (
+      <div className="bg-gray-50 min-h-screen">
+        <div className="container mx-auto py-6 px-4">
+          <div className="mb-6 flex items-center gap-4">
+            <button
+              className="text-gray-600 hover:text-gray-800"
+              onClick={() => setIsEditingOrder(false)}
+            >
+              <ChevronLeft size={20} />
+            </button>
+            <h1 className="text-xl font-bold">
+              Sipariş Düzenle - #{salesOrder.order_number}
+            </h1>
           </div>
 
-          {/* Tabs Navigation */}
-          <div className="border-b">
-            <div className="flex space-x-2">
-              <Button
-                variant="ghost"
-                className={`px-3 rounded-none ${
-                  activeTab === "overview" ? "border-b-2 border-primary" : ""
-                }`}
-                onClick={() => setActiveTab("overview")}
-              >
-                Genel Bakış
-              </Button>
-              <Button
-                variant="ghost"
-                className={`px-3 rounded-none ${
-                  activeTab === "items" ? "border-b-2 border-primary" : ""
-                }`}
-                onClick={() => setActiveTab("items")}
-              >
-                Sipariş Kalemleri
-              </Button>
-              <Button
-                variant="ghost"
-                className={`px-3 rounded-none ${
-                  activeTab === "shipments" ? "border-b-2 border-primary" : ""
-                }`}
-                onClick={() => setActiveTab("shipments")}
-              >
-                Sevkiyatlar
-              </Button>
-              <Button
-                variant="ghost"
-                className={`px-3 rounded-none ${
-                  activeTab === "statistics" ? "border-b-2 border-primary" : ""
-                }`}
-                onClick={() => setActiveTab("statistics")}
-              >
-                İstatistikler
-              </Button>
-            </div>
-          </div>
-
-          {/* Tab Content */}
-          <div className="space-y-6">
-            {/* Overview Tab */}
-            {activeTab === "overview" && (
+          <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-100">
+            <Form {...form}>
               <div className="space-y-6">
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                  <div className="bg-white rounded-lg border shadow-sm p-4">
-                    <h3 className="text-base font-medium mb-4">
-                      Sipariş Özeti
-                    </h3>
-                    <div className="space-y-3">
-                      <div className="flex justify-between items-center text-sm">
-                        <span className="text-muted-foreground">
-                          Sipariş No
-                        </span>
-                        <span className="font-medium">
-                          {salesOrder.order_number}
-                        </span>
-                      </div>
-                      <div className="flex justify-between items-center text-sm">
-                        <span className="text-muted-foreground">Müşteri</span>
-                        <span className="font-medium">
-                          {salesOrder.customer_name}
-                        </span>
-                      </div>
-                      <div className="flex justify-between items-center text-sm">
-                        <span className="text-muted-foreground">
-                          Oluşturulma Tarihi
-                        </span>
-                        <span className="font-medium">
-                          {format(
-                            new Date(salesOrder.created_at),
-                            "dd/MM/yyyy"
-                          )}
-                        </span>
-                      </div>
-                      <div className="flex justify-between items-center text-sm">
-                        <span className="text-muted-foreground">Durum</span>
-                        <Badge
-                          className={`${getStatusBadgeColor(
-                            salesOrder.status
-                          )}`}
-                        >
-                          {salesOrder.status === "OPEN"
-                            ? "Bekliyor"
-                            : "Tamamlandı"}
-                        </Badge>
-                      </div>
-                      {salesOrder.approved_by && (
-                        <div className="flex justify-between items-center text-sm">
-                          <span className="text-muted-foreground">
-                            Onaylayan
-                          </span>
-                          <span className="font-medium">
-                            {salesOrder.approved_by}
-                          </span>
-                        </div>
-                      )}
-                    </div>
-                  </div>
+                <FormField
+                  control={form.control}
+                  name="status"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="text-gray-700">Durum</FormLabel>
+                      <Select
+                        onValueChange={field.onChange}
+                        defaultValue={field.value}
+                      >
+                        <FormMessage />
+                        <SelectTrigger className="bg-white border border-gray-200 h-10">
+                          <SelectValue placeholder="Durum seçiniz" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="OPEN">Bekliyor</SelectItem>
+                          <SelectItem value="CLOSED">Tamamlandı</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </FormItem>
+                  )}
+                />
 
-                  <div className="md:col-span-2">
-                    <h3 className="text-base font-medium mb-4">
-                      Özet İstatistikler
-                    </h3>
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                      {/* Tamamlama Oranı */}
-                      <div className="bg-white border rounded-lg p-4">
-                        <span className="text-sm font-medium text-muted-foreground">
-                          Tamamlama Oranı
-                        </span>
-                        <div className="mt-2 flex items-baseline">
-                          <span className="text-2xl font-semibold">
-                            {salesOrder.items && salesOrder.items.length > 0
-                              ? Math.round(
-                                  (salesOrder.items.reduce(
-                                    (acc, item) =>
-                                      acc + (item.fulfilled_quantity || 0),
-                                    0
-                                  ) /
-                                    salesOrder.items.reduce(
-                                      (acc, item) =>
-                                        acc + (item.ordered_quantity || 0),
-                                      0
-                                    )) *
-                                    100
-                                )
-                              : 0}
-                            %
-                          </span>
-                        </div>
-                      </div>
+                <FormField
+                  control={form.control}
+                  name="customer"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="text-gray-700">Müşteri</FormLabel>
+                      <Select
+                        onValueChange={(value) =>
+                          field.onChange(parseInt(value))
+                        }
+                        defaultValue={field.value.toString()}
+                      >
+                        <FormMessage />
+                        <SelectTrigger className="bg-white border border-gray-200 h-10">
+                          <SelectValue placeholder="Müşteri seçiniz" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {customers.map((customer) => (
+                            <SelectItem
+                              key={customer.id}
+                              value={customer.id.toString()}
+                            >
+                              {customer.name}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </FormItem>
+                  )}
+                />
 
-                      {/* Sevkiyat Oranı */}
-                      <div className="bg-white border rounded-lg p-4">
-                        <span className="text-sm font-medium text-muted-foreground">
-                          Sevkiyat Oranı
-                        </span>
-                        <div className="mt-2 flex items-baseline">
-                          <span className="text-2xl font-semibold">
-                            {salesOrder.items && salesOrder.items.length > 0
-                              ? Math.round(
-                                  (calculateTotalQuantity(shipments || []) /
-                                    salesOrder.items.reduce(
-                                      (acc, item) =>
-                                        acc + (item.ordered_quantity || 0),
-                                      0
-                                    )) *
-                                    100
-                                )
-                              : 0}
-                            %
-                          </span>
-                        </div>
-                      </div>
-
-                      {/* Toplam Kalemler */}
-                      <div className="bg-white border rounded-lg p-4">
-                        <span className="text-sm font-medium text-muted-foreground">
-                          Toplam Kalemler
-                        </span>
-                        <div className="mt-2 flex items-baseline">
-                          <span className="text-2xl font-semibold">
-                            {salesOrder.items?.length || 0}
-                          </span>
-                          <span className="ml-2 text-sm text-muted-foreground">
-                            kalem
-                          </span>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
+                <div className="flex justify-end space-x-2 pt-6 border-t">
+                  <Button
+                    variant="outline"
+                    onClick={handleCancelEdit}
+                    disabled={isOrderUpdating}
+                    className="px-4"
+                  >
+                    İptal
+                  </Button>
+                  <Button
+                    onClick={handleSaveChanges}
+                    disabled={isOrderUpdating}
+                    className="bg-blue-500 hover:bg-blue-600 px-4"
+                  >
+                    {isOrderUpdating ? "Kaydediliyor..." : "Kaydet"}
+                  </Button>
                 </div>
               </div>
-            )}
-
-            {/* Items Tab */}
-            {activeTab === "items" && <OrderItemsTable orderId={id} />}
-
-            {/* Shipments Tab */}
-            {activeTab === "shipments" && <ShipmentsTable orderId={id} />}
-
-            {/* Statistics Tab */}
-            {activeTab === "statistics" && (
-              <div className="space-y-6">
-                <h3 className="text-base font-medium mb-4">
-                  Detaylı İstatistikler
-                </h3>
-                <OrderStatistics orderId={id} />
-              </div>
-            )}
+            </Form>
           </div>
-
-          {/* Order Edit Form */}
-          {isEditingOrder && (
-            <div className="mb-6 bg-white rounded-lg border shadow-sm">
-              <div className="p-4 border-b">
-                <h3 className="text-base font-medium">
-                  Sipariş Detaylarını Düzenle
-                </h3>
-              </div>
-              <div className="p-4">
-                <Form {...form}>
-                  <form className="space-y-4">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <FormField
-                        control={form.control}
-                        name="customer"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Müşteri</FormLabel>
-                            <Select
-                              value={field.value.toString()}
-                              onValueChange={(value) =>
-                                field.onChange(Number(value))
-                              }
-                              disabled={isOrderUpdating}
-                            >
-                              <SelectTrigger>
-                                <SelectValue placeholder="Müşteri Seçin" />
-                              </SelectTrigger>
-                              <SelectContent>
-                                {customers.map((customer: Customer) => (
-                                  <SelectItem
-                                    key={customer.id}
-                                    value={customer.id.toString()}
-                                  >
-                                    {customer.name}
-                                  </SelectItem>
-                                ))}
-                              </SelectContent>
-                            </Select>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-
-                      <FormField
-                        control={form.control}
-                        name="status"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Durum</FormLabel>
-                            <Select
-                              value={field.value}
-                              onValueChange={field.onChange}
-                              disabled={isOrderUpdating}
-                            >
-                              <SelectTrigger>
-                                <SelectValue placeholder="Durum Seçin" />
-                              </SelectTrigger>
-                              <SelectContent>
-                                <SelectItem value="OPEN">Bekliyor</SelectItem>
-                                <SelectItem value="CLOSED">
-                                  Tamamlandı
-                                </SelectItem>
-                              </SelectContent>
-                            </Select>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                    </div>
-                  </form>
-                </Form>
-              </div>
-              <div className="p-4 border-t flex justify-end gap-2">
-                <Button
-                  variant="outline"
-                  onClick={handleCancelEdit}
-                  disabled={isOrderUpdating}
-                >
-                  İptal
-                </Button>
-                <Button
-                  variant="primary-blue"
-                  onClick={handleSaveChanges}
-                  disabled={isOrderUpdating}
-                >
-                  {isOrderUpdating ? "Kaydediliyor..." : "Kaydet"}
-                </Button>
-              </div>
-            </div>
-          )}
         </div>
       </div>
-    </div>
+    );
+  }
+
+  return (
+    <>
+      <OrderTracker
+        salesOrder={salesOrder}
+        orderItems={orderItems}
+        shipments={shipments}
+        onEditOrder={() => setIsEditingOrder(true)}
+        onCreateShipment={() => router.push(`/sales/${id}/create-shipment`)}
+        onEditItems={() => setIsEditingItems(true)}
+        onAddItems={() => setIsBatchAddingItems(true)}
+        onEditShipments={() => setIsEditingShipments(true)}
+        onAddShipment={() => router.push(`/sales/${id}/create-shipment`)}
+        onDeleteShipment={handleDeleteShipment}
+      />
+
+      {/* Batch add items dialog */}
+      {isBatchAddingItems && (
+        <BatchAddItemsDialog
+          open={isBatchAddingItems}
+          onOpenChange={setIsBatchAddingItems}
+          orderId={id}
+          orderNumber={salesOrder.order_number}
+        />
+      )}
+    </>
   );
 }

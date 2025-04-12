@@ -90,6 +90,7 @@ export async function createFetchOptions(
  * Parse API error response
  */
 async function parseErrorResponse(response: Response): Promise<string> {
+  console.log(await response.json());
   try {
     const contentType = response.headers.get("content-type");
     if (contentType && contentType.includes("application/json")) {
